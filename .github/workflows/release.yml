@@ -35,7 +35,7 @@ jobs:
             asset_name: plerion-windows-x86_64.exe
 
           - target: x86_64-apple-darwin
-            os: macos-13
+            os: macos-latest
             use_cross: false
             artifact_name: plerion
             asset_name: plerion-macos-x86_64
