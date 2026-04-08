@@ -1,0 +1,59 @@
+---
+title: plerion alerts
+sidebarTitle: alerts
+description: View risk-based alerts
+icon: bell
+---
+
+## Synopsis
+
+```bash
+plerion alerts list [options]
+```
+
+## Subcommands
+
+### list
+
+List risk-based alerts with filtering and sorting.
+
+```bash
+plerion alerts list [options]
+```
+
+#### Options
+
+| Flag | Type | Description |
+|---|---|---|
+| `--status` | string | `OPEN` or `RESOLVED` |
+| `--provider` | string | Cloud provider filter |
+| `--alert-type` | string | `ASSET` or `FINDING` |
+| `--flagged` | string | Filter by flagged status (`true`/`false`) |
+| `--acknowledged` | string | Filter by acknowledged status (`true`/`false`) |
+| `--sort-by` | string | `riskScore` or `discoveredDate` |
+| `--sort-order` | string | `ASC` or `DESC` |
+| `--per-page` | number | Results per page (max 1000) |
+
+## Examples
+
+```bash
+# Open alerts sorted by risk score (highest first)
+plerion alerts list --status OPEN --sort-by riskScore --sort-order DESC
+
+# Flagged alerts only
+plerion alerts list --flagged true
+
+# Asset-type alerts
+plerion alerts list --alert-type ASSET --output table
+
+# All AWS alerts as JSON
+plerion alerts list --provider AWS --output json
+```
+
+### Example output (table)
+
+```
+ ID           STATUS   TYPE     RISK SCORE   PROVIDER   DISCOVERED
+ alt-abc123   OPEN     ASSET    9.1          AWS        2024-06-15
+ alt-def456   OPEN     FINDING  7.8          Azure      2024-06-14
+```

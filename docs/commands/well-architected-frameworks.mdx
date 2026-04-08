@@ -1,0 +1,63 @@
+---
+title: plerion well-architected-frameworks
+sidebarTitle: well-architected-frameworks
+description: View Well-Architected Framework assessments and download reports
+icon: compass-drafting
+---
+
+## Synopsis
+
+```bash
+plerion well-architected-frameworks <subcommand> [options]
+```
+
+## Subcommands
+
+### list
+
+List Well-Architected Framework assessments.
+
+```bash
+plerion well-architected-frameworks list
+```
+
+### request-report
+
+Trigger report generation for a Well-Architected Framework assessment.
+
+```bash
+plerion well-architected-frameworks request-report --integration-id <id> --framework-id <id>
+```
+
+### download
+
+Download a Well-Architected Framework report. If `--output-file` is omitted, writes to stdout.
+
+```bash
+plerion well-architected-frameworks download --integration-id <id> --framework-id <id> [--output-file <path>]
+```
+
+## Examples
+
+```bash
+# List assessments
+plerion well-architected-frameworks list
+
+# Request a report
+plerion well-architected-frameworks request-report \
+  --integration-id int-abc123 \
+  --framework-id WAF-2024
+
+# Download the report
+plerion well-architected-frameworks download \
+  --integration-id int-abc123 \
+  --framework-id WAF-2024 \
+  --output-file waf-report.pdf
+```
+
+### Example output (table)
+
+```
+ FRAMEWORK ID   NAME                                 PILLARS
+ WAF-2024       AWS Well-Architected Framework 2024  6
+```

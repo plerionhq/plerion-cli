@@ -1,0 +1,64 @@
+---
+title: Plerion CLI
+sidebarTitle: Introduction
+description: A cross-platform command-line interface for the Plerion cloud security platform
+icon: terminal
+---
+
+The Plerion CLI provides command-line access to the [Plerion](https://plerion.com) cloud security platform. It is modelled on the AWS CLI experience with INI-based profiles, multiple output formats, JMESPath filtering, and coloured table output.
+
+## Quick start
+
+<Steps>
+  <Step title="Install the CLI">
+    Download a pre-built binary from [GitHub Releases](https://github.com/plerionhq/plerion-cli/releases) or [build from source](/installation#from-source).
+  </Step>
+  <Step title="Get an API key">
+    Sign in to the [Plerion dashboard](https://app.plerion.com), navigate to **Settings > API Keys**, and create a new key.
+  </Step>
+  <Step title="Configure credentials">
+    ```bash
+    plerion configure
+    ```
+    This creates `~/.plerion/credentials` and `~/.plerion/config` with your API key, region, and output preferences.
+  </Step>
+  <Step title="Run your first command">
+    ```bash
+    plerion tenant get
+    plerion findings list --severity CRITICAL --output table
+    ```
+  </Step>
+</Steps>
+
+## Global options
+
+These flags apply to every command:
+
+| Flag | Env var | Description |
+|---|---|---|
+| `--profile <name>` | `PLERION_PROFILE` | Use a named credentials profile |
+| `--region <region>` | `PLERION_REGION` | Override region (`au`, `sg1`, `in1`, `us1`) |
+| `--api-key <key>` | `PLERION_API_KEY` | Override API key |
+| `--endpoint-url <url>` | `PLERION_ENDPOINT_URL` | Custom API base URL |
+| `--output <format>` | — | Output format: `table`, `json`, `yaml`, `text` |
+| `--query <jmespath>` | — | JMESPath expression to filter output |
+| `--no-color` | `NO_COLOR` | Disable colour output |
+
+## Commands
+
+| Command | Description |
+|---|---|
+| [`configure`](/commands/configure) | Interactive setup wizard |
+| [`tenant`](/commands/tenant) | Tenant details and usage |
+| [`findings`](/commands/findings) | Security findings |
+| [`assets`](/commands/assets) | Asset inventory |
+| [`asset-groups`](/commands/asset-groups) | Manage asset groups |
+| [`alerts`](/commands/alerts) | Risk-based alerts |
+| [`audit-logs`](/commands/audit-logs) | Audit logs |
+| [`integrations`](/commands/integrations) | Cloud integrations |
+| [`risks`](/commands/risks) | Security risks |
+| [`vulnerabilities`](/commands/vulnerabilities) | Vulnerabilities and exemptions |
+| [`compliance-frameworks`](/commands/compliance-frameworks) | Compliance posture and reports |
+| [`well-architected-frameworks`](/commands/well-architected-frameworks) | Well-Architected assessments |
+| [`iac`](/commands/iac) | Infrastructure as Code scanning |
+| [`aws`](/commands/aws) | AWS integration helpers |

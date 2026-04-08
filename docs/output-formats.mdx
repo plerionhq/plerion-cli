@@ -1,0 +1,75 @@
+---
+title: Output Formats
+sidebarTitle: Output Formats
+description: Control how results are displayed with table, JSON, YAML, and text output
+icon: table
+---
+
+Use `--output` (or set `output` in your config file) to control how results are displayed.
+
+## Table (default)
+
+Human-readable table with colour-coded severity and status columns. This is the default when stdout is a TTY.
+
+```bash
+plerion findings list --severity CRITICAL --output table
+```
+
+### Colour scheme
+
+| Colour | Meaning |
+|---|---|
+| Bold red | CRITICAL severity |
+| Red | HIGH severity, FAILED, OPEN |
+| Yellow | MEDIUM severity, DISMISSED |
+| Cyan | LOW severity |
+| Blue | INFORMATIONAL |
+| Green | PASSED, RESOLVED, ACTIVE |
+
+Colour is automatically disabled when stdout is not a TTY, or when `--no-color` or the `NO_COLOR` environment variable is set.
+
+## JSON
+
+Pretty-printed JSON. Useful for scripting and piping to `jq`.
+
+```bash
+plerion findings list --output json | jq '.[].detectionId'
+```
+
+## YAML
+
+YAML output for Kubernetes-style tooling or human-readable structured data.
+
+```bash
+plerion assets list --output yaml
+```
+
+## Text
+
+Tab-separated values with a header row. Useful for `awk`, `cut`, and shell scripts.
+
+```bash
+plerion findings list --output text | awk -F'\t' '{print $1, $3}'
+```
+
+## JMESPath filtering (`--query`)
+
+Filter or transform output using [JMESPath](https://jmespath.org/) expressions. The query is applied to the raw JSON before rendering.
+
+```bash
+# Get the first detection ID
+plerion findings list --output json --query 'data[0].detectionId'
+
+# Filter only CRITICAL findings
+plerion findings list --output json --query "data[?severityLevel=='CRITICAL']"
+
+# Extract a field from all items
+plerion assets list --output json --query 'data[*].name'
+
+# Count results
+plerion vulnerabilities list --output json --query 'length(data)'
+```
+
+<Note>
+When `--query` is used, output is always JSON regardless of the `--output` flag.
+</Note>

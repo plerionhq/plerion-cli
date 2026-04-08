@@ -1,0 +1,50 @@
+---
+title: plerion integrations
+sidebarTitle: integrations
+description: List cloud integrations
+icon: plug
+---
+
+## Synopsis
+
+```bash
+plerion integrations list [options]
+```
+
+## Subcommands
+
+### list
+
+List cloud integrations (AWS, Azure, GCP, Kubernetes).
+
+```bash
+plerion integrations list [options]
+```
+
+#### Options
+
+| Flag | Type | Description |
+|---|---|---|
+| `--per-page` | number | Results per page |
+| `--include-total` | flag | Include total count in response metadata |
+
+## Examples
+
+```bash
+# List all integrations
+plerion integrations list
+
+# Include total count
+plerion integrations list --include-total --output json
+
+# Extract integration IDs
+plerion integrations list --output json --query 'data[*].integrationId'
+```
+
+### Example output (table)
+
+```
+ INTEGRATION ID   NAME              PROVIDER   STATUS   ACCOUNT ID
+ int-abc123       Production AWS    AWS        ACTIVE   123456789012
+ int-def456       Staging Azure     Azure      ACTIVE   sub-xyz
+```

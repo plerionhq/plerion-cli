@@ -1,0 +1,112 @@
+---
+title: plerion vulnerabilities
+sidebarTitle: vulnerabilities
+description: Query vulnerabilities and manage exemptions
+icon: bug
+---
+
+## Synopsis
+
+```bash
+plerion vulnerabilities <subcommand> [options]
+```
+
+## Subcommands
+
+### list
+
+List vulnerabilities with filtering.
+
+```bash
+plerion vulnerabilities list [options]
+```
+
+#### Options
+
+| Flag | Type | Description |
+|---|---|---|
+| `--severity` | string | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL` (comma-separated) |
+| `--provider` | string | Cloud provider filter |
+| `--has-kev` | flag | Only CISA Known Exploited Vulnerabilities |
+| `--has-exploit` | flag | Only vulnerabilities with known exploits |
+| `--has-vendor-fix` | flag | Only vulnerabilities with a vendor fix available |
+| `--asset-id` | string | Filter by asset ID(s) |
+| `--region` | string | Filter by cloud region(s) |
+| `--per-page` | number | Results per page (max 2000) |
+| `--all` | flag | Fetch all pages automatically |
+
+### exemptions list
+
+```bash
+plerion vulnerabilities exemptions list --profile-id <id>
+```
+
+List vulnerability exemptions for a profile.
+
+### exemptions get
+
+```bash
+plerion vulnerabilities exemptions get --profile-id <id> <exemption-id>
+```
+
+### exemptions create
+
+```bash
+plerion vulnerabilities exemptions create --profile-id <id> --name <n> --reason <r> [--rules <json>]
+```
+
+#### Reason values
+
+| Value | Description |
+|---|---|
+| `ACCEPTED_RISK` | Risk has been accepted |
+| `COMPENSATING_CONTROL` | A compensating control is in place |
+| `NO_VENDOR_FIX` | No vendor fix is available |
+| `NOT_IN_USE` | The vulnerable component is not in use |
+| `OTHER_REASONS` | Other reasons (provide details in name) |
+
+### exemptions update
+
+```bash
+plerion vulnerabilities exemptions update --profile-id <id> <exemption-id> [--name <n>] [--reason <r>]
+```
+
+### exemptions delete
+
+```bash
+plerion vulnerabilities exemptions delete --profile-id <id> <exemption-id>
+```
+
+## Examples
+
+```bash
+# Critical vulnerabilities with known exploits
+plerion vulnerabilities list --severity CRITICAL --has-exploit
+
+# CISA KEV list
+plerion vulnerabilities list --has-kev --output table
+
+# All critical and high vulnerabilities
+plerion vulnerabilities list --severity CRITICAL,HIGH --all --output json > vulns.json
+
+# Create an exemption
+plerion vulnerabilities exemptions create \
+  --profile-id my-profile \
+  --name "Accepted CVE-2022-22965" \
+  --reason ACCEPTED_RISK
+
+# List exemptions
+plerion vulnerabilities exemptions list --profile-id my-profile
+
+# Delete an exemption
+plerion vulnerabilities exemptions delete --profile-id my-profile ex-abc123
+```
+
+### Example output (table)
+
+```
+ CVE ID            SEVERITY   PACKAGE          VERSION   FIX AVAILABLE   KEV
+ CVE-2024-1234     CRITICAL   openssl          1.1.1k    true            true
+ CVE-2023-5678     HIGH       log4j-core       2.14.1    true            false
+ CVE-2023-9012     MEDIUM     spring-core      5.3.18    true            false
+```

@@ -1,0 +1,72 @@
+---
+title: plerion compliance-frameworks
+sidebarTitle: compliance-frameworks
+description: View compliance framework posture and download reports
+icon: shield-check
+---
+
+## Synopsis
+
+```bash
+plerion compliance-frameworks <subcommand> [options]
+```
+
+## Subcommands
+
+### list
+
+List available compliance frameworks.
+
+```bash
+plerion compliance-frameworks list [--custom <true|false>]
+```
+
+| Flag | Type | Description |
+|---|---|---|
+| `--custom` | string | `true` for custom frameworks only, `false` for Plerion-managed only |
+
+### request-report
+
+Trigger report generation for a compliance framework.
+
+```bash
+plerion compliance-frameworks request-report --integration-id <id> --framework-id <id>
+```
+
+### download
+
+Download a compliance report. If `--output-file` is omitted, writes to stdout.
+
+```bash
+plerion compliance-frameworks download --integration-id <id> --framework-id <id> [--output-file <path>]
+```
+
+## Examples
+
+```bash
+# List all compliance frameworks
+plerion compliance-frameworks list
+
+# List only Plerion-managed frameworks
+plerion compliance-frameworks list --custom false
+
+# Request a CIS report
+plerion compliance-frameworks request-report \
+  --integration-id int-abc123 \
+  --framework-id CIS-AWSFB-v140
+
+# Download the report
+plerion compliance-frameworks download \
+  --integration-id int-abc123 \
+  --framework-id CIS-AWSFB-v140 \
+  --output-file cis-report.pdf
+```
+
+### Example output (table)
+
+```
+ FRAMEWORK ID       NAME                              CUSTOM   TOTAL POSTURE
+ CIS-AWSFB-v140     CIS AWS Foundations Benchmark      false    82.5%
+ SOC2-2024          SOC 2 Type II                      false    91.0%
+ CUSTOM-001         Internal Security Policy           true     76.3%
+```

@@ -1,0 +1,83 @@
+---
+title: plerion iac
+sidebarTitle: iac
+description: Infrastructure as Code scanning for Terraform, CloudFormation, Kubernetes, and more
+icon: code
+---
+
+## Synopsis
+
+```bash
+plerion iac <subcommand> [options]
+```
+
+Supported IaC formats: **Terraform**, **CloudFormation**, **Bicep**, **ARM**, **Kubernetes**, **Helm**, **Dockerfile**.
+
+## Subcommands
+
+### scan
+
+Upload a zip file for IaC scanning.
+
+```bash
+plerion iac scan <file.zip> --name <artifact-name>
+```
+
+<Note>
+Maximum upload size is 4.4 MB. Zip your IaC files before uploading.
+</Note>
+
+### list-scans
+
+List previous IaC scans.
+
+```bash
+plerion iac list-scans
+```
+
+### get-findings
+
+Get security findings from a completed scan.
+
+```bash
+plerion iac get-findings <scan-id>
+```
+
+### get-vulnerabilities
+
+Get vulnerabilities from a completed scan.
+
+```bash
+plerion iac get-vulnerabilities <scan-id>
+```
+
+## Examples
+
+```bash
+# Zip and scan a Terraform directory
+zip -r infra.zip ./terraform/
+plerion iac scan infra.zip --name infra.zip
+
+# List all scans
+plerion iac list-scans --output table
+
+# Get findings from a scan
+plerion iac get-findings scan-abc123
+
+# Get vulnerabilities from a scan
+plerion iac get-vulnerabilities scan-abc123 --output json
+
+# Full workflow
+zip -r infra.zip ./terraform/
+plerion iac scan infra.zip --name infra.zip
+# Note the scan ID from output, then:
+plerion iac get-findings <scan-id> --output table
+```
+
+### Example output (list-scans, table)
+
+```
+ SCAN ID         NAME          STATUS      CREATED AT
+ scan-abc123     infra.zip     COMPLETED   2024-06-15T10:30:00Z
+ scan-def456     k8s.zip       COMPLETED   2024-06-14T09:15:00Z
+```

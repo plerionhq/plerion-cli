@@ -1,0 +1,76 @@
+---
+title: plerion asset-groups
+sidebarTitle: asset-groups
+description: Create, update, list, and delete asset groups
+icon: layer-group
+---
+
+## Synopsis
+
+```bash
+plerion asset-groups <subcommand> [options]
+```
+
+## Subcommands
+
+### list
+
+```bash
+plerion asset-groups list [--name <n>] [--per-page N]
+```
+
+### get
+
+```bash
+plerion asset-groups get <id>
+```
+
+### create
+
+```bash
+plerion asset-groups create --name <name> [--rules <json>]
+```
+
+### update
+
+```bash
+plerion asset-groups update <id> [--name <n>] [--rules <json>]
+```
+
+### delete
+
+```bash
+plerion asset-groups delete <id>
+```
+
+## Examples
+
+```bash
+# List all asset groups
+plerion asset-groups list
+
+# Create a new group
+plerion asset-groups create --name "Production AWS"
+
+# Create with rules
+plerion asset-groups create --name "Critical Servers" \
+  --rules '[{"field":"provider","operator":"equals","value":"AWS"}]'
+
+# Update a group name
+plerion asset-groups update ag-abc123 --name "Production - All Providers"
+
+# Delete a group
+plerion asset-groups delete ag-abc123
+
+# Get group details
+plerion asset-groups get ag-abc123 --output json
+```
+
+### Example output (table)
+
+```
+ ID           NAME                ASSET COUNT
+ ag-abc123    Production AWS      1,247
+ ag-def456    Staging             312
+ ag-ghi789    Critical Servers    89
+```

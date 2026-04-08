@@ -1,0 +1,68 @@
+---
+title: plerion tenant
+sidebarTitle: tenant
+description: Get tenant information and usage details
+icon: building
+---
+
+## Synopsis
+
+```bash
+plerion tenant <subcommand>
+```
+
+## Subcommands
+
+### get
+
+```bash
+plerion tenant get
+```
+
+Returns tenant ID, organization ID, name, risk score, and timestamps.
+
+### get-usage
+
+```bash
+plerion tenant get-usage
+```
+
+Returns tenant usage details.
+
+## Examples
+
+```bash
+# Get tenant info as a table
+plerion tenant get
+
+# Get tenant info as JSON
+plerion tenant get --output json
+
+# Extract just the risk score
+plerion tenant get --output json --query 'data.riskScore'
+
+# Get usage details
+plerion tenant get-usage --output json
+```
+
+### Example output (table)
+
+```
+ TENANT ID     ORG ID         NAME         RISK SCORE
+ t-abc123      org-xyz        Acme Corp    7.2
+```
+
+### Example output (JSON)
+
+```json
+{
+  "data": {
+    "tenantId": "t-abc123",
+    "organizationId": "org-xyz",
+    "name": "Acme Corp",
+    "riskScore": 7.2,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-06-01T14:00:00Z"
+  }
+}
+```

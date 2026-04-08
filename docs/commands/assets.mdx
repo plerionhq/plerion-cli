@@ -1,0 +1,91 @@
+---
+title: plerion assets
+sidebarTitle: assets
+description: Query the asset inventory, get details, and retrieve SBOMs
+icon: server
+---
+
+## Synopsis
+
+```bash
+plerion assets <subcommand> [options]
+```
+
+## Subcommands
+
+### list
+
+List cloud assets with filtering.
+
+```bash
+plerion assets list [options]
+```
+
+#### Options
+
+| Flag | Type | Description |
+|---|---|---|
+| `--provider` | string | Cloud provider: `AWS`, `Azure`, `GCP`, `Kubernetes` |
+| `--region` | string | Cloud region(s) |
+| `--resource-type` | string | Resource type (e.g. `AWS::EC2::Instance`) |
+| `--service` | string | Service filter (e.g. `AWS::S3`) |
+| `--severity` | string | Vulnerability severity levels |
+| `--is-publicly-exposed` | flag | Show only publicly exposed assets |
+| `--is-vulnerable` | flag | Show only assets with vulnerabilities |
+| `--has-kev` | flag | Show only assets with CISA KEV vulnerabilities |
+| `--has-exploit` | flag | Show only assets with known exploits |
+| `--has-admin-privileges` | flag | Show only assets with admin privileges |
+| `--risk-score-gte` | float | Minimum risk score (0-10) |
+| `--query-string` | string | Filter by asset name substring |
+| `--operational-state` | string | `active` or `inactive` |
+| `--sort-by` | string | Sort field |
+| `--sort-order` | string | `ASC` or `DESC` |
+| `--per-page` | number | Results per page (default: 50, max: 1000) |
+| `--all` | flag | Fetch all pages automatically |
+
+### get
+
+Get full details for a single asset.
+
+```bash
+plerion assets get <asset-id>
+```
+
+### get-sbom
+
+Get the Software Bill of Materials (SBOM) for an asset.
+
+```bash
+plerion assets get-sbom <asset-id>
+```
+
+## Examples
+
+```bash
+# Publicly exposed assets
+plerion assets list --is-publicly-exposed
+
+# High-risk AWS EC2 instances
+plerion assets list --provider AWS --resource-type AWS::EC2::Instance --risk-score-gte 8.0
+
+# Assets with CISA KEV vulnerabilities
+plerion assets list --has-kev --output table
+
+# Get full asset details
+plerion assets get prn:assets:abc123
+
+# Get SBOM for an asset
+plerion assets get-sbom prn:assets:abc123 --output json
+
+# Export all assets
+plerion assets list --all --output json > assets.json
+```
+
+### Example output (table)
+
+```
+ NAME                    PROVIDER   RESOURCE TYPE         RISK SCORE   PUBLIC
+ my-web-server           AWS        AWS::EC2::Instance    8.5          true
+ production-db           AWS        AWS::RDS::DBInstance  6.2          false
+ storage-bucket          GCP        GCP::Storage::Bucket  3.1          true
+```

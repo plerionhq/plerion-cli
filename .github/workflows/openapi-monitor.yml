@@ -1,0 +1,115 @@
+name: OpenAPI Sync
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 09:00 UTC
+  workflow_dispatch:       # Allow manual trigger
+
+jobs:
+  check-openapi-spec:
+    name: Check OpenAPI spec for changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download upstream OpenAPI spec
+        run: |
+          curl -sSfL \
+            -o /tmp/openapi-upstream.yaml \
+            https://raw.githubusercontent.com/plerionhq/docs/main/api-reference/openapi.yaml
+
+      - name: Extract endpoint paths from upstream spec
+        run: |
+          # Extract all paths and methods from the upstream spec
+          python3 -c "
+          import yaml, json, sys
+          with open('/tmp/openapi-upstream.yaml') as f:
+              spec = yaml.safe_load(f)
+          endpoints = []
+          for path, methods in sorted(spec.get('paths', {}).items()):
+              for method in sorted(methods.keys()):
+                  if method.lower() in ('get', 'post', 'put', 'patch', 'delete'):
+                      endpoints.append(f'{method.upper()} {path}')
+          with open('/tmp/upstream-endpoints.txt', 'w') as f:
+              f.write('\n'.join(endpoints) + '\n')
+          print(f'Found {len(endpoints)} endpoints in upstream spec')
+          for ep in endpoints:
+              print(f'  {ep}')
+          "
+
+      - name: Compare with implemented endpoints
+        run: |
+          cat > /tmp/implemented-endpoints.txt << 'ENDPOINTS'
+          DELETE /v1/tenant/asset-groups/{assetGroupId}
+          DELETE /v1/tenant/profiles/{profileId}/vulnerability/exemptions/{exemptionId}
+          GET /v1/tenant
+          GET /v1/tenant/alerts
+          GET /v1/tenant/asset-groups
+          GET /v1/tenant/asset-groups/{assetGroupId}
+          GET /v1/tenant/assets
+          GET /v1/tenant/assets/{assetId}
+          GET /v1/tenant/assets/{assetId}/sbom
+          GET /v1/tenant/audit-logs
+          GET /v1/tenant/cloudformation-templates
+          GET /v1/tenant/compliance-frameworks
+          GET /v1/tenant/external-id
+          GET /v1/tenant/findings
+          GET /v1/tenant/integrations
+          GET /v1/tenant/integrations/{integrationId}/compliance-frameworks/{frameworkId}/download
+          GET /v1/tenant/integrations/{integrationId}/well-architected-frameworks/{frameworkId}/download
+          GET /v1/tenant/profiles/{profileId}/vulnerability/exemptions
+          GET /v1/tenant/profiles/{profileId}/vulnerability/exemptions/{exemptionId}
+          GET /v1/tenant/risks
+          GET /v1/tenant/shiftleft/iac/scans
+          GET /v1/tenant/shiftleft/iac/scans/{scanId}/findings
+          GET /v1/tenant/shiftleft/iac/scans/{scanId}/vulnerabilities
+          GET /v1/tenant/usage
+          GET /v1/tenant/vulnerabilities
+          GET /v1/tenant/well-architected-frameworks
+          PATCH /v1/tenant/asset-groups/{assetGroupId}
+          PATCH /v1/tenant/profiles/{profileId}/vulnerability/exemptions/{exemptionId}
+          POST /v1/tenant/asset-groups
+          POST /v1/tenant/integrations/{integrationId}/frameworks/{frameworkId}/reports
+          POST /v1/tenant/integrations/token
+          POST /v1/tenant/profiles/{profileId}/vulnerability/exemptions
+          POST /v1/tenant/shiftleft/iac/scan
+          ENDPOINTS
+
+      - name: Diff endpoints
+        run: |
+          echo "=== Comparing upstream spec with implemented endpoints ==="
+
+          # Normalise path parameter names for comparison
+          # Upstream may use {id} while we use {assetId} etc.
+          normalize() {
+            sed 's/{[^}]*}/{id}/g' "$1" | sort -u
+          }
+
+          normalize /tmp/upstream-endpoints.txt > /tmp/upstream-norm.txt
+          normalize /tmp/implemented-endpoints.txt > /tmp/implemented-norm.txt
+
+          MISSING=$(comm -23 /tmp/upstream-norm.txt /tmp/implemented-norm.txt)
+          EXTRA=$(comm -13 /tmp/upstream-norm.txt /tmp/implemented-norm.txt)
+
+          if [ -n "$MISSING" ]; then
+            echo ""
+            echo "::error::Endpoints in upstream spec but NOT implemented:"
+            echo "$MISSING"
+            echo ""
+          fi
+
+          if [ -n "$EXTRA" ]; then
+            echo ""
+            echo "::warning::Endpoints implemented but NOT in upstream spec:"
+            echo "$EXTRA"
+            echo ""
+          fi
+
+          if [ -z "$MISSING" ] && [ -z "$EXTRA" ]; then
+            echo "All endpoints are in sync."
+          fi
+
+          # Fail the workflow if there are missing endpoints
+          if [ -n "$MISSING" ]; then
+            exit 1
+          fi
