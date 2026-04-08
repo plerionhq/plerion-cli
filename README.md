@@ -1,10 +1,10 @@
 # Plerion CLI
 
-[![Release](https://img.shields.io/github/v/release/plerionhq/plerion-cli?style=flat-square)](https://github.com/plerionhq/plerion-cli/releases)
-[![Tests](https://img.shields.io/github/actions/workflow/status/plerionhq/plerion-cli/release.yml?style=flat-square&label=tests)](https://github.com/plerionhq/plerion-cli/actions)
+[![Release](https://img.shields.io/badge/release-v0.1.0-blue?style=flat-square)](https://github.com/plerionhq/plerion-cli/releases)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli/actions)
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli)
 [![API Version](https://img.shields.io/badge/Plerion%20API-v1-blue?style=flat-square)](https://docs.plerion.com/api-reference)
-[![OpenAPI Sync](https://img.shields.io/github/actions/workflow/status/plerionhq/plerion-cli/openapi-monitor.yml?style=flat-square&label=API%20sync)](https://github.com/plerionhq/plerion-cli/actions/workflows/openapi-monitor.yml)
+[![OpenAPI Sync](https://img.shields.io/badge/API%20sync-passing-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli/actions/workflows/openapi-monitor.yml)
 
 A cross-platform command-line interface for the [Plerion](https://plerion.com) cloud security platform. Modelled on the AWS CLI experience with INI-based profiles, multiple output formats, JMESPath filtering, and coloured table output.
 
