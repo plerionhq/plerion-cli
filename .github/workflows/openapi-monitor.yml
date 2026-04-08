@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install PyYAML
+        run: pip install pyyaml
+
       - name: Download upstream OpenAPI spec
         run: |
           curl -sSfL \
@@ -20,7 +23,6 @@ jobs:
 
       - name: Extract endpoint paths from upstream spec
         run: |
-          # Extract all paths and methods from the upstream spec
           python3 -c "
           import yaml, json, sys
           with open('/tmp/openapi-upstream.yaml') as f:
@@ -79,10 +81,9 @@ jobs:
         run: |
           echo "=== Comparing upstream spec with implemented endpoints ==="
 
-          # Normalise path parameter names for comparison
-          # Upstream may use {id} while we use {assetId} etc.
+          # Normalise: strip leading whitespace, normalise path params, sort
           normalize() {
-            sed 's/{[^}]*}/{id}/g' "$1" | sort -u
+            sed 's/^[[:space:]]*//' "$1" | sed 's/{[^}]*}/{id}/g' | grep -v '^$' | sort -u
           }
 
           normalize /tmp/upstream-endpoints.txt > /tmp/upstream-norm.txt
