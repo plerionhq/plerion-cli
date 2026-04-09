@@ -66,11 +66,16 @@ plerion asset-groups delete --id ag-abc123
 plerion asset-groups get --id ag-abc123 --output json
 ```
 
-### Example output (table)
+### Output columns
 
-```
- ID           NAME                ASSET COUNT
- ag-abc123    Production AWS      1,247
- ag-def456    Staging             312
- ag-ghi789    Critical Servers    89
-```
+| Column | Description |
+|---|---|
+| ID | Asset group ID |
+| NAME | Asset group name |
+| STATUS | Group status |
+| ASSETS | Total asset count |
+| RISK SCORE | Numeric risk score |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| CREATED AT | Creation timestamp |
+| UPDATED AT | Update timestamp |

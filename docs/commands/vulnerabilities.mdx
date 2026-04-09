@@ -102,11 +102,45 @@ plerion vulnerabilities exemptions list --profile-id my-profile
 plerion vulnerabilities exemptions delete --profile-id my-profile --id ex-abc123
 ```
 
-### Example output (table)
+### Output columns
 
-```
- CVE ID            SEVERITY   PACKAGE          VERSION   FIX AVAILABLE   KEV
- CVE-2024-1234     CRITICAL   openssl          1.1.1k    true            true
- CVE-2023-5678     HIGH       log4j-core       2.14.1    true            false
- CVE-2023-9012     MEDIUM     spring-core      5.3.18    true            false
-```
+Table output includes all fields returned by the API:
+
+| Column | Description |
+|---|---|
+| CVE / ID | CVE identifier or Plerion vulnerability ID |
+| TITLE | Vulnerability title |
+| SEVERITY | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL` |
+| SEVERITY VALUE | Numeric CVSS-style severity score |
+| SEVERITY SOURCE | Source of the severity rating |
+| PROVIDER | Cloud provider |
+| ASSET ID | Affected asset ID |
+| ASSET TYPE | Asset type |
+| TARGET NAME | Affected package or target name |
+| DESCRIPTION | Vulnerability description |
+| PRIMARY URL | Link to CVE or advisory |
+| KEV | CISA Known Exploited Vulnerability |
+| EXPLOIT | Has known exploit |
+| FIX | Vendor fix available |
+| PUBLISHED | Publication date |
+| FIRST OBSERVED | First observed timestamp |
+| LAST OBSERVED | Last observed timestamp |
+| INTEGRATION ID | Integration ID |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| EXECUTION ID | Scan execution ID |
+| SCHEMA VERSION | API schema version |
+
+#### Exemptions output columns
+
+| Column | Description |
+|---|---|
+| ID | Exemption ID |
+| PROFILE ID | Profile the exemption belongs to |
+| NAME | Exemption name/description |
+| REASON | Exemption reason |
+| AUDIT NOTE | Auditor note |
+| CREATED BY | User who created the exemption |
+| UPDATED BY | User who last updated the exemption |
+| CREATED AT | Creation timestamp |
+| UPDATED AT | Update timestamp |

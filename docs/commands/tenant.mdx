@@ -45,12 +45,16 @@ plerion tenant get --output json --query 'data.riskScore'
 plerion tenant get-usage --output json
 ```
 
-### Example output (table)
+### Output columns
 
-```
- TENANT ID     ORG ID         NAME         RISK SCORE
- t-abc123      org-xyz        Acme Corp    7.2
-```
+| Column | Description |
+|---|---|
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| NAME | Tenant name |
+| RISK SCORE | Numeric risk score |
+| CREATED AT | Creation timestamp |
+| UPDATED AT | Update timestamp |
 
 ### Example output (JSON)
 

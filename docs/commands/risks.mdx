@@ -48,11 +48,26 @@ plerion risks list --lifecycle-state OPEN --include primaryAsset
 plerion risks list --integration-id int-abc123 --output json
 ```
 
-### Example output (table)
+### Output columns
 
-```
- RISK TYPE ID          SEVERITY   STATE   SCORE   RESOURCE TYPE
- ATTACK-PATH-001       CRITICAL   OPEN    9.5     AWS::EC2::Instance
- LATERAL-MOVE-003      HIGH       OPEN    7.8     AWS::IAM::Role
- DATA-EXPOSURE-012     MEDIUM     OPEN    5.2     AWS::S3::Bucket
-```
+Table output includes all fields returned by the API:
+
+| Column | Description |
+|---|---|
+| ID | Risk ID |
+| TYPE | Risk type ID |
+| SEVERITY | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` |
+| SCORE | Numeric risk score |
+| LIKELIHOOD | Likelihood rating |
+| IMPACT | Impact rating |
+| STATE | Lifecycle state (`OPEN`, `DISMISSED_ACCEPTED`, `DISMISSED_NOT_A_RISK`) |
+| DESCRIPTION | Risk description |
+| PRIMARY ASSET ID | Primary affected asset ID |
+| ASSET NAME | Primary asset name |
+| RESOURCE TYPE | Resource type |
+| FULL RESOURCE NAME | Full resource name |
+| REGION | Cloud region |
+| INTEGRATION ID | Integration ID |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| DISCOVERED AT | Discovery timestamp |

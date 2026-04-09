@@ -62,11 +62,20 @@ plerion compliance-frameworks download \
   --output-file cis-report.pdf
 ```
 
-### Example output (table)
+### Output columns
 
-```
- FRAMEWORK ID       NAME                              CUSTOM   TOTAL POSTURE
- CIS-AWSFB-v140     CIS AWS Foundations Benchmark      false    82.5%
- SOC2-2024          SOC 2 Type II                      false    91.0%
- CUSTOM-001         Internal Security Policy           true     76.3%
-```
+| Column | Description |
+|---|---|
+| ID | Framework ID |
+| NAME | Framework name |
+| VERSION | Framework version |
+| TYPE | Framework type |
+| POSTURE % | Overall posture percentage |
+| PASSED | Passed findings count |
+| TOTAL | Total findings count |
+| CUSTOM | Whether this is a custom framework |
+| PROVIDERS | Applicable cloud providers |
+| DESCRIPTION | Framework description |
+| RELEASE DATE | Framework release date |
+| LAST MODIFIED | Last modification date |
+| LINK | Link to framework documentation |

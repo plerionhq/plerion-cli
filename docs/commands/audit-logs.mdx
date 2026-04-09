@@ -44,10 +44,21 @@ plerion audit-logs list --operation UserLogin
 plerion audit-logs list --user-id user-abc123 --output json
 ```
 
-### Example output (table)
+### Output columns
 
-```
- TIMESTAMP                 USER                OPERATION        IP ADDRESS
- 2024-06-15T10:30:00Z      alice@acme.com      UserLogin        203.0.113.10
- 2024-06-15T10:32:00Z      alice@acme.com      CreatedApiKey    203.0.113.10
-```
+Table output includes all fields returned by the API:
+
+| Column | Description |
+|---|---|
+| ID | Audit log entry ID |
+| OPERATION | Operation type (e.g. `UserLogin`, `CreatedApiKey`) |
+| TIME | Operation timestamp |
+| USER ID | Operator user ID |
+| EMAIL | Operator email address |
+| IP | IP address |
+| USER AGENT | Browser/client user agent |
+| COUNTRY | Country (from IP geolocation) |
+| CITY | City (from IP geolocation) |
+| REGION | Region (from IP geolocation) |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |

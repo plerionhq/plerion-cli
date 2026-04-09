@@ -41,10 +41,26 @@ plerion integrations list --include-total --output json
 plerion integrations list --output json --query 'data[*].integrationId'
 ```
 
-### Example output (table)
+### Output columns
 
-```
- INTEGRATION ID   NAME              PROVIDER   STATUS   ACCOUNT ID
- int-abc123       Production AWS    AWS        ACTIVE   123456789012
- int-def456       Staging Azure     Azure      ACTIVE   sub-xyz
-```
+Table output includes all fields returned by the API:
+
+| Column | Description |
+|---|---|
+| ID | Integration ID |
+| NAME | Integration name |
+| PROVIDER | Cloud provider (`AWS`, `Azure`, `GCP`, `Kubernetes`) |
+| TYPE | Integration type |
+| STATUS | Integration status (e.g. `ACTIVE`) |
+| RISK SCORE | Numeric risk score |
+| SCHEDULE | Scan schedule |
+| SCAN INTERVAL | Scan interval setting |
+| DETECTION SETTING ID | Detection setting ID |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| AWS ACCOUNT | AWS account ID |
+| AZURE SUBSCRIPTION | Azure subscription ID |
+| AZURE DIRECTORY | Azure directory/tenant ID |
+| GCP PROJECT | GCP project ID |
+| CREATED AT | Creation timestamp |
+| UPDATED AT | Update timestamp |

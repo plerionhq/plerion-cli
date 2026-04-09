@@ -162,10 +162,12 @@ Most list commands accept `--per-page <n>` (default 50) and `--sort-by`/`--sort-
 
 | Format | Flag | Description |
 |---|---|---|
-| Table | `--output table` | Coloured, human-readable (default) |
+| Table | `--output table` | Coloured, human-readable (default). All API fields shown. |
 | JSON | `--output json` | Pretty-printed JSON |
 | YAML | `--output yaml` | YAML output |
 | Text | `--output text` | Tab-separated for scripting |
+
+Table output shows every field returned by the API — no columns are hidden. Use `--query` (JMESPath) to extract specific fields from JSON output, or pipe `--output text` to `cut`/`awk` for scripting.
 
 ## Regions
 

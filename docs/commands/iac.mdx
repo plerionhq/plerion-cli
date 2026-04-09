@@ -74,10 +74,60 @@ plerion iac scan --file infra.zip --name infra.zip
 plerion iac get-findings --scan-id <scan-id> --output table
 ```
 
-### Example output (list-scans, table)
+### Output columns (list-scans)
 
-```
- SCAN ID         NAME          STATUS      CREATED AT
- scan-abc123     infra.zip     COMPLETED   2024-06-15T10:30:00Z
- scan-def456     k8s.zip       COMPLETED   2024-06-14T09:15:00Z
-```
+| Column | Description |
+|---|---|
+| ID | Scan ID |
+| ARTIFACT | Artifact name (uploaded zip filename) |
+| STATUS | Scan status (e.g. `COMPLETED`, `PROCESSING`) |
+| TYPES | Detected IaC types (e.g. `terraform`, `kubernetes`) |
+| FINDINGS | Total findings count |
+| FAILED | Failed findings count |
+| PASSED | Passed findings count |
+| VULNS | Vulnerability count |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| CREATED AT | Scan creation timestamp |
+| UPDATED AT | Scan update timestamp |
+
+### Output columns (get-findings)
+
+| Column | Description |
+|---|---|
+| ID | Finding ID |
+| SCAN ID | Parent scan ID |
+| DETECTION ID | Detection rule ID |
+| DETECTION TITLE | Detection rule title |
+| TYPE | Finding type |
+| RESULT | `PASSED` or `FAILED` |
+| SEVERITY | Severity level |
+| FILE | Source file path |
+| LINE RANGE | Affected line range (e.g. `10-25`) |
+| RESOURCE | Resource identifier |
+| DASHBOARD URL | Link to finding in the Plerion dashboard |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| CREATED AT | Record creation timestamp |
+| UPDATED AT | Record update timestamp |
+
+### Output columns (get-vulnerabilities)
+
+| Column | Description |
+|---|---|
+| ID | Vulnerability record ID |
+| CVE / VULN ID | CVE or vulnerability identifier |
+| TITLE | Vulnerability title |
+| SEVERITY | Severity level |
+| SEVERITY VALUE | Numeric severity score |
+| DESCRIPTION | Vulnerability description |
+| FILE | Source file containing the vulnerable dependency |
+| KEV | CISA Known Exploited Vulnerability |
+| EXPLOIT | Has known exploit |
+| PACKAGES | Affected package name(s) |
+| PRIMARY URL | Link to CVE or advisory |
+| PUBLISHED | Publication date |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| CREATED AT | Record creation timestamp |
+| UPDATED AT | Record update timestamp |

@@ -81,11 +81,46 @@ plerion assets get-sbom --asset-id prn:assets:abc123 --output json
 plerion assets list --all --output json > assets.json
 ```
 
-### Example output (table)
+### Output columns
 
-```
- NAME                    PROVIDER   RESOURCE TYPE         RISK SCORE   PUBLIC
- my-web-server           AWS        AWS::EC2::Instance    8.5          true
- production-db           AWS        AWS::RDS::DBInstance  6.2          false
- storage-bucket          GCP        GCP::Storage::Bucket  3.1          true
-```
+Table output includes all fields returned by the API:
+
+| Column | Description |
+|---|---|
+| ID | Asset ID |
+| NAME | Asset name |
+| TYPE | Asset type |
+| PROVIDER | Cloud provider (`AWS`, `Azure`, `GCP`) |
+| REGION | Cloud region |
+| SERVICE | Cloud service |
+| RESOURCE TYPE | Resource type (e.g. `AWS::EC2::Instance`) |
+| RESOURCE ID | Provider resource ID |
+| RESOURCE NAME | Resource name |
+| FULL RESOURCE NAME | Full resource name |
+| RISK SCORE | Numeric risk score |
+| VULN SCORE | Vulnerability score |
+| PUBLIC | Whether publicly exposed |
+| VULNERABLE | Whether has vulnerabilities |
+| KEV | Has CISA Known Exploited Vulnerability |
+| EXPLOIT | Has known exploit |
+| EXPLOITABLE | Whether exploitable |
+| IN VPC | Whether inside a VPC |
+| ADMIN PRIVS | Has admin privileges |
+| OVERLY PERMISSIVE | Has overly permissive privileges |
+| AUTHORIZER | Has an authorizer |
+| TRACING | Has tracing enabled |
+| STATE | Operational state (`active`, `inactive`) |
+| PLATFORM | Platform (e.g. OS, runtime) |
+| IMAGE ID | Container/AMI image ID |
+| INTEGRATION ID | Integration ID |
+| ACCOUNT ID | Cloud account/subscription ID |
+| EXECUTION ID | Scan execution ID |
+| CRITICAL/HIGH/MEDIUM/LOW VULNS | Vulnerability counts by severity |
+| CRITICAL/HIGH/MEDIUM/LOW SECRETS | Secret counts by severity |
+| RESOURCE URL | Link to resource in cloud console |
+| FIRST OBSERVED | Timestamp first detected |
+| LAST OBSERVED | Timestamp last detected |
+| CREATED AT | Record creation timestamp |
+| UPDATED AT | Record update timestamp |
+| LAST SCANNED | Last scan timestamp |
+| SCHEMA VERSION | API schema version |

@@ -50,10 +50,33 @@ plerion alerts list --alert-type ASSET --output table
 plerion alerts list --provider AWS --output json
 ```
 
-### Example output (table)
+### Output columns
 
-```
- ID           STATUS   TYPE     RISK SCORE   PROVIDER   DISCOVERED
- alt-abc123   OPEN     ASSET    9.1          AWS        2024-06-15
- alt-def456   OPEN     FINDING  7.8          Azure      2024-06-14
-```
+Table output includes all fields returned by the API:
+
+| Column | Description |
+|---|---|
+| ID | Alert ID |
+| TITLE | Alert title |
+| STATUS | `OPEN` or `RESOLVED` |
+| TYPE | `ASSET` or `FINDING` |
+| RISK SCORE | Numeric risk score |
+| FLAGGED | Whether flagged |
+| ACKNOWLEDGED | Whether acknowledged |
+| TENANT ID | Tenant ID |
+| INTEGRATION ID | Integration ID |
+| WORKFLOW ID | Associated workflow ID |
+| PROVIDER | Cloud provider |
+| SERVICE | Cloud service |
+| REGION | Cloud region |
+| RESOURCE ID | Resource identifier |
+| RESOURCE TYPE | Resource type |
+| RESOURCE NAME | Resource name |
+| ACCOUNT ID | Cloud account ID |
+| FIRST OBSERVED | First observed timestamp |
+| DISCOVERED | Alert discovery timestamp |
+| LAST SCANNED | Last scan timestamp |
+| RULES CHANGED | Rules last changed timestamp |
+| CLOSED AT | Closed timestamp |
+| CREATED AT | Record creation timestamp |
+| UPDATED AT | Record update timestamp |

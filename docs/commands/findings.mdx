@@ -65,11 +65,36 @@ plerion findings list --all --output json > all-findings.json
 plerion findings list --output json --query 'data[0].detectionId'
 ```
 
-### Example output (table)
+### Output columns
 
-```
- DETECTION ID      SEVERITY   STATUS   RESOURCE TYPE        RESOURCE ID
- PLERION-AWS-16    CRITICAL   FAILED   AWS::S3::Bucket      my-public-bucket
- PLERION-AWS-42    HIGH       FAILED   AWS::EC2::Instance   i-0abc123def456
- PLERION-AWS-8     MEDIUM     FAILED   AWS::IAM::Role       admin-role
-```
+Table output includes all fields returned by the API:
+
+| Column | Description |
+|---|---|
+| ID | Finding ID |
+| DETECTION ID | Detection rule identifier (e.g. `PLERION-AWS-16`) |
+| STATUS | `PASSED` or `FAILED` |
+| SEVERITY | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL` |
+| CALC SEVERITY | Calculated/contextual severity |
+| MODIFIED SEVERITY | Manually overridden severity |
+| LIKELIHOOD | Likelihood rating |
+| IMPACT | Impact rating |
+| PROVIDER | Cloud provider (`AWS`, `Azure`, `GCP`) |
+| SERVICE | Cloud service (e.g. `AWS::S3`) |
+| RESOURCE TYPE | Resource type (e.g. `AWS::S3::Bucket`) |
+| REGION | Cloud region |
+| ASSET ID | Associated asset ID |
+| RESOURCE ID | Provider resource ID |
+| FULL RESOURCE NAME | Full resource name |
+| PROVIDER FULL RESOURCE NAME | Provider-native full resource name |
+| INTEGRATION ID | Integration ID |
+| PROVIDER ACCOUNT ID | Cloud account/subscription ID |
+| EXECUTION ID | Scan execution ID |
+| MESSAGE | Finding message |
+| EXEMPTED | Whether the finding is exempted |
+| RESOURCE URL | Link to the resource in the cloud console |
+| FIRST OBSERVED | Timestamp first detected |
+| LAST OBSERVED | Timestamp last detected |
+| CREATED AT | Record creation timestamp |
+| UPDATED AT | Record update timestamp |
+| SCHEMA VERSION | API schema version |
