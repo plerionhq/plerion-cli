@@ -3,6 +3,7 @@ use comfy_table::{Attribute, Cell, Color, ContentArrangement, Table};
 use super::TableRenderable;
 
 /// Severity color mapping — returns ANSI-colored string if color enabled.
+#[allow(dead_code)]
 pub fn colorize_severity(s: &str, no_color: bool) -> String {
     if no_color {
         return s.to_string();
@@ -18,6 +19,7 @@ pub fn colorize_severity(s: &str, no_color: bool) -> String {
 }
 
 /// Status color mapping.
+#[allow(dead_code)]
 pub fn colorize_status(s: &str, no_color: bool) -> String {
     if no_color {
         return s.to_string();

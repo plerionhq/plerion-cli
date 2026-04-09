@@ -503,7 +503,7 @@ async fn test_cli_asset_groups_get() {
 async fn test_cli_iac_list_scans() {
     let mut server = Server::new_async().await;
     let body = serde_json::json!({
-        "data": [{ "scanId": "scan-1", "artifactName": "test.zip", "status": "COMPLETED" }]
+        "data": [{ "id": "scan-1", "artifactName": "test.zip", "status": "COMPLETED", "types": [] }]
     });
     let _mock = server
         .mock("GET", "/v1/tenant/shiftleft/iac/scans")
@@ -522,7 +522,7 @@ async fn test_cli_iac_list_scans() {
 async fn test_cli_iac_get_findings() {
     let mut server = Server::new_async().await;
     let body = serde_json::json!({
-        "data": [{ "id": "f-1", "severityLevel": "HIGH", "message": "Insecure" }]
+        "data": [{ "id": "f-1", "severityLevel": "HIGH", "detectionTitle": "Insecure" }]
     });
     let _mock = server
         .mock("GET", "/v1/tenant/shiftleft/iac/scans/scan-1/findings")

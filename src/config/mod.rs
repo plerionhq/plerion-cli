@@ -9,6 +9,7 @@ pub const VALID_REGIONS: &[&str] = &["au", "sg1", "in1", "us1"];
 pub struct Config {
     pub api_key: String,
     pub region: String,
+    #[allow(dead_code)]
     pub profile: String,
     pub output: crate::output::OutputFormat,
     pub no_color: bool,

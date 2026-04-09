@@ -6,12 +6,14 @@ pub enum PlerionError {
     MissingApiKey,
 
     #[error("No region configured. Set PLERION_REGION or run `plerion configure`.")]
+    #[allow(dead_code)]
     MissingRegion,
 
     #[error("Invalid region '{0}'. Valid regions: au, sg1, in1, us1")]
     InvalidRegion(String),
 
     #[error("Profile '{0}' not found in credentials file.")]
+    #[allow(dead_code)]
     ProfileNotFound(String),
 
     #[error("HTTP error {status}: {message}")]

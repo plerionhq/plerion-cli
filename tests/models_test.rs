@@ -39,27 +39,42 @@ fn test_tenant_no_risk_score() {
 fn test_finding_table_renderable() {
     let f = findings::Finding {
         id: Some("prn:123".to_string()),
+        schema_version: None,
+        organization_id: None,
+        tenant_id: None,
+        integration_id: None,
+        provider: Some("AWS".to_string()),
+        execution_id: None,
+        asset_id: None,
+        provider_account_id: None,
+        resource_type: Some("AWS::S3::Bucket".to_string()),
         detection_id: Some("PLERION-AWS-16".to_string()),
         status: Some("FAILED".to_string()),
         severity_level: Some("CRITICAL".to_string()),
-        provider: Some("AWS".to_string()),
-        resource_type: Some("AWS::S3::Bucket".to_string()),
+        message: None,
+        first_observed_at: Some("2023-01-01".to_string()),
+        created_at: None,
+        last_observed_at: None,
+        updated_at: None,
+        parameters: None,
+        tags: None,
+        full_resource_name: None,
+        resource_id: None,
+        provider_full_resource_name: None,
         region: Some("us-east-1".to_string()),
         service: None,
-        message: None,
-        full_resource_name: None,
-        asset_id: None,
-        integration_id: None,
-        first_observed_at: Some("2023-01-01".to_string()),
-        last_observed_at: None,
-        is_exempted: None,
-        risk_score: None,
+        likelihood: None,
+        impact: None,
         calculated_severity: None,
+        modified_severity_level: None,
+        attack_paths: None,
+        is_exempted: None,
+        meta: None,
+        resource_tags: None,
         resource_url: None,
-        tags: None,
     };
     let headers = findings::Finding::headers();
-    assert_eq!(headers.len(), 18);
+    assert_eq!(headers.len(), 27);
     let row = f.row();
     assert_eq!(row[0], "prn:123");         // id
     assert_eq!(row[1], "PLERION-AWS-16");  // detection_id
@@ -70,12 +85,16 @@ fn test_finding_table_renderable() {
 #[test]
 fn test_finding_with_nones() {
     let f = findings::Finding {
-        id: None, detection_id: None, status: None, severity_level: None,
-        provider: None, resource_type: None, region: None, service: None,
-        message: None, full_resource_name: None, asset_id: None,
-        integration_id: None, first_observed_at: None, last_observed_at: None,
-        is_exempted: None, risk_score: None, calculated_severity: None,
-        resource_url: None, tags: None,
+        id: None, schema_version: None, organization_id: None, tenant_id: None,
+        integration_id: None, provider: None, execution_id: None, asset_id: None,
+        provider_account_id: None, resource_type: None, detection_id: None,
+        status: None, severity_level: None, message: None, first_observed_at: None,
+        created_at: None, last_observed_at: None, updated_at: None, parameters: None,
+        tags: None, full_resource_name: None, resource_id: None,
+        provider_full_resource_name: None, region: None, service: None,
+        likelihood: None, impact: None, calculated_severity: None,
+        modified_severity_level: None, attack_paths: None, is_exempted: None,
+        meta: None, resource_tags: None, resource_url: None,
     };
     let row = f.row();
     for cell in &row {
@@ -87,71 +106,119 @@ fn test_finding_with_nones() {
 fn test_asset_table_renderable() {
     let a = assets::Asset {
         id: Some("prn:assets:verylongidthatismorethan40characterslongfortruncation".to_string()),
-        name: Some("my-instance".to_string()),
-        asset_type: None,
+        schema_version: None,
+        organization_id: None,
+        tenant_id: None,
+        integration_id: None,
+        execution_id: None,
         provider: Some("AWS".to_string()),
-        region: Some("us-east-1".to_string()),
-        service: None,
-        resource_type: Some("AWS::EC2::Instance".to_string()),
-        resource_id: None,
-        risk_score: Some(serde_json::json!(9.36)),
-        is_publicly_exposed: Some(true),
-        is_vulnerable: Some(false),
-        has_kev: None,
-        operational_state: Some("active".to_string()),
+        asset_type: None,
+        name: Some("my-instance".to_string()),
+        created_at: None,
         first_observed_at: None,
         last_observed_at: None,
-        integration_id: None,
-        provider_account_id: None,
-        number_of_critical_vulnerabilities: None,
-        number_of_high_vulnerabilities: None,
-        number_of_medium_vulnerabilities: None,
+        updated_at: None,
+        tags: None,
+        is_publicly_exposed: Some(true),
+        is_vulnerable: Some(false),
         number_of_low_vulnerabilities: None,
+        number_of_medium_vulnerabilities: None,
+        number_of_high_vulnerabilities: None,
+        number_of_critical_vulnerabilities: None,
+        vulnerability_score: None,
+        has_kev: None,
+        has_exploit: None,
+        is_exploitable: None,
+        is_in_vpc: None,
+        last_scan_id: None,
+        last_scanned_at: None,
+        image_id: None,
+        platform: None,
+        has_admin_privileges: None,
+        has_overly_permissive_privileges: None,
+        has_authorizer: None,
+        has_tracing_enabled: None,
+        policy: None,
+        number_of_low_secrets: None,
+        number_of_medium_secrets: None,
+        number_of_high_secrets: None,
+        number_of_critical_secrets: None,
+        low_secrets: None,
+        medium_secrets: None,
+        high_secrets: None,
+        critical_secrets: None,
+        operating_system: None,
+        risk_score: Some(serde_json::json!(9.36)),
+        operational_state: Some("active".to_string()),
+        region: Some("us-east-1".to_string()),
+        service: None,
+        resource_id: None,
+        resource_name: None,
+        resource_tags: None,
+        resource_type: Some("AWS::EC2::Instance".to_string()),
+        full_resource_name: None,
+        provider_account_id: None,
         resource_url: None,
     };
     let row = a.row();
     assert!(row[0].starts_with("prn:")); // full ID
     assert_eq!(row[1], "my-instance");
-    assert_eq!(row[8], "9.36");  // risk score
-    assert_eq!(row[9], "yes");   // publicly exposed
-    assert_eq!(row[10], "no");   // vulnerable
+    assert_eq!(row[10], "9.36");  // risk score (index 10 in new headers)
+    assert_eq!(row[12], "yes");   // publicly exposed (index 12)
+    assert_eq!(row[13], "no");   // vulnerable (index 13)
 }
 
 #[test]
 fn test_asset_string_risk_score() {
     let a = assets::Asset {
         id: Some("short-id".to_string()),
-        name: None, asset_type: None, provider: None, region: None,
-        service: None, resource_type: None, resource_id: None,
+        schema_version: None, organization_id: None, tenant_id: None,
+        integration_id: None, execution_id: None,
+        provider: None, asset_type: None, name: None,
+        created_at: None, first_observed_at: None, last_observed_at: None, updated_at: None,
+        tags: None,
+        is_publicly_exposed: None, is_vulnerable: None,
+        number_of_low_vulnerabilities: None, number_of_medium_vulnerabilities: None,
+        number_of_high_vulnerabilities: None, number_of_critical_vulnerabilities: None,
+        vulnerability_score: None, has_kev: None, has_exploit: None, is_exploitable: None,
+        is_in_vpc: None, last_scan_id: None, last_scanned_at: None, image_id: None,
+        platform: None, has_admin_privileges: None, has_overly_permissive_privileges: None,
+        has_authorizer: None, has_tracing_enabled: None, policy: None,
+        number_of_low_secrets: None, number_of_medium_secrets: None,
+        number_of_high_secrets: None, number_of_critical_secrets: None,
+        low_secrets: None, medium_secrets: None, high_secrets: None, critical_secrets: None,
+        operating_system: None,
         risk_score: Some(serde_json::json!("7.5")),
-        is_publicly_exposed: None, is_vulnerable: None, has_kev: None,
-        operational_state: None, first_observed_at: None, last_observed_at: None,
-        integration_id: None, provider_account_id: None,
-        number_of_critical_vulnerabilities: None,
-        number_of_high_vulnerabilities: None,
-        number_of_medium_vulnerabilities: None,
-        number_of_low_vulnerabilities: None,
-        resource_url: None,
+        operational_state: None, region: None, service: None,
+        resource_id: None, resource_name: None, resource_tags: None,
+        resource_type: None, full_resource_name: None,
+        provider_account_id: None, resource_url: None,
     };
     let row = a.row();
     assert_eq!(row[0], "short-id");
-    assert_eq!(row[8], "7.5"); // string risk score
+    assert_eq!(row[10], "7.5"); // string risk score (index 10 in new headers)
 }
 
 #[test]
 fn test_alert_table_renderable() {
     let a = alerts::Alert {
         id: Some("prn:alerts:abcdef01234567890123456789012345678901".to_string()),
+        tenant_id: None,
+        integration_id: None,
         status: Some("OPEN".to_string()),
-        title: Some("High risk asset".to_string()),
-        alert_type: Some("ASSET".to_string()),
-        risk_score: Some(9.5),
         flagged: Some(true),
         acknowledged: None,
-        integration_id: None,
         workflow_id: None,
+        title: Some("High risk asset".to_string()),
         created_at: Some("2025-01-01".to_string()),
         updated_at: None,
+        summary: None,
+        alert_type: Some("ASSET".to_string()),
+        risk_score: Some(9.5),
+        discovered_date: None,
+        last_scanned_at_timestamp: None,
+        rules_changed_at_timestamp: None,
+        closed_at_timestamp: None,
         meta: None,
     };
     let row = a.row();
@@ -166,18 +233,24 @@ fn test_risk_table_renderable() {
     let r = risks::Risk {
         id: Some("risk-1".to_string()),
         risk_type_id: Some("PLERION-RISK-1".to_string()),
+        organization_id: None,
+        tenant_id: None,
+        integration_id: None,
         description: None,
-        score: Some(9.5),
-        severity_level: Some("CRITICAL".to_string()),
-        lifecycle_state: Some("OPEN".to_string()),
         primary_asset_id: None,
         region: Some("us-east-1".to_string()),
-        integration_id: None,
-        discovered_at: Some("2025-01-01".to_string()),
+        resolutions: None,
+        score: Some(9.5),
+        likelihood: None,
+        impact: None,
+        severity_level: Some("CRITICAL".to_string()),
+        factors: None,
         meta: None,
+        discovered_at: Some("2025-01-01".to_string()),
+        lifecycle_state: Some("OPEN".to_string()),
     };
     let headers = risks::Risk::headers();
-    assert_eq!(headers.len(), 13);
+    assert_eq!(headers.len(), 17);
     let row = r.row();
     assert_eq!(row[0], "risk-1");
     assert_eq!(row[3], "9.50");
@@ -186,43 +259,61 @@ fn test_risk_table_renderable() {
 #[test]
 fn test_vulnerability_table_renderable() {
     let v = vulnerabilities::Vulnerability {
-        vulnerability_id: Some("CVE-2023-1234".to_string()),
-        title: Some("A very long vulnerability title that exceeds fifty characters to test truncation".to_string()),
-        severity_level: Some("HIGH".to_string()),
+        schema_version: None,
         asset_id: None,
-        asset_type: Some("AWS::EC2::Instance".to_string()),
+        organization_id: None,
+        tenant_id: None,
+        integration_id: None,
+        vulnerability_id: Some("CVE-2023-1234".to_string()),
         provider: Some("AWS".to_string()),
+        asset_type: Some("AWS::EC2::Instance".to_string()),
+        description: None,
+        severity_level: Some("HIGH".to_string()),
+        first_observed_at: Some("2023-10-27".to_string()),
+        last_observed_at: None,
+        published_date: None,
+        execution_id: None,
+        title: Some("A very long vulnerability title that exceeds fifty characters to test truncation".to_string()),
+        target_name: None,
+        severity_source: None,
+        primary_url: None,
+        packages: None,
+        cwes: None,
         has_kev: Some(true),
         has_exploit: Some(false),
         has_vendor_fix: Some(true),
-        first_observed_at: Some("2023-10-27".to_string()),
-        last_observed_at: None,
-        is_exempted: None,
-        primary_url: None,
-        description: None,
+        known_exploit: None,
+        exploits: None,
+        exemptions: None,
+        severity_level_value: None,
     };
     let row = v.row();
     assert_eq!(row[0], "CVE-2023-1234");
     // Title is now full length (no truncation)
     assert!(row[1].contains("very long vulnerability title"));
-    assert_eq!(row[7], "yes"); // KEV
-    assert_eq!(row[8], "no");  // exploit
-    assert_eq!(row[9], "yes"); // fix
+    assert_eq!(row[11], "yes"); // KEV (index 11 in new headers)
+    assert_eq!(row[12], "no");  // exploit (index 12)
+    assert_eq!(row[13], "yes"); // fix (index 13)
 }
 
 #[test]
 fn test_vulnerability_exemption_table_renderable() {
     let e = vulnerabilities::VulnerabilityExemption {
         id: Some("ex-1".to_string()),
+        profile_id: None,
         name: Some("My exemption".to_string()),
+        audit_note: None,
         reason: Some("ACCEPTED_RISK".to_string()),
+        conditions: None,
         created_at: Some("2025-01-01".to_string()),
         updated_at: None,
+        created_by: None,
+        updated_by: None,
     };
     let row = e.row();
     assert_eq!(row[0], "ex-1");
-    assert_eq!(row[1], "My exemption");
-    assert_eq!(row[2], "ACCEPTED_RISK");
+    assert_eq!(row[2], "My exemption");   // NAME is at index 2 now
+    assert_eq!(row[3], "ACCEPTED_RISK");  // REASON is at index 3 now
 }
 
 #[test]
@@ -236,16 +327,20 @@ fn test_integration_table_renderable() {
         risk_score: Some(8.19),
         tenant_id: None,
         organization_id: None,
+        schedule: None,
+        scan_interval: None,
+        detection_setting_id: None,
         created_at: None,
         updated_at: None,
         aws_account_id: Some("123456789012".to_string()),
         azure_subscription_id: None,
+        azure_directory_id: None,
         gcp_project_id: None,
     };
     let row = i.row();
     assert_eq!(row[0], "int-1");
     assert_eq!(row[1], "AWS Prod");
-    assert_eq!(row[8], "123456789012"); // aws_account_id
+    assert_eq!(row[11], "123456789012"); // aws_account_id (index 11 in new headers)
 }
 
 #[test]
@@ -253,13 +348,16 @@ fn test_integration_azure_account() {
     let i = integrations::Integration {
         integration_id: None, name: None, provider: Some("Azure".to_string()),
         integration_type: None, status: None, risk_score: None,
-        tenant_id: None, organization_id: None, created_at: None, updated_at: None,
+        tenant_id: None, organization_id: None,
+        schedule: None, scan_interval: None, detection_setting_id: None,
+        created_at: None, updated_at: None,
         aws_account_id: None,
         azure_subscription_id: Some("sub-123".to_string()),
+        azure_directory_id: None,
         gcp_project_id: None,
     };
     let row = i.row();
-    assert_eq!(row[9], "sub-123"); // azure_subscription_id
+    assert_eq!(row[12], "sub-123"); // azure_subscription_id (index 12 in new headers)
 }
 
 #[test]
@@ -267,12 +365,15 @@ fn test_integration_gcp_project() {
     let i = integrations::Integration {
         integration_id: None, name: None, provider: Some("GCP".to_string()),
         integration_type: None, status: None, risk_score: None,
-        tenant_id: None, organization_id: None, created_at: None, updated_at: None,
+        tenant_id: None, organization_id: None,
+        schedule: None, scan_interval: None, detection_setting_id: None,
+        created_at: None, updated_at: None,
         aws_account_id: None, azure_subscription_id: None,
+        azure_directory_id: None,
         gcp_project_id: Some("my-project".to_string()),
     };
     let row = i.row();
-    assert_eq!(row[10], "my-project"); // gcp_project_id
+    assert_eq!(row[14], "my-project"); // gcp_project_id (index 14 in new headers)
 }
 
 #[test]
@@ -299,12 +400,14 @@ fn test_asset_group_table_renderable() {
 fn test_audit_log_table_renderable() {
     let log = audit_logs::AuditLog {
         id: Some("log-1".to_string()),
+        organization_id: None,
+        tenant_id: None,
         operation: Some("UserLogin".to_string()),
         operation_time: Some("2025-01-01T10:00:00Z".to_string()),
         operator_user_id: None,
         operator_email: Some("user@test.com".to_string()),
-        ip: Some("1.2.3.4".to_string()),
         user_agent: None,
+        ip: Some("1.2.3.4".to_string()),
         location: Some(audit_logs::AuditLocation {
             country: Some("Australia".to_string()),
             city: None,
@@ -314,20 +417,21 @@ fn test_audit_log_table_renderable() {
     let row = log.row();
     assert_eq!(row[0], "log-1");          // id
     assert_eq!(row[1], "UserLogin");      // operation
-    assert_eq!(row[3], "user@test.com");  // email
-    assert_eq!(row[4], "1.2.3.4");        // ip
-    assert_eq!(row[6], "Australia");      // country
+    assert_eq!(row[4], "user@test.com");  // email (index 4 in new headers)
+    assert_eq!(row[5], "1.2.3.4");        // ip (index 5)
+    assert_eq!(row[7], "Australia");      // country (index 7)
 }
 
 #[test]
 fn test_audit_log_no_location() {
     let log = audit_logs::AuditLog {
-        id: None, operation: None, operation_time: None,
+        id: None, organization_id: None, tenant_id: None,
+        operation: None, operation_time: None,
         operator_user_id: None, operator_email: None,
         ip: None, user_agent: None, location: None,
     };
     let row = log.row();
-    assert_eq!(row[6], ""); // country should be empty
+    assert_eq!(row[7], ""); // country should be empty (index 7 in new headers)
 }
 
 #[test]
@@ -343,13 +447,15 @@ fn test_compliance_framework_table_renderable() {
         providers: Some(vec!["AWS".to_string(), "Azure".to_string()]),
         description: None,
         release_date: None,
+        last_modified_date: None,
+        framework_type: None,
         link: None,
     };
     let row = cf.row();
     assert_eq!(row[0], "CIS");
-    assert_eq!(row[3], "82.1%");
-    assert_eq!(row[6], "no");
-    assert_eq!(row[7], "AWS, Azure");
+    assert_eq!(row[4], "82.1%");       // POSTURE % at index 4
+    assert_eq!(row[7], "no");          // CUSTOM at index 7
+    assert_eq!(row[8], "AWS, Azure");  // PROVIDERS at index 8
 }
 
 #[test]
@@ -365,43 +471,62 @@ fn test_well_architected_table_renderable() {
         providers: Some(vec!["AWS".to_string()]),
         description: None,
         release_date: None,
+        last_modified_date: None,
+        framework_type: None,
         link: None,
     };
     let row = waf.row();
     assert_eq!(row[0], "WAF");
-    assert_eq!(row[3], "75.0%");
-    assert_eq!(row[7], "AWS"); // providers
+    assert_eq!(row[4], "75.0%");  // POSTURE % at index 4
+    assert_eq!(row[8], "AWS");    // PROVIDERS at index 8
 }
 
 #[test]
 fn test_iac_scan_table_renderable() {
     let scan = iac::IacScan {
-        scan_id: Some("s-1".to_string()),
+        id: Some("s-1".to_string()),
         artifact_name: Some("infra.zip".to_string()),
         status: Some("completed".to_string()),
         tenant_id: None,
         organization_id: None,
         created_at: Some("2025-01-01".to_string()),
+        updated_at: None,
+        summary: None,
+        types: vec!["terraform".to_string()],
     };
     let row = scan.row();
     assert_eq!(row[0], "s-1");
     assert_eq!(row[1], "infra.zip");
+    assert_eq!(row[3], "terraform");
 }
 
 #[test]
 fn test_iac_finding_table_renderable() {
     let f = iac::IacFinding {
         id: Some("if-1".to_string()),
+        scan_id: Some("s-1".to_string()),
+        detection_id: Some("PLERION-K8S-108".to_string()),
+        detection_title: Some("Ensure privileged is false".to_string()),
+        finding_type: Some("terraform".to_string()),
+        result: Some("FAILED".to_string()),
         severity_level: Some("HIGH".to_string()),
-        resource_type: Some("AWS::S3::Bucket".to_string()),
-        message: Some("Public bucket".to_string()),
-        file_path: Some("main.tf".to_string()),
-        line_number: Some(42),
+        file: Some("main.tf".to_string()),
+        repository_path: None,
+        line_range: Some(vec![10, 42]),
+        resource: Some("aws_s3_bucket.data".to_string()),
+        resource_tags: None,
+        evaluated_keys: None,
+        code_block: None,
+        dashboard_url: None,
+        tenant_id: None,
+        organization_id: None,
+        created_at: None,
+        updated_at: None,
     };
     let row = f.row();
     assert_eq!(row[0], "if-1");
-    assert_eq!(row[3], "main.tf");
-    assert_eq!(row[4], "42");
+    assert_eq!(row[7], "main.tf");
+    assert_eq!(row[8], "10-42");
 }
 
 // Deserialization tests

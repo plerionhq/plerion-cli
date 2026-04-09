@@ -14,11 +14,15 @@ pub struct Integration {
     pub risk_score: Option<f64>,
     pub tenant_id: Option<String>,
     pub organization_id: Option<String>,
+    pub schedule: Option<String>,
+    pub scan_interval: Option<serde_json::Value>,
+    pub detection_setting_id: Option<String>,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
     // Provider-specific
     pub aws_account_id: Option<String>,
     pub azure_subscription_id: Option<String>,
+    pub azure_directory_id: Option<String>,
     pub gcp_project_id: Option<String>,
 }
 
@@ -31,19 +35,11 @@ pub struct IntegrationsResponse {
 impl TableRenderable for Integration {
     fn headers() -> Vec<&'static str> {
         vec![
-            "ID",
-            "NAME",
-            "PROVIDER",
-            "TYPE",
-            "STATUS",
-            "RISK SCORE",
-            "TENANT ID",
-            "ORG ID",
-            "AWS ACCOUNT",
-            "AZURE SUBSCRIPTION",
-            "GCP PROJECT",
-            "CREATED AT",
-            "UPDATED AT",
+            "ID", "NAME", "PROVIDER", "TYPE", "STATUS", "RISK SCORE",
+            "SCHEDULE", "SCAN INTERVAL", "DETECTION SETTING ID",
+            "TENANT ID", "ORG ID",
+            "AWS ACCOUNT", "AZURE SUBSCRIPTION", "AZURE DIRECTORY", "GCP PROJECT",
+            "CREATED AT", "UPDATED AT",
         ]
     }
 
@@ -55,10 +51,14 @@ impl TableRenderable for Integration {
             self.integration_type.clone().unwrap_or_default(),
             self.status.clone().unwrap_or_default(),
             self.risk_score.map(|s| format!("{s:.2}")).unwrap_or_default(),
+            self.schedule.clone().unwrap_or_default(),
+            self.scan_interval.as_ref().map(|v| v.to_string()).unwrap_or_default(),
+            self.detection_setting_id.clone().unwrap_or_default(),
             self.tenant_id.clone().unwrap_or_default(),
             self.organization_id.clone().unwrap_or_default(),
             self.aws_account_id.clone().unwrap_or_default(),
             self.azure_subscription_id.clone().unwrap_or_default(),
+            self.azure_directory_id.clone().unwrap_or_default(),
             self.gcp_project_id.clone().unwrap_or_default(),
             self.created_at.clone().unwrap_or_default(),
             self.updated_at.clone().unwrap_or_default(),

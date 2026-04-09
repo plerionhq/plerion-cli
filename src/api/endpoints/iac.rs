@@ -1,5 +1,5 @@
 use crate::api::client::PlerionClient;
-use crate::api::models::iac::{IacFindingsResponse, IacScanResponse, IacScansResponse};
+use crate::api::models::iac::{IacFindingsResponse, IacScanResponse, IacScansResponse, IacVulnerabilitiesResponse};
 use crate::error::PlerionError;
 
 pub async fn upload_iac_scan(
@@ -28,7 +28,7 @@ pub async fn get_iac_findings(
 pub async fn get_iac_vulnerabilities(
     client: &PlerionClient,
     scan_id: &str,
-) -> Result<serde_json::Value, PlerionError> {
+) -> Result<IacVulnerabilitiesResponse, PlerionError> {
     client
         .execute(client.get(&format!("/v1/tenant/shiftleft/iac/scans/{scan_id}/vulnerabilities")))
         .await

@@ -23,6 +23,7 @@ impl PlerionClient {
     }
 
     /// Create a new client pointing at a custom base URL (used in tests).
+    #[allow(dead_code)]
     pub fn with_base_url(base_url: &str, api_key: &str) -> Result<Self, PlerionError> {
         let inner = Client::builder()
             .user_agent(format!("plerion-cli/{}", env!("CARGO_PKG_VERSION")))

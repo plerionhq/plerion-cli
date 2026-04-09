@@ -7,10 +7,20 @@ async fn test_list_iac_scans() {
     let body = serde_json::json!({
         "data": [
             {
-                "scanId": "scan-1",
+                "id": "scan-1",
                 "artifactName": "infra.zip",
-                "status": "completed",
-                "createdAt": "2025-01-01T00:00:00Z"
+                "status": "SUCCESS",
+                "createdAt": "2025-01-01T00:00:00Z",
+                "updatedAt": "2025-01-01T00:01:00Z",
+                "tenantId": "t-1",
+                "organizationId": "o-1",
+                "summary": {
+                    "totalFindings": 10,
+                    "totalFailedFindings": 3,
+                    "totalPassedFindings": 7,
+                    "totalVulnerabilities": 2
+                },
+                "types": ["terraform"]
             }
         ]
     });
@@ -24,8 +34,13 @@ async fn test_list_iac_scans() {
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
     let resp = iac::list_iac_scans(&client).await.unwrap();
     assert_eq!(resp.data.len(), 1);
-    assert_eq!(resp.data[0].scan_id.as_deref(), Some("scan-1"));
+    assert_eq!(resp.data[0].id.as_deref(), Some("scan-1"));
     assert_eq!(resp.data[0].artifact_name.as_deref(), Some("infra.zip"));
+    assert_eq!(resp.data[0].status.as_deref(), Some("SUCCESS"));
+    assert_eq!(resp.data[0].types, vec!["terraform"]);
+    let summary = resp.data[0].summary.as_ref().unwrap();
+    assert_eq!(summary.total_findings, Some(10));
+    assert_eq!(summary.total_failed_findings, Some(3));
 }
 
 #[tokio::test]
@@ -35,11 +50,17 @@ async fn test_get_iac_findings() {
         "data": [
             {
                 "id": "f-1",
+                "scanId": "scan-1",
+                "detectionId": "PLERION-K8S-108",
+                "detectionTitle": "Ensure privileged is false",
+                "type": "terraform",
+                "result": "FAILED",
                 "severityLevel": "HIGH",
-                "resourceType": "AWS::S3::Bucket",
-                "message": "Bucket is public",
-                "filePath": "main.tf",
-                "lineNumber": 42
+                "file": "main.tf",
+                "repositoryPath": "/repo/main.tf",
+                "lineRange": [10, 42],
+                "resource": "aws_s3_bucket.data",
+                "dashboardURL": "https://example.com/finding/f-1"
             }
         ]
     });
@@ -54,13 +75,26 @@ async fn test_get_iac_findings() {
     let resp = iac::get_iac_findings(&client, "scan-1").await.unwrap();
     assert_eq!(resp.data.len(), 1);
     assert_eq!(resp.data[0].severity_level.as_deref(), Some("HIGH"));
-    assert_eq!(resp.data[0].line_number, Some(42));
+    assert_eq!(resp.data[0].file.as_deref(), Some("main.tf"));
+    assert_eq!(resp.data[0].line_range.as_ref().unwrap(), &vec![10, 42]);
+    assert_eq!(resp.data[0].detection_id.as_deref(), Some("PLERION-K8S-108"));
+    assert_eq!(resp.data[0].resource.as_deref(), Some("aws_s3_bucket.data"));
 }
 
 #[tokio::test]
 async fn test_get_iac_vulnerabilities() {
     let mut server = Server::new_async().await;
-    let body = serde_json::json!({ "data": [{ "id": "v-1" }] });
+    let body = serde_json::json!({
+        "data": [{
+            "id": "v-1",
+            "vulnerabilityId": "CVE-2023-12345",
+            "title": "Sample Vulnerability",
+            "severityLevel": "HIGH",
+            "hasKev": true,
+            "hasExploit": false,
+            "packages": [{"name": "openssl", "type": "npm", "installedVersion": "1.0.0", "fixedVersion": "1.0.1"}]
+        }]
+    });
     let _mock = server
         .mock("GET", "/v1/tenant/shiftleft/iac/scans/scan-1/vulnerabilities")
         .with_status(200)
@@ -70,7 +104,9 @@ async fn test_get_iac_vulnerabilities() {
 
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
     let resp = iac::get_iac_vulnerabilities(&client, "scan-1").await.unwrap();
-    assert!(resp["data"].is_array());
+    assert_eq!(resp.data.len(), 1);
+    assert_eq!(resp.data[0].vulnerability_id.as_deref(), Some("CVE-2023-12345"));
+    assert_eq!(resp.data[0].has_kev, Some(true));
 }
 
 #[tokio::test]

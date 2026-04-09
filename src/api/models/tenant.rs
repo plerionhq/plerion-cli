@@ -17,13 +17,6 @@ pub struct TenantResponse {
     pub data: TenantData,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct TenantUsage {
-    #[serde(flatten)]
-    pub extra: serde_json::Value,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TenantUsageResponse {
     pub data: serde_json::Value,

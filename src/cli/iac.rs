@@ -58,7 +58,7 @@ pub async fn run(args: &IacArgs, config: &Config) -> anyhow::Result<()> {
         }
         IacCommands::GetVulnerabilities { scan_id } => {
             let resp = get_iac_vulnerabilities(&client, scan_id).await?;
-            output::render_json_value(&resp, config.output, config.query.as_deref())?;
+            output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
         }
     }
     Ok(())

@@ -14,6 +14,9 @@ pub struct ComplianceFramework {
     pub providers: Option<Vec<String>>,
     pub description: Option<String>,
     pub release_date: Option<String>,
+    pub last_modified_date: Option<String>,
+    #[serde(rename = "type")]
+    pub framework_type: Option<String>,
     pub link: Option<String>,
 }
 
@@ -32,17 +35,10 @@ pub struct ComplianceFrameworksResponse {
 impl TableRenderable for ComplianceFramework {
     fn headers() -> Vec<&'static str> {
         vec![
-            "ID",
-            "NAME",
-            "VERSION",
-            "POSTURE %",
-            "PASSED",
-            "TOTAL",
-            "CUSTOM",
-            "PROVIDERS",
-            "DESCRIPTION",
-            "RELEASE DATE",
-            "LINK",
+            "ID", "NAME", "VERSION", "TYPE", "POSTURE %",
+            "PASSED", "TOTAL", "CUSTOM",
+            "PROVIDERS", "DESCRIPTION",
+            "RELEASE DATE", "LAST MODIFIED", "LINK",
         ]
     }
 
@@ -54,6 +50,7 @@ impl TableRenderable for ComplianceFramework {
             self.id.clone().unwrap_or_default(),
             self.name.clone().unwrap_or_default(),
             self.version.clone().unwrap_or_default(),
+            self.framework_type.clone().unwrap_or_default(),
             self.posture.map(|p| format!("{p:.1}%")).unwrap_or_default(),
             self.passed_findings.map(|n| n.to_string()).unwrap_or_default(),
             self.total_findings.map(|n| n.to_string()).unwrap_or_default(),
@@ -61,6 +58,7 @@ impl TableRenderable for ComplianceFramework {
             providers,
             self.description.clone().unwrap_or_default(),
             self.release_date.clone().unwrap_or_default(),
+            self.last_modified_date.clone().unwrap_or_default(),
             self.link.clone().unwrap_or_default(),
         ]
     }

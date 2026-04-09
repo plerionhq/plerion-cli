@@ -6,12 +6,14 @@ use crate::api::models::findings::PaginationMeta;
 #[serde(rename_all = "camelCase")]
 pub struct AuditLog {
     pub id: Option<String>,
+    pub organization_id: Option<String>,
+    pub tenant_id: Option<String>,
     pub operation: Option<String>,
     pub operation_time: Option<String>,
     pub operator_user_id: Option<String>,
     pub operator_email: Option<String>,
-    pub ip: Option<String>,
     pub user_agent: Option<String>,
+    pub ip: Option<String>,
     pub location: Option<AuditLocation>,
 }
 
@@ -32,16 +34,10 @@ pub struct AuditLogsResponse {
 impl TableRenderable for AuditLog {
     fn headers() -> Vec<&'static str> {
         vec![
-            "ID",
-            "OPERATION",
-            "USER ID",
-            "EMAIL",
-            "IP",
-            "USER AGENT",
-            "COUNTRY",
-            "CITY",
-            "REGION",
-            "TIME",
+            "ID", "OPERATION", "TIME",
+            "USER ID", "EMAIL", "IP", "USER AGENT",
+            "COUNTRY", "CITY", "REGION",
+            "TENANT ID", "ORG ID",
         ]
     }
 
@@ -50,6 +46,7 @@ impl TableRenderable for AuditLog {
         vec![
             self.id.clone().unwrap_or_default(),
             self.operation.clone().unwrap_or_default(),
+            self.operation_time.clone().unwrap_or_default(),
             self.operator_user_id.clone().unwrap_or_default(),
             self.operator_email.clone().unwrap_or_default(),
             self.ip.clone().unwrap_or_default(),
@@ -57,7 +54,8 @@ impl TableRenderable for AuditLog {
             loc.and_then(|l| l.country.clone()).unwrap_or_default(),
             loc.and_then(|l| l.city.clone()).unwrap_or_default(),
             loc.and_then(|l| l.region.clone()).unwrap_or_default(),
-            self.operation_time.clone().unwrap_or_default(),
+            self.tenant_id.clone().unwrap_or_default(),
+            self.organization_id.clone().unwrap_or_default(),
         ]
     }
 }
