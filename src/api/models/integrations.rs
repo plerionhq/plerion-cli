@@ -30,14 +30,24 @@ pub struct IntegrationsResponse {
 
 impl TableRenderable for Integration {
     fn headers() -> Vec<&'static str> {
-        vec!["ID", "NAME", "PROVIDER", "TYPE", "STATUS", "RISK SCORE", "ACCOUNT/PROJECT"]
+        vec![
+            "ID",
+            "NAME",
+            "PROVIDER",
+            "TYPE",
+            "STATUS",
+            "RISK SCORE",
+            "TENANT ID",
+            "ORG ID",
+            "AWS ACCOUNT",
+            "AZURE SUBSCRIPTION",
+            "GCP PROJECT",
+            "CREATED AT",
+            "UPDATED AT",
+        ]
     }
 
     fn row(&self) -> Vec<String> {
-        let account = self.aws_account_id.clone()
-            .or_else(|| self.azure_subscription_id.clone())
-            .or_else(|| self.gcp_project_id.clone())
-            .unwrap_or_default();
         vec![
             self.integration_id.clone().unwrap_or_default(),
             self.name.clone().unwrap_or_default(),
@@ -45,7 +55,13 @@ impl TableRenderable for Integration {
             self.integration_type.clone().unwrap_or_default(),
             self.status.clone().unwrap_or_default(),
             self.risk_score.map(|s| format!("{s:.2}")).unwrap_or_default(),
-            account,
+            self.tenant_id.clone().unwrap_or_default(),
+            self.organization_id.clone().unwrap_or_default(),
+            self.aws_account_id.clone().unwrap_or_default(),
+            self.azure_subscription_id.clone().unwrap_or_default(),
+            self.gcp_project_id.clone().unwrap_or_default(),
+            self.created_at.clone().unwrap_or_default(),
+            self.updated_at.clone().unwrap_or_default(),
         ]
     }
 }

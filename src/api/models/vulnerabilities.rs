@@ -34,25 +34,35 @@ impl TableRenderable for Vulnerability {
             "TITLE",
             "SEVERITY",
             "PROVIDER",
+            "ASSET ID",
             "ASSET TYPE",
+            "DESCRIPTION",
             "KEV",
             "EXPLOIT",
             "FIX",
+            "EXEMPTED",
+            "PRIMARY URL",
             "FIRST OBSERVED",
+            "LAST OBSERVED",
         ]
     }
 
     fn row(&self) -> Vec<String> {
         vec![
             self.vulnerability_id.clone().unwrap_or_default(),
-            truncate(&self.title.clone().unwrap_or_default(), 50),
+            self.title.clone().unwrap_or_default(),
             self.severity_level.clone().unwrap_or_default(),
             self.provider.clone().unwrap_or_default(),
+            self.asset_id.clone().unwrap_or_default(),
             self.asset_type.clone().unwrap_or_default(),
+            self.description.clone().unwrap_or_default(),
             bool_icon(self.has_kev),
             bool_icon(self.has_exploit),
             bool_icon(self.has_vendor_fix),
+            bool_icon(self.is_exempted),
+            self.primary_url.clone().unwrap_or_default(),
             self.first_observed_at.clone().unwrap_or_default(),
+            self.last_observed_at.clone().unwrap_or_default(),
         ]
     }
 }
@@ -62,14 +72,6 @@ fn bool_icon(v: Option<bool>) -> String {
         Some(true) => "yes".to_string(),
         Some(false) => "no".to_string(),
         None => String::new(),
-    }
-}
-
-fn truncate(s: &str, max: usize) -> String {
-    if s.len() > max {
-        format!("{}…", &s[..max])
-    } else {
-        s.to_string()
     }
 }
 
@@ -92,7 +94,7 @@ pub struct ExemptionsResponse {
 
 impl TableRenderable for VulnerabilityExemption {
     fn headers() -> Vec<&'static str> {
-        vec!["ID", "NAME", "REASON", "CREATED AT"]
+        vec!["ID", "NAME", "REASON", "CREATED AT", "UPDATED AT"]
     }
 
     fn row(&self) -> Vec<String> {
@@ -101,6 +103,7 @@ impl TableRenderable for VulnerabilityExemption {
             self.name.clone().unwrap_or_default(),
             self.reason.clone().unwrap_or_default(),
             self.created_at.clone().unwrap_or_default(),
+            self.updated_at.clone().unwrap_or_default(),
         ]
     }
 }

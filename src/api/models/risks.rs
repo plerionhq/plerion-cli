@@ -34,17 +34,38 @@ pub struct RisksResponse {
 
 impl TableRenderable for Risk {
     fn headers() -> Vec<&'static str> {
-        vec!["ID", "TYPE", "SEVERITY", "SCORE", "STATE", "REGION", "DISCOVERED AT"]
+        vec![
+            "ID",
+            "TYPE",
+            "SEVERITY",
+            "SCORE",
+            "STATE",
+            "DESCRIPTION",
+            "PRIMARY ASSET ID",
+            "ASSET NAME",
+            "RESOURCE TYPE",
+            "FULL RESOURCE NAME",
+            "REGION",
+            "INTEGRATION ID",
+            "DISCOVERED AT",
+        ]
     }
 
     fn row(&self) -> Vec<String> {
+        let meta = self.meta.as_ref();
         vec![
             self.id.clone().unwrap_or_default(),
             self.risk_type_id.clone().unwrap_or_default(),
             self.severity_level.clone().unwrap_or_default(),
             self.score.map(|s| format!("{s:.2}")).unwrap_or_default(),
             self.lifecycle_state.clone().unwrap_or_default(),
+            self.description.clone().unwrap_or_default(),
+            self.primary_asset_id.clone().unwrap_or_default(),
+            meta.and_then(|m| m.asset_name.clone()).unwrap_or_default(),
+            meta.and_then(|m| m.resource_type.clone()).unwrap_or_default(),
+            meta.and_then(|m| m.full_resource_name.clone()).unwrap_or_default(),
             self.region.clone().unwrap_or_default(),
+            self.integration_id.clone().unwrap_or_default(),
             self.discovered_at.clone().unwrap_or_default(),
         ]
     }

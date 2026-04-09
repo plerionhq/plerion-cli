@@ -34,7 +34,7 @@ pub struct IacScansResponse {
 
 impl TableRenderable for IacScan {
     fn headers() -> Vec<&'static str> {
-        vec!["SCAN ID", "ARTIFACT", "STATUS", "CREATED AT"]
+        vec!["SCAN ID", "ARTIFACT", "STATUS", "TENANT ID", "ORG ID", "CREATED AT"]
     }
 
     fn row(&self) -> Vec<String> {
@@ -42,6 +42,8 @@ impl TableRenderable for IacScan {
             self.scan_id.clone().unwrap_or_default(),
             self.artifact_name.clone().unwrap_or_default(),
             self.status.clone().unwrap_or_default(),
+            self.tenant_id.clone().unwrap_or_default(),
+            self.organization_id.clone().unwrap_or_default(),
             self.created_at.clone().unwrap_or_default(),
         ]
     }

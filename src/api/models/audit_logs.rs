@@ -31,18 +31,32 @@ pub struct AuditLogsResponse {
 
 impl TableRenderable for AuditLog {
     fn headers() -> Vec<&'static str> {
-        vec!["OPERATION", "EMAIL", "IP", "COUNTRY", "TIME"]
+        vec![
+            "ID",
+            "OPERATION",
+            "USER ID",
+            "EMAIL",
+            "IP",
+            "USER AGENT",
+            "COUNTRY",
+            "CITY",
+            "REGION",
+            "TIME",
+        ]
     }
 
     fn row(&self) -> Vec<String> {
-        let country = self.location.as_ref()
-            .and_then(|l| l.country.clone())
-            .unwrap_or_default();
+        let loc = self.location.as_ref();
         vec![
+            self.id.clone().unwrap_or_default(),
             self.operation.clone().unwrap_or_default(),
+            self.operator_user_id.clone().unwrap_or_default(),
             self.operator_email.clone().unwrap_or_default(),
             self.ip.clone().unwrap_or_default(),
-            country,
+            self.user_agent.clone().unwrap_or_default(),
+            loc.and_then(|l| l.country.clone()).unwrap_or_default(),
+            loc.and_then(|l| l.city.clone()).unwrap_or_default(),
+            loc.and_then(|l| l.region.clone()).unwrap_or_default(),
             self.operation_time.clone().unwrap_or_default(),
         ]
     }

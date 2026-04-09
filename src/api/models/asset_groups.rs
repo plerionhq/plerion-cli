@@ -29,7 +29,17 @@ pub struct AssetGroupResponse {
 
 impl TableRenderable for AssetGroup {
     fn headers() -> Vec<&'static str> {
-        vec!["ID", "NAME", "STATUS", "ASSETS", "RISK SCORE", "CREATED AT"]
+        vec![
+            "ID",
+            "NAME",
+            "STATUS",
+            "ASSETS",
+            "RISK SCORE",
+            "TENANT ID",
+            "ORG ID",
+            "CREATED AT",
+            "UPDATED AT",
+        ]
     }
 
     fn row(&self) -> Vec<String> {
@@ -39,7 +49,10 @@ impl TableRenderable for AssetGroup {
             self.status.clone().unwrap_or_default(),
             self.total_assets.map(|n| n.to_string()).unwrap_or_default(),
             self.risk_score.map(|s| format!("{s:.2}")).unwrap_or_default(),
+            self.tenant_id.clone().unwrap_or_default(),
+            self.organization_id.clone().unwrap_or_default(),
             self.created_at.clone().unwrap_or_default(),
+            self.updated_at.clone().unwrap_or_default(),
         ]
     }
 }

@@ -12,7 +12,7 @@ fn test_tenant_table_renderable() {
         risk_score: Some(8.5),
     };
     let headers = tenant::TenantData::headers();
-    assert_eq!(headers.len(), 5);
+    assert_eq!(headers.len(), 6);
     assert_eq!(headers[0], "TENANT ID");
     let row = t.row();
     assert_eq!(row[0], "tid");
@@ -59,13 +59,12 @@ fn test_finding_table_renderable() {
         tags: None,
     };
     let headers = findings::Finding::headers();
-    assert_eq!(headers.len(), 7);
+    assert_eq!(headers.len(), 18);
     let row = f.row();
-    assert_eq!(row[0], "PLERION-AWS-16");
-    let text_row = f.text_row();
-    // text_row has no color codes
-    assert_eq!(text_row[1], "FAILED");
-    assert_eq!(text_row[2], "CRITICAL");
+    assert_eq!(row[0], "prn:123");         // id
+    assert_eq!(row[1], "PLERION-AWS-16");  // detection_id
+    assert_eq!(row[2], "FAILED");          // status
+    assert_eq!(row[3], "CRITICAL");        // severity_level
 }
 
 #[test]
@@ -111,11 +110,11 @@ fn test_asset_table_renderable() {
         resource_url: None,
     };
     let row = a.row();
-    assert!(row[0].starts_with("...")); // truncated ID
+    assert!(row[0].starts_with("prn:")); // full ID
     assert_eq!(row[1], "my-instance");
-    assert_eq!(row[5], "9.36"); // risk score
-    assert_eq!(row[6], "yes"); // publicly exposed
-    assert_eq!(row[7], "no"); // vulnerable
+    assert_eq!(row[8], "9.36");  // risk score
+    assert_eq!(row[9], "yes");   // publicly exposed
+    assert_eq!(row[10], "no");   // vulnerable
 }
 
 #[test]
@@ -135,8 +134,8 @@ fn test_asset_string_risk_score() {
         resource_url: None,
     };
     let row = a.row();
-    assert_eq!(row[0], "short-id"); // no truncation for short IDs
-    assert_eq!(row[5], "7.5"); // string risk score
+    assert_eq!(row[0], "short-id");
+    assert_eq!(row[8], "7.5"); // string risk score
 }
 
 #[test]
@@ -178,7 +177,7 @@ fn test_risk_table_renderable() {
         meta: None,
     };
     let headers = risks::Risk::headers();
-    assert_eq!(headers.len(), 7);
+    assert_eq!(headers.len(), 13);
     let row = r.row();
     assert_eq!(row[0], "risk-1");
     assert_eq!(row[3], "9.50");
@@ -204,10 +203,11 @@ fn test_vulnerability_table_renderable() {
     };
     let row = v.row();
     assert_eq!(row[0], "CVE-2023-1234");
-    assert!(row[1].len() <= 53); // truncated to 50 bytes + '…' (3 bytes UTF-8)
-    assert_eq!(row[5], "yes"); // KEV
-    assert_eq!(row[6], "no");  // exploit
-    assert_eq!(row[7], "yes"); // fix
+    // Title is now full length (no truncation)
+    assert!(row[1].contains("very long vulnerability title"));
+    assert_eq!(row[7], "yes"); // KEV
+    assert_eq!(row[8], "no");  // exploit
+    assert_eq!(row[9], "yes"); // fix
 }
 
 #[test]
@@ -245,7 +245,7 @@ fn test_integration_table_renderable() {
     let row = i.row();
     assert_eq!(row[0], "int-1");
     assert_eq!(row[1], "AWS Prod");
-    assert_eq!(row[6], "123456789012"); // account
+    assert_eq!(row[8], "123456789012"); // aws_account_id
 }
 
 #[test]
@@ -259,7 +259,7 @@ fn test_integration_azure_account() {
         gcp_project_id: None,
     };
     let row = i.row();
-    assert_eq!(row[6], "sub-123");
+    assert_eq!(row[9], "sub-123"); // azure_subscription_id
 }
 
 #[test]
@@ -272,7 +272,7 @@ fn test_integration_gcp_project() {
         gcp_project_id: Some("my-project".to_string()),
     };
     let row = i.row();
-    assert_eq!(row[6], "my-project");
+    assert_eq!(row[10], "my-project"); // gcp_project_id
 }
 
 #[test]
@@ -312,10 +312,11 @@ fn test_audit_log_table_renderable() {
         }),
     };
     let row = log.row();
-    assert_eq!(row[0], "UserLogin");
-    assert_eq!(row[1], "user@test.com");
-    assert_eq!(row[2], "1.2.3.4");
-    assert_eq!(row[3], "Australia");
+    assert_eq!(row[0], "log-1");          // id
+    assert_eq!(row[1], "UserLogin");      // operation
+    assert_eq!(row[3], "user@test.com");  // email
+    assert_eq!(row[4], "1.2.3.4");        // ip
+    assert_eq!(row[6], "Australia");      // country
 }
 
 #[test]
@@ -326,7 +327,7 @@ fn test_audit_log_no_location() {
         ip: None, user_agent: None, location: None,
     };
     let row = log.row();
-    assert_eq!(row[3], ""); // country should be empty
+    assert_eq!(row[6], ""); // country should be empty
 }
 
 #[test]
@@ -369,7 +370,7 @@ fn test_well_architected_table_renderable() {
     let row = waf.row();
     assert_eq!(row[0], "WAF");
     assert_eq!(row[3], "75.0%");
-    assert_eq!(row[6], "AWS");
+    assert_eq!(row[7], "AWS"); // providers
 }
 
 #[test]

@@ -16,15 +16,15 @@ Download the latest binary for your platform from [Releases](https://github.com/
 
 | Platform | Binary |
 |---|---|
-| macOS (Apple Silicon) | `plerion-aarch64-apple-darwin` |
-| macOS (Intel) | `plerion-x86_64-apple-darwin` |
-| Linux (x86_64) | `plerion-x86_64-unknown-linux-musl` |
-| Linux (ARM64) | `plerion-aarch64-unknown-linux-musl` |
-| Windows (x64) | `plerion-x86_64-pc-windows-msvc.exe` |
+| macOS (Apple Silicon) | `plerion-macos-arm64` |
+| macOS (Intel) | `plerion-macos-x86_64` |
+| Linux (x86_64) | `plerion-linux-x86_64` |
+| Linux (ARM64) | `plerion-linux-arm64` |
+| Windows (x64) | `plerion-windows-x86_64.exe` |
 
 ```bash
 # Example: macOS Apple Silicon
-curl -L -o plerion https://github.com/plerionhq/plerion-cli/releases/latest/download/plerion-aarch64-apple-darwin
+curl -L -o plerion https://github.com/plerionhq/plerion-cli/releases/latest/download/plerion-macos-arm64
 chmod +x plerion
 sudo mv plerion /usr/local/bin/
 ```

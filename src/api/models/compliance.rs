@@ -31,7 +31,19 @@ pub struct ComplianceFrameworksResponse {
 
 impl TableRenderable for ComplianceFramework {
     fn headers() -> Vec<&'static str> {
-        vec!["ID", "NAME", "VERSION", "POSTURE %", "PASSED", "TOTAL", "CUSTOM", "PROVIDERS"]
+        vec![
+            "ID",
+            "NAME",
+            "VERSION",
+            "POSTURE %",
+            "PASSED",
+            "TOTAL",
+            "CUSTOM",
+            "PROVIDERS",
+            "DESCRIPTION",
+            "RELEASE DATE",
+            "LINK",
+        ]
     }
 
     fn row(&self) -> Vec<String> {
@@ -47,6 +59,9 @@ impl TableRenderable for ComplianceFramework {
             self.total_findings.map(|n| n.to_string()).unwrap_or_default(),
             self.is_custom.map(|b| if b { "yes" } else { "no" }).unwrap_or_default().to_string(),
             providers,
+            self.description.clone().unwrap_or_default(),
+            self.release_date.clone().unwrap_or_default(),
+            self.link.clone().unwrap_or_default(),
         ]
     }
 }

@@ -92,9 +92,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${GITHUB_REF_NAME:-v0.0.0}"
-          # Flatten artifact directories — each artifact is in its own folder
+          # Rename each artifact to its directory name (the asset_name from the matrix)
           mkdir -p release-assets
-          find artifacts/ -type f -exec cp {} release-assets/ \;
+          for dir in artifacts/*/; do
+            asset_name=$(basename "$dir")
+            # Find the binary inside (plerion or plerion.exe)
+            for file in "$dir"*; do
+              if [ -f "$file" ]; then
+                cp "$file" "release-assets/${asset_name}"
+                chmod +x "release-assets/${asset_name}"
+              fi
+            done
+          done
+          ls -la release-assets/
           gh release create "$TAG" release-assets/* \
             --repo "$GITHUB_REPOSITORY" \
             --title "$TAG" \

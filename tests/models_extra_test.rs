@@ -328,8 +328,8 @@ fn test_asset_long_id_truncated() {
         resource_url: None,
     };
     let row = a.row();
-    // Should be truncated (starts with "...")
-    assert!(row[0].starts_with("..."));
+    // Full ID is now shown (no truncation)
+    assert!(row[0].starts_with("prn:"));
 }
 
 #[test]
@@ -359,8 +359,8 @@ fn test_asset_bool_fields_display() {
         resource_url: None,
     };
     let row = a.row();
-    assert_eq!(row[6], "yes");   // is_publicly_exposed
-    assert_eq!(row[7], "no");    // is_vulnerable
+    assert_eq!(row[9], "yes");   // is_publicly_exposed
+    assert_eq!(row[10], "no");   // is_vulnerable
 }
 
 #[test]
@@ -390,5 +390,5 @@ fn test_asset_string_risk_score_display() {
         resource_url: None,
     };
     let row = a.row();
-    assert_eq!(row[5], "N/A");
+    assert_eq!(row[8], "N/A");
 }

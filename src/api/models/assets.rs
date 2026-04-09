@@ -55,10 +55,23 @@ impl TableRenderable for Asset {
             "TYPE",
             "PROVIDER",
             "REGION",
+            "SERVICE",
+            "RESOURCE TYPE",
+            "RESOURCE ID",
             "RISK SCORE",
             "PUBLIC",
             "VULNERABLE",
+            "KEV",
             "STATE",
+            "INTEGRATION ID",
+            "ACCOUNT ID",
+            "CRITICAL VULNS",
+            "HIGH VULNS",
+            "MEDIUM VULNS",
+            "LOW VULNS",
+            "RESOURCE URL",
+            "FIRST OBSERVED",
+            "LAST OBSERVED",
         ]
     }
 
@@ -69,15 +82,28 @@ impl TableRenderable for Asset {
             _ => String::new(),
         };
         vec![
-            self.id.as_deref().map(truncate_id).unwrap_or_default(),
+            self.id.clone().unwrap_or_default(),
             self.name.clone().unwrap_or_default(),
-            self.resource_type.clone().unwrap_or_default(),
+            self.asset_type.clone().unwrap_or_default(),
             self.provider.clone().unwrap_or_default(),
             self.region.clone().unwrap_or_default(),
+            self.service.clone().unwrap_or_default(),
+            self.resource_type.clone().unwrap_or_default(),
+            self.resource_id.clone().unwrap_or_default(),
             risk,
             bool_to_str(self.is_publicly_exposed),
             bool_to_str(self.is_vulnerable),
+            bool_to_str(self.has_kev),
             self.operational_state.clone().unwrap_or_default(),
+            self.integration_id.clone().unwrap_or_default(),
+            self.provider_account_id.clone().unwrap_or_default(),
+            self.number_of_critical_vulnerabilities.map(|n| n.to_string()).unwrap_or_default(),
+            self.number_of_high_vulnerabilities.map(|n| n.to_string()).unwrap_or_default(),
+            self.number_of_medium_vulnerabilities.map(|n| n.to_string()).unwrap_or_default(),
+            self.number_of_low_vulnerabilities.map(|n| n.to_string()).unwrap_or_default(),
+            self.resource_url.clone().unwrap_or_default(),
+            self.first_observed_at.clone().unwrap_or_default(),
+            self.last_observed_at.clone().unwrap_or_default(),
         ]
     }
 }
@@ -90,11 +116,3 @@ fn bool_to_str(v: Option<bool>) -> String {
     }
 }
 
-fn truncate_id(id: &str) -> String {
-    // Show last 36 chars of PRN-style IDs for table readability
-    if id.len() > 40 {
-        format!("...{}", &id[id.len() - 36..])
-    } else {
-        id.to_string()
-    }
-}

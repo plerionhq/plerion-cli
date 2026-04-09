@@ -31,7 +31,7 @@ pub struct TenantUsageResponse {
 
 impl TableRenderable for TenantData {
     fn headers() -> Vec<&'static str> {
-        vec!["TENANT ID", "ORG ID", "NAME", "RISK SCORE", "CREATED AT"]
+        vec!["TENANT ID", "ORG ID", "NAME", "RISK SCORE", "CREATED AT", "UPDATED AT"]
     }
 
     fn row(&self) -> Vec<String> {
@@ -41,6 +41,7 @@ impl TableRenderable for TenantData {
             self.name.clone(),
             self.risk_score.map(|s| format!("{s:.2}")).unwrap_or_default(),
             self.created_at.clone().unwrap_or_default(),
+            self.updated_at.clone().unwrap_or_default(),
         ]
     }
 }

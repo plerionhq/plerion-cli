@@ -38,18 +38,47 @@ pub struct AlertsResponse {
 
 impl TableRenderable for Alert {
     fn headers() -> Vec<&'static str> {
-        vec!["ID", "TITLE", "STATUS", "TYPE", "RISK SCORE", "FLAGGED", "CREATED AT"]
+        vec![
+            "ID",
+            "TITLE",
+            "STATUS",
+            "TYPE",
+            "RISK SCORE",
+            "FLAGGED",
+            "ACKNOWLEDGED",
+            "INTEGRATION ID",
+            "WORKFLOW ID",
+            "PROVIDER",
+            "SERVICE",
+            "REGION",
+            "RESOURCE TYPE",
+            "RESOURCE NAME",
+            "ACCOUNT ID",
+            "CREATED AT",
+            "UPDATED AT",
+        ]
     }
 
     fn row(&self) -> Vec<String> {
+        let meta = self.meta.as_ref();
         vec![
-            self.id.as_deref().map(|s| &s[s.len().saturating_sub(36)..]).unwrap_or_default().to_string(),
+            self.id.clone().unwrap_or_default(),
             self.title.clone().unwrap_or_default(),
             self.status.clone().unwrap_or_default(),
             self.alert_type.clone().unwrap_or_default(),
             self.risk_score.map(|s| format!("{s:.2}")).unwrap_or_default(),
             self.flagged.map(|b| if b { "yes" } else { "no" }).unwrap_or_default().to_string(),
+            self.acknowledged.map(|b| if b { "yes" } else { "no" }).unwrap_or_default().to_string(),
+            self.integration_id.clone().unwrap_or_default(),
+            self.workflow_id.clone().unwrap_or_default(),
+            meta.and_then(|m| m.provider.clone()).unwrap_or_default(),
+            meta.and_then(|m| m.service.clone()).unwrap_or_default(),
+            meta.and_then(|m| m.region.clone()).unwrap_or_default(),
+            meta.and_then(|m| m.resource_type.clone()).unwrap_or_default(),
+            meta.and_then(|m| m.resource_name.clone()).unwrap_or_default(),
+            meta.and_then(|m| m.provider_account_id.clone()).unwrap_or_default(),
             self.created_at.clone().unwrap_or_default(),
+            self.updated_at.clone().unwrap_or_default(),
         ]
     }
 }

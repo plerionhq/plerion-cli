@@ -47,25 +47,47 @@ pub struct PaginationMeta {
 impl TableRenderable for Finding {
     fn headers() -> Vec<&'static str> {
         vec![
+            "ID",
             "DETECTION ID",
             "STATUS",
             "SEVERITY",
+            "RISK SCORE",
+            "CALC SEVERITY",
             "PROVIDER",
+            "SERVICE",
             "RESOURCE TYPE",
             "REGION",
+            "ASSET ID",
+            "FULL RESOURCE NAME",
+            "INTEGRATION ID",
+            "MESSAGE",
+            "EXEMPTED",
+            "RESOURCE URL",
             "FIRST OBSERVED",
+            "LAST OBSERVED",
         ]
     }
 
     fn row(&self) -> Vec<String> {
         vec![
+            self.id.clone().unwrap_or_default(),
             self.detection_id.clone().unwrap_or_default(),
             self.status.clone().unwrap_or_default(),
             self.severity_level.clone().unwrap_or_default(),
+            self.risk_score.map(|s| format!("{s:.2}")).unwrap_or_default(),
+            self.calculated_severity.map(|s| format!("{s:.2}")).unwrap_or_default(),
             self.provider.clone().unwrap_or_default(),
+            self.service.clone().unwrap_or_default(),
             self.resource_type.clone().unwrap_or_default(),
             self.region.clone().unwrap_or_default(),
+            self.asset_id.clone().unwrap_or_default(),
+            self.full_resource_name.clone().unwrap_or_default(),
+            self.integration_id.clone().unwrap_or_default(),
+            self.message.clone().unwrap_or_default(),
+            self.is_exempted.map(|b| if b { "yes" } else { "no" }).unwrap_or_default().to_string(),
+            self.resource_url.clone().unwrap_or_default(),
             self.first_observed_at.clone().unwrap_or_default(),
+            self.last_observed_at.clone().unwrap_or_default(),
         ]
     }
 }
