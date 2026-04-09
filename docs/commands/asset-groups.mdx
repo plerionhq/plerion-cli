@@ -22,7 +22,7 @@ plerion asset-groups list [--name <n>] [--per-page N]
 ### get
 
 ```bash
-plerion asset-groups get <id>
+plerion asset-groups get --id <id>
 ```
 
 ### create
@@ -34,13 +34,13 @@ plerion asset-groups create --name <name> [--rules <json>]
 ### update
 
 ```bash
-plerion asset-groups update <id> [--name <n>] [--rules <json>]
+plerion asset-groups update --id <id> [--name <n>] [--rules <json>]
 ```
 
 ### delete
 
 ```bash
-plerion asset-groups delete <id>
+plerion asset-groups delete --id <id>
 ```
 
 ## Examples
@@ -57,13 +57,13 @@ plerion asset-groups create --name "Critical Servers" \
   --rules '[{"field":"provider","operator":"equals","value":"AWS"}]'
 
 # Update a group name
-plerion asset-groups update ag-abc123 --name "Production - All Providers"
+plerion asset-groups update --id ag-abc123 --name "Production - All Providers"
 
 # Delete a group
-plerion asset-groups delete ag-abc123
+plerion asset-groups delete --id ag-abc123
 
 # Get group details
-plerion asset-groups get ag-abc123 --output json
+plerion asset-groups get --id ag-abc123 --output json
 ```
 
 ### Example output (table)

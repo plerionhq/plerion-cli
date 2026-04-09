@@ -14,9 +14,17 @@ pub enum AssetsCommands {
     /// List assets
     List(ListAssetsArgs),
     /// Get a specific asset by ID
-    Get { asset_id: String },
+    Get {
+        /// Asset ID (e.g. prn:assets:...)
+        #[arg(long)]
+        asset_id: String,
+    },
     /// Get SBOM for a specific asset
-    GetSbom { asset_id: String },
+    GetSbom {
+        /// Asset ID (e.g. prn:assets:...)
+        #[arg(long)]
+        asset_id: String,
+    },
 }
 
 #[derive(Args, Debug)]

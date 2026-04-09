@@ -48,7 +48,7 @@ plerion assets list [options]
 Get full details for a single asset.
 
 ```bash
-plerion assets get <asset-id>
+plerion assets get --asset-id <asset-id>
 ```
 
 ### get-sbom
@@ -56,7 +56,7 @@ plerion assets get <asset-id>
 Get the Software Bill of Materials (SBOM) for an asset.
 
 ```bash
-plerion assets get-sbom <asset-id>
+plerion assets get-sbom --asset-id <asset-id>
 ```
 
 ## Examples
@@ -72,10 +72,10 @@ plerion assets list --provider AWS --resource-type AWS::EC2::Instance --risk-sco
 plerion assets list --has-kev --output table
 
 # Get full asset details
-plerion assets get prn:assets:abc123
+plerion assets get --asset-id prn:assets:abc123
 
 # Get SBOM for an asset
-plerion assets get-sbom prn:assets:abc123 --output json
+plerion assets get-sbom --asset-id prn:assets:abc123 --output json
 
 # Export all assets
 plerion assets list --all --output json > assets.json

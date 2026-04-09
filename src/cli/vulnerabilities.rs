@@ -43,7 +43,11 @@ pub struct ExemptionsArgs {
 #[derive(Subcommand, Debug)]
 pub enum ExemptionsCommands {
     List { #[arg(long)] profile_id: String },
-    Get { #[arg(long)] profile_id: String, id: String },
+    Get {
+        #[arg(long)] profile_id: String,
+        /// Exemption ID
+        #[arg(long)] id: String,
+    },
     Create {
         #[arg(long)] profile_id: String,
         #[arg(long)] name: String,
@@ -52,11 +56,16 @@ pub enum ExemptionsCommands {
     },
     Update {
         #[arg(long)] profile_id: String,
-        id: String,
+        /// Exemption ID
+        #[arg(long)] id: String,
         #[arg(long)] name: Option<String>,
         #[arg(long)] reason: Option<String>,
     },
-    Delete { #[arg(long)] profile_id: String, id: String },
+    Delete {
+        #[arg(long)] profile_id: String,
+        /// Exemption ID
+        #[arg(long)] id: String,
+    },
 }
 
 pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<()> {

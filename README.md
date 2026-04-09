@@ -131,8 +131,8 @@ plerion --profile prod findings list
 | `tenant get-usage` | Tenant usage |
 | `findings list` | Security findings (supports `--all`) |
 | `assets list` | Cloud assets (supports `--all`) |
-| `assets get <id>` | Asset details |
-| `assets get-sbom <id>` | Asset SBOM |
+| `assets get --asset-id <id>` | Asset details |
+| `assets get-sbom --asset-id <id>` | Asset SBOM |
 | `asset-groups list/get/create/update/delete` | Manage asset groups |
 | `alerts list` | Risk-based alerts |
 | `audit-logs list` | Audit logs |
@@ -146,10 +146,10 @@ plerion --profile prod findings list
 | `well-architected-frameworks list` | Well-Architected frameworks |
 | `well-architected-frameworks request-report --integration-id <id> --framework-id <id>` | Request WAF report |
 | `well-architected-frameworks download --integration-id <id> --framework-id <id> [--output-file <path>]` | Download WAF report |
-| `iac scan <file.zip> --name <name>` | Upload IaC for scanning (max 4.4 MB) |
+| `iac scan --file <file.zip> --name <name>` | Upload IaC for scanning (max 4.4 MB) |
 | `iac list-scans` | List IaC scans |
-| `iac get-findings <scan-id>` | IaC scan findings |
-| `iac get-vulnerabilities <scan-id>` | IaC scan vulnerabilities |
+| `iac get-findings --scan-id <id>` | IaC scan findings |
+| `iac get-vulnerabilities --scan-id <id>` | IaC scan vulnerabilities |
 | `aws get-external-id` | AWS external ID for role trust |
 | `aws get-cloudformation-template` | CloudFormation setup template |
 | `aws generate-token --integration-id <id>` | Temporary auth token |

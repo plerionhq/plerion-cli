@@ -12,11 +12,24 @@ pub struct AssetGroupsArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum AssetGroupsCommands {
+    /// List asset groups
     List(ListAssetGroupsArgs),
-    Get { id: String },
+    /// Get an asset group by ID
+    Get {
+        /// Asset group ID
+        #[arg(long)]
+        id: String,
+    },
+    /// Create a new asset group
     Create(CreateAssetGroupArgs),
+    /// Update an asset group
     Update(UpdateAssetGroupArgs),
-    Delete { id: String },
+    /// Delete an asset group
+    Delete {
+        /// Asset group ID
+        #[arg(long)]
+        id: String,
+    },
 }
 
 #[derive(Args, Debug)]
@@ -33,6 +46,8 @@ pub struct CreateAssetGroupArgs {
 
 #[derive(Args, Debug)]
 pub struct UpdateAssetGroupArgs {
+    /// Asset group ID
+    #[arg(long)]
     pub id: String,
     #[arg(long)] pub name: Option<String>,
     #[arg(long)] pub rules: Option<String>,

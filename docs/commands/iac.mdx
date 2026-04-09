@@ -20,7 +20,7 @@ Supported IaC formats: **Terraform**, **CloudFormation**, **Bicep**, **ARM**, **
 Upload a zip file for IaC scanning.
 
 ```bash
-plerion iac scan <file.zip> --name <artifact-name>
+plerion iac scan --file <file.zip> --name <artifact-name>
 ```
 
 <Note>
@@ -40,7 +40,7 @@ plerion iac list-scans
 Get security findings from a completed scan.
 
 ```bash
-plerion iac get-findings <scan-id>
+plerion iac get-findings --scan-id <scan-id>
 ```
 
 ### get-vulnerabilities
@@ -48,7 +48,7 @@ plerion iac get-findings <scan-id>
 Get vulnerabilities from a completed scan.
 
 ```bash
-plerion iac get-vulnerabilities <scan-id>
+plerion iac get-vulnerabilities --scan-id <scan-id>
 ```
 
 ## Examples
@@ -56,22 +56,22 @@ plerion iac get-vulnerabilities <scan-id>
 ```bash
 # Zip and scan a Terraform directory
 zip -r infra.zip ./terraform/
-plerion iac scan infra.zip --name infra.zip
+plerion iac scan --file infra.zip --name infra.zip
 
 # List all scans
 plerion iac list-scans --output table
 
 # Get findings from a scan
-plerion iac get-findings scan-abc123
+plerion iac get-findings --scan-id scan-abc123
 
 # Get vulnerabilities from a scan
-plerion iac get-vulnerabilities scan-abc123 --output json
+plerion iac get-vulnerabilities --scan-id scan-abc123 --output json
 
 # Full workflow
 zip -r infra.zip ./terraform/
-plerion iac scan infra.zip --name infra.zip
+plerion iac scan --file infra.zip --name infra.zip
 # Note the scan ID from output, then:
-plerion iac get-findings <scan-id> --output table
+plerion iac get-findings --scan-id <scan-id> --output table
 ```
 
 ### Example output (list-scans, table)

@@ -259,7 +259,7 @@ async fn test_cli_assets_get() {
         .create_async()
         .await;
 
-    let output = run_plerion(&["assets", "get", "asset-1", "--output", "json"], "test-key", &server.url());
+    let output = run_plerion(&["assets", "get", "--asset-id", "asset-1", "--output", "json"], "test-key", &server.url());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(output.status.success());
     assert!(stdout.contains("my-instance"));
@@ -276,7 +276,7 @@ async fn test_cli_assets_get_sbom() {
         .create_async()
         .await;
 
-    let output = run_plerion(&["assets", "get-sbom", "asset-1", "--output", "json"], "test-key", &server.url());
+    let output = run_plerion(&["assets", "get-sbom", "--asset-id", "asset-1", "--output", "json"], "test-key", &server.url());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(output.status.success());
     assert!(stdout.contains("openssl"));
@@ -491,7 +491,7 @@ async fn test_cli_asset_groups_get() {
         .create_async()
         .await;
 
-    let output = run_plerion(&["asset-groups", "get", "ag-1", "--output", "json"], "test-key", &server.url());
+    let output = run_plerion(&["asset-groups", "get", "--id", "ag-1", "--output", "json"], "test-key", &server.url());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(output.status.success());
     assert!(stdout.contains("Staging"));
@@ -531,7 +531,7 @@ async fn test_cli_iac_get_findings() {
         .create_async()
         .await;
 
-    let output = run_plerion(&["iac", "get-findings", "scan-1", "--output", "json"], "test-key", &server.url());
+    let output = run_plerion(&["iac", "get-findings", "--scan-id", "scan-1", "--output", "json"], "test-key", &server.url());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(output.status.success());
     assert!(stdout.contains("Insecure"));

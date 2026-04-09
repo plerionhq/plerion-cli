@@ -46,7 +46,7 @@ async fn test_cli_asset_groups_update() {
         .await;
 
     let output = run_plerion(
-        &["asset-groups", "update", "ag-1", "--name", "Updated", "--output", "json"],
+        &["asset-groups", "update", "--id", "ag-1", "--name", "Updated", "--output", "json"],
         "key", &server.url(),
     );
     let stdout = String::from_utf8(output.stdout).unwrap();
@@ -64,7 +64,7 @@ async fn test_cli_asset_groups_delete() {
         .await;
 
     let output = run_plerion(
-        &["asset-groups", "delete", "ag-1"],
+        &["asset-groups", "delete", "--id", "ag-1"],
         "key", &server.url(),
     );
     assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
@@ -106,7 +106,7 @@ async fn test_cli_vuln_exemptions_get() {
         .await;
 
     let output = run_plerion(
-        &["vulnerabilities", "exemptions", "get", "--profile-id", "prof-1", "ex-1", "--output", "json"],
+        &["vulnerabilities", "exemptions", "get", "--profile-id", "prof-1", "--id", "ex-1", "--output", "json"],
         "key", &server.url(),
     );
     let stdout = String::from_utf8(output.stdout).unwrap();
@@ -145,7 +145,7 @@ async fn test_cli_vuln_exemptions_delete() {
         .await;
 
     let output = run_plerion(
-        &["vulnerabilities", "exemptions", "delete", "--profile-id", "prof-1", "ex-1"],
+        &["vulnerabilities", "exemptions", "delete", "--profile-id", "prof-1", "--id", "ex-1"],
         "key", &server.url(),
     );
     assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
@@ -291,7 +291,7 @@ async fn test_cli_iac_get_vulnerabilities() {
         .await;
 
     let output = run_plerion(
-        &["iac", "get-vulnerabilities", "scan-1", "--output", "json"],
+        &["iac", "get-vulnerabilities", "--scan-id", "scan-1", "--output", "json"],
         "key", &server.url(),
     );
     let stdout = String::from_utf8(output.stdout).unwrap();

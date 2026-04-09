@@ -16,14 +16,23 @@ pub enum IacCommands {
     /// List IaC scans
     ListScans,
     /// Get findings for a scan
-    GetFindings { scan_id: String },
+    GetFindings {
+        /// The scan ID returned from `iac scan`
+        #[arg(long)]
+        scan_id: String,
+    },
     /// Get vulnerabilities for a scan
-    GetVulnerabilities { scan_id: String },
+    GetVulnerabilities {
+        /// The scan ID returned from `iac scan`
+        #[arg(long)]
+        scan_id: String,
+    },
 }
 
 #[derive(Args, Debug)]
 pub struct ScanArgs {
     /// Path to the zip file to scan
+    #[arg(long)]
     pub file: String,
     /// Artifact name (e.g. my-iac.zip)
     #[arg(long)]

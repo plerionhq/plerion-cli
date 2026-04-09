@@ -46,7 +46,7 @@ List vulnerability exemptions for a profile.
 ### exemptions get
 
 ```bash
-plerion vulnerabilities exemptions get --profile-id <id> <exemption-id>
+plerion vulnerabilities exemptions get --profile-id <id> --id <exemption-id>
 ```
 
 ### exemptions create
@@ -68,13 +68,13 @@ plerion vulnerabilities exemptions create --profile-id <id> --name <n> --reason 
 ### exemptions update
 
 ```bash
-plerion vulnerabilities exemptions update --profile-id <id> <exemption-id> [--name <n>] [--reason <r>]
+plerion vulnerabilities exemptions update --profile-id <id> --id <exemption-id> [--name <n>] [--reason <r>]
 ```
 
 ### exemptions delete
 
 ```bash
-plerion vulnerabilities exemptions delete --profile-id <id> <exemption-id>
+plerion vulnerabilities exemptions delete --profile-id <id> --id <exemption-id>
 ```
 
 ## Examples
@@ -99,7 +99,7 @@ plerion vulnerabilities exemptions create \
 plerion vulnerabilities exemptions list --profile-id my-profile
 
 # Delete an exemption
-plerion vulnerabilities exemptions delete --profile-id my-profile ex-abc123
+plerion vulnerabilities exemptions delete --profile-id my-profile --id ex-abc123
 ```
 
 ### Example output (table)
