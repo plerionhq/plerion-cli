@@ -60,6 +60,26 @@ fn parse_output_format(s: &str) -> Result<OutputFormat, String> {
     s.parse()
 }
 
+/// Normalize provider names so that common case variants are accepted.
+/// The API requires exact casing: `AWS`, `Azure`, `GCP`, `CASM`, `Kubernetes`.
+/// This allows users to type `azure`, `AZURE`, `gcp`, `kubernetes`, etc.
+pub fn normalize_providers(input: Option<String>) -> Option<String> {
+    input.map(|s| {
+        s.split(',')
+            .map(|p| match p.trim().to_lowercase().as_str() {
+                "aws" => "AWS",
+                "azure" => "Azure",
+                "gcp" => "GCP",
+                "casm" => "CASM",
+                "kubernetes" => "Kubernetes",
+                _ => return p.trim().to_string(),
+            }
+            .to_string())
+            .collect::<Vec<_>>()
+            .join(",")
+    })
+}
+
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Configure Plerion CLI credentials and settings

@@ -19,7 +19,27 @@ pub struct TenantResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TenantUsageResponse {
-    pub data: serde_json::Value,
+    pub data: TenantUsageData,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TenantUsageData {
+    pub assets: Option<u64>,
+    pub integrations: Option<u64>,
+}
+
+impl TableRenderable for TenantUsageData {
+    fn headers() -> Vec<&'static str> {
+        vec!["ASSETS", "INTEGRATIONS"]
+    }
+
+    fn row(&self) -> Vec<String> {
+        vec![
+            self.assets.map(|v| v.to_string()).unwrap_or_default(),
+            self.integrations.map(|v| v.to_string()).unwrap_or_default(),
+        ]
+    }
 }
 
 impl TableRenderable for TenantData {

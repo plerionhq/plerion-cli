@@ -1,6 +1,35 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use crate::output::TableRenderable;
 use crate::api::models::findings::PaginationMeta;
+
+/// Deserialize a value that may be a number or a stringified number (e.g. `"4.44"` or `4.44`).
+fn deserialize_option_f64_or_string<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de;
+
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrF64 {
+        F64(f64),
+        Str(String),
+    }
+
+    match Option::<StringOrF64>::deserialize(deserializer)? {
+        None => Ok(None),
+        Some(StringOrF64::F64(v)) => Ok(Some(v)),
+        Some(StringOrF64::Str(s)) => {
+            if s.is_empty() {
+                Ok(None)
+            } else {
+                s.parse::<f64>()
+                    .map(Some)
+                    .map_err(|_| de::Error::custom(format!("invalid numeric string: {s}")))
+            }
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -17,6 +46,7 @@ pub struct Alert {
     pub updated_at: Option<String>,
     pub summary: Option<Vec<String>>,
     pub alert_type: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_option_f64_or_string")]
     pub risk_score: Option<f64>,
     pub discovered_date: Option<String>,
     pub last_scanned_at_timestamp: Option<String>,

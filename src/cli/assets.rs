@@ -79,7 +79,7 @@ pub async fn run(args: &AssetsArgs, config: &Config) -> anyhow::Result<()> {
         AssetsCommands::List(a) => {
             let params = ListAssetsParams {
                 ids: a.ids.clone(),
-                providers: a.provider.clone(),
+                providers: super::normalize_providers(a.provider.clone()),
                 regions: a.region.clone(),
                 resource_types: a.resource_type.clone(),
                 services: a.service.clone(),

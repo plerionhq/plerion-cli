@@ -27,7 +27,7 @@ Returns tenant ID, organization ID, name, risk score, and timestamps.
 plerion tenant get-usage [--date <yyyy-MM-dd>]
 ```
 
-Returns tenant usage details.
+Returns tenant usage details. Supports all output formats (table, json, yaml, text).
 
 | Option | Type | Description |
 |---|---|---|
@@ -45,11 +45,14 @@ plerion tenant get --output json
 # Extract just the risk score
 plerion tenant get --output json --query 'data.riskScore'
 
-# Get usage details
-plerion tenant get-usage --output json
+# Get usage details as a table
+plerion tenant get-usage
+
+# Get usage for a specific date
+plerion tenant get-usage --date 2025-03-01 --output json
 ```
 
-### Output columns
+### Output columns (get)
 
 | Column | Description |
 |---|---|
@@ -59,6 +62,13 @@ plerion tenant get-usage --output json
 | RISK SCORE | Numeric risk score |
 | CREATED AT | Creation timestamp |
 | UPDATED AT | Update timestamp |
+
+### Output columns (get-usage)
+
+| Column | Description |
+|---|---|
+| ASSETS | Number of assets in the tenant |
+| INTEGRATIONS | Number of integrations configured |
 
 ### Example output (JSON)
 

@@ -123,6 +123,41 @@ async fn test_cli_tenant_get_usage() {
     assert!(stdout.contains("5000"));
 }
 
+#[tokio::test]
+async fn test_cli_tenant_get_usage_table() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({ "data": { "assets": 5000, "integrations": 3 } });
+    let _mock = server
+        .mock("GET", "/v1/tenant/usage")
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["tenant", "get-usage", "--output", "table"], "test-key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(stdout.contains("ASSETS"), "Table should contain ASSETS header, got: {stdout}");
+    assert!(stdout.contains("5000"), "Table should contain value 5000, got: {stdout}");
+}
+
+#[tokio::test]
+async fn test_cli_tenant_get_usage_text() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({ "data": { "assets": 5000, "integrations": 3 } });
+    let _mock = server
+        .mock("GET", "/v1/tenant/usage")
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["tenant", "get-usage", "--output", "text"], "test-key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(stdout.contains("5000"), "Text should contain value 5000, got: {stdout}");
+}
+
 // --- findings ---
 
 #[tokio::test]
@@ -539,6 +574,90 @@ async fn test_cli_iac_get_findings() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(output.status.success());
     assert!(stdout.contains("Insecure"));
+}
+
+// --- provider normalization ---
+
+#[tokio::test]
+async fn test_cli_findings_normalizes_provider() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/findings")
+        .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("providers".to_string(), "Azure".to_string()),
+        ]))
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(serde_json::json!({
+            "data": [],
+            "meta": { "cursor": null, "perPage": 50, "hasNextPage": false }
+        }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["findings", "list", "--provider", "azure", "--output", "json"],
+        "test-key",
+        &server.url(),
+    );
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_alerts_normalizes_provider() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/alerts")
+        .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("providers".to_string(), "GCP".to_string()),
+        ]))
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(serde_json::json!({
+            "data": [],
+            "meta": { "cursor": null, "perPage": 50, "hasNextPage": false }
+        }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["alerts", "list", "--provider", "gcp", "--output", "json"],
+        "test-key",
+        &server.url(),
+    );
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_alerts_risk_score_string() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [{
+            "id": "alert-str",
+            "status": "OPEN",
+            "title": "String score alert",
+            "riskScore": "7.7700"
+        }],
+        "meta": { "cursor": null, "perPage": 50, "hasNextPage": false }
+    });
+    let _mock = server
+        .mock("GET", "/v1/tenant/alerts")
+        .match_query(mockito::Matcher::Any)
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["alerts", "list", "--output", "json"],
+        "test-key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(stdout.contains("7.77") || stdout.contains("7.7700"));
 }
 
 // --- error handling ---

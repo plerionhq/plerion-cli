@@ -26,6 +26,7 @@ impl Config {
     /// 4. [default] profile
     pub fn load(overrides: ConfigOverrides) -> Result<Self, PlerionError> {
         // Determine profile name
+        let profile_explicit = overrides.profile.is_some() || std::env::var("PLERION_PROFILE").is_ok();
         let profile = overrides
             .profile
             .or_else(|| std::env::var("PLERION_PROFILE").ok())
@@ -39,7 +40,13 @@ impl Config {
             .api_key
             .or_else(|| std::env::var("PLERION_API_KEY").ok())
             .or(file_config.api_key)
-            .ok_or(PlerionError::MissingApiKey)?;
+            .ok_or_else(|| {
+                if profile_explicit {
+                    PlerionError::ProfileNotFound(profile.clone())
+                } else {
+                    PlerionError::MissingApiKey
+                }
+            })?;
 
         // Resolve region (only validated when no endpoint_url override)
         let region = overrides

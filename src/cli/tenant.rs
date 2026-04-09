@@ -35,7 +35,12 @@ pub async fn run(args: &TenantArgs, config: &Config) -> anyhow::Result<()> {
         }
         TenantCommands::GetUsage { date } => {
             let resp = tenant::get_tenant_usage(&client, date.as_deref()).await?;
-            output::render_json_value(&resp.data, config.output, config.query.as_deref())?;
+            output::render(
+                &resp.data,
+                config.output,
+                config.query.as_deref(),
+                config.no_color,
+            )?;
         }
     }
     Ok(())

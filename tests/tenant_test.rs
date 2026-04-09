@@ -1,5 +1,6 @@
 use mockito::Server;
 use plerion::api::{client::PlerionClient, endpoints::tenant};
+use plerion::output::TableRenderable;
 
 #[tokio::test]
 async fn test_get_tenant() {
@@ -45,7 +46,8 @@ async fn test_get_tenant_usage() {
 
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
     let resp = tenant::get_tenant_usage(&client, None).await.unwrap();
-    assert_eq!(resp.data["assets"], 100);
+    assert_eq!(resp.data.assets, Some(100));
+    assert_eq!(resp.data.integrations, Some(5));
 }
 
 #[tokio::test]
@@ -65,6 +67,38 @@ async fn test_get_tenant_usage_with_date() {
 
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
     let resp = tenant::get_tenant_usage(&client, Some("2025-03-01")).await.unwrap();
-    assert_eq!(resp.data["assets"], 100);
+    assert_eq!(resp.data.assets, Some(100));
     mock.assert_async().await;
+}
+
+#[test]
+fn test_tenant_usage_table_renderable() {
+    use plerion::api::models::tenant::TenantUsageData;
+
+    let usage = TenantUsageData {
+        assets: Some(5000),
+        integrations: Some(3),
+    };
+
+    let headers = TenantUsageData::headers();
+    assert!(headers.contains(&"ASSETS"));
+    assert!(headers.contains(&"INTEGRATIONS"));
+
+    let row = usage.row();
+    assert_eq!(row[0], "5000");
+    assert_eq!(row[1], "3");
+}
+
+#[test]
+fn test_tenant_usage_table_renderable_nones() {
+    use plerion::api::models::tenant::TenantUsageData;
+
+    let usage = TenantUsageData {
+        assets: None,
+        integrations: None,
+    };
+
+    let row = usage.row();
+    assert_eq!(row[0], "");
+    assert_eq!(row[1], "");
 }

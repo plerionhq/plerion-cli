@@ -97,7 +97,7 @@ pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<
         VulnerabilitiesCommands::List(a) => {
             let params = ListVulnerabilitiesParams {
                 severity_levels: a.severity.clone(),
-                providers: a.provider.clone(),
+                providers: super::normalize_providers(a.provider.clone()),
                 has_kev: if a.has_kev { Some(true) } else { None },
                 has_exploit: if a.has_exploit { Some(true) } else { None },
                 has_vendor_fix: if a.has_vendor_fix { Some(true) } else { None },

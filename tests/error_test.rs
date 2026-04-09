@@ -1,4 +1,5 @@
 use plerion::error::PlerionError;
+use std::process::Command;
 
 #[test]
 fn test_missing_api_key_display() {
@@ -72,4 +73,50 @@ fn test_error_is_debug() {
     let err = PlerionError::MissingApiKey;
     let debug = format!("{:?}", err);
     assert!(debug.contains("MissingApiKey"));
+}
+
+#[test]
+fn test_profile_not_found_includes_configure_hint() {
+    let err = PlerionError::ProfileNotFound("nonexistent".to_string());
+    let s = err.to_string();
+    assert!(s.contains("nonexistent"));
+    assert!(s.contains("not found"));
+    assert!(s.contains("plerion configure"));
+}
+
+#[test]
+fn test_cli_connection_refused_error() {
+    let binary = env!("CARGO_BIN_EXE_plerion");
+    let output = Command::new(binary)
+        .args(["tenant", "get", "--output", "json"])
+        .env("PLERION_API_KEY", "test-key")
+        .env("PLERION_ENDPOINT_URL", "http://127.0.0.1:1")
+        .output()
+        .expect("failed to execute plerion binary");
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains("Connection failed"),
+        "Error should say 'Connection failed', got: {stderr}"
+    );
+}
+
+#[test]
+fn test_cli_nonexistent_profile_mentions_profile_name() {
+    let binary = env!("CARGO_BIN_EXE_plerion");
+    let output = Command::new(binary)
+        .args(["--profile", "nonexistent", "tenant", "get"])
+        .env_remove("PLERION_API_KEY")
+        .env_remove("PLERION_PROFILE")
+        .env_remove("PLERION_ENDPOINT_URL")
+        .output()
+        .expect("failed to execute plerion binary");
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains("nonexistent"),
+        "Error should mention the profile name, got: {stderr}"
+    );
 }
