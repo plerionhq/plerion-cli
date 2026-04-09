@@ -11,19 +11,17 @@ Cross-platform CLI for the [Plerion](https://plerion.com) cloud security platfor
 
 ## Install
 
-> Requires the [GitHub CLI](https://cli.github.com) (`gh`) installed and authenticated (`gh auth login`).
-
 ### macOS / Linux (auto-detects OS and architecture)
 
 ```bash
-gh release download --repo plerionhq/plerion-cli --pattern install.sh -D /tmp/
-sh /tmp/install.sh
+curl -fsSL https://raw.githubusercontent.com/plerionhq/plerion-cli/main/install.sh | sh
 ```
 
 To pin a version or change the install directory:
 
 ```bash
-VERSION=v0.1.1 INSTALL_DIR=~/.local/bin sh /tmp/install.sh
+VERSION=v0.1.1 INSTALL_DIR=~/.local/bin \
+  curl -fsSL https://raw.githubusercontent.com/plerionhq/plerion-cli/main/install.sh | sh
 ```
 
 ### macOS — "cannot verify" Gatekeeper warning
@@ -46,17 +44,14 @@ The install script does this automatically. It only affects manually downloaded 
 | Linux (ARM64) | `plerion-linux-arm64` |
 
 ```bash
-gh release download --repo plerionhq/plerion-cli --pattern plerion-macos-arm64
-chmod +x plerion-macos-arm64
-mv plerion-macos-arm64 /usr/local/bin/plerion
+curl -fsSL https://github.com/plerionhq/plerion-cli/releases/latest/download/plerion-macos-arm64 \
+  -o /usr/local/bin/plerion
+chmod +x /usr/local/bin/plerion
 ```
 
 ### Windows
 
-```powershell
-gh release download --repo plerionhq/plerion-cli --pattern plerion-windows-x86_64.exe
-# Rename to plerion.exe and add to your PATH
-```
+Download `plerion-windows-x86_64.exe` from the [latest release](https://github.com/plerionhq/plerion-cli/releases/latest), rename it to `plerion.exe`, and add it to your `PATH`.
 
 ### From source
 
