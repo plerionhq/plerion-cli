@@ -7,6 +7,8 @@
 
 Cross-platform CLI for the [Plerion](https://plerion.com) cloud security platform.
 
+> **Experimental:** This tool is not officially supported by Plerion. It is provided as-is for convenience and should not be relied upon in production workflows. Commands, flags, and output formats may change without notice.
+
 ## Install
 
 > Requires the [GitHub CLI](https://cli.github.com) (`gh`) installed and authenticated (`gh auth login`).
