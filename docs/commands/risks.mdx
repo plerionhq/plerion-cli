@@ -1,0 +1,73 @@
+---
+title: plerion risks
+sidebarTitle: risks
+description: View security risks identified by Plerion
+icon: triangle-exclamation
+---
+
+## Synopsis
+
+```bash
+plerion risks list [options]
+```
+
+## Subcommands
+
+### list
+
+List security risks with filtering and sorting.
+
+```bash
+plerion risks list [options]
+```
+
+#### Options
+
+| Flag | Type | Description |
+|---|---|---|
+| `--severity` | string | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` |
+| `--lifecycle-state` | string | `OPEN`, `DISMISSED_ACCEPTED`, `DISMISSED_NOT_A_RISK` |
+| `--integration-id` | string | Filter by integration |
+| `--environment-id` | string | Filter by environment |
+| `--resource-type` | string | Filter by resource type |
+| `--include` | string | Load relationships: `primaryAsset`, `integration` |
+| `--sort-by` | string | `discoveredAt` or `score` |
+| `--sort-order` | string | `asc` or `desc` |
+| `--per-page` | number | Results per page (1-100) |
+
+## Examples
+
+```bash
+# Critical risks sorted by score
+plerion risks list --severity CRITICAL --sort-by score --sort-order desc
+
+# Open risks with asset details
+plerion risks list --lifecycle-state OPEN --include primaryAsset
+
+# Risks for a specific integration
+plerion risks list --integration-id int-abc123 --output json
+```
+
+### Output columns
+
+Table output includes all fields returned by the API:
+
+| Column | Description |
+|---|---|
+| ID | Risk ID |
+| TYPE | Risk type ID |
+| SEVERITY | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` |
+| SCORE | Numeric risk score |
+| LIKELIHOOD | Likelihood rating |
+| IMPACT | Impact rating |
+| STATE | Lifecycle state (`OPEN`, `DISMISSED_ACCEPTED`, `DISMISSED_NOT_A_RISK`) |
+| DESCRIPTION | Risk description |
+| PRIMARY ASSET ID | Primary affected asset ID |
+| ASSET NAME | Primary asset name |
+| RESOURCE TYPE | Resource type |
+| FULL RESOURCE NAME | Full resource name |
+| REGION | Cloud region |
+| INTEGRATION ID | Integration ID |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| DISCOVERED AT | Discovery timestamp |

@@ -1,0 +1,108 @@
+---
+title: Configuration
+sidebarTitle: Configuration
+description: Configure credentials, profiles, regions, and output preferences
+icon: gear
+---
+
+The Plerion CLI resolves credentials and settings from multiple sources. In order of precedence (highest first):
+
+1. **CLI flags** (`--api-key`, `--region`, `--endpoint-url`)
+2. **Environment variables** (`PLERION_API_KEY`, `PLERION_REGION`, etc.)
+3. **Named profile** from config files (selected via `--profile` or `PLERION_PROFILE`)
+4. **`[default]` profile** from config files
+
+## Getting an API key
+
+<Steps>
+  <Step title="Sign in to Plerion">
+    Go to the [Plerion dashboard](https://app.plerion.com) and sign in with your credentials.
+  </Step>
+  <Step title="Navigate to API Keys">
+    Go to **Settings > API Keys**.
+  </Step>
+  <Step title="Create a key">
+    Click **Create API Key**, give it a name, and copy the key. You will not be able to see it again.
+  </Step>
+</Steps>
+
+## Interactive setup
+
+```bash
+plerion configure
+```
+
+This prompts for your API key, region, output format, and profile name, then writes both config files.
+
+```bash
+plerion configure list
+```
+
+Lists all configured profile names.
+
+## Credentials file
+
+**Location:** `~/.plerion/credentials`
+
+```ini
+[default]
+api_key = pk_live_xxxxxxxxxxxxxxxx
+
+[prod]
+api_key = pk_live_yyyyyyyyyyyyyyyyyy
+
+[staging]
+api_key = pk_live_zzzzzzzzzzzzzzzzzz
+```
+
+## Config file
+
+**Location:** `~/.plerion/config`
+
+```ini
+[default]
+region = au
+output = table
+
+[profile prod]
+region = us1
+output = json
+
+[profile staging]
+region = sg1
+output = table
+```
+
+<Note>
+Named profiles use the `[profile <name>]` prefix in the config file (mirroring AWS CLI), but use bare `[<name>]` in the credentials file.
+</Note>
+
+## Environment variables
+
+| Variable | Description |
+|---|---|
+| `PLERION_API_KEY` | API key (overrides credentials file) |
+| `PLERION_REGION` | Region (overrides config file) |
+| `PLERION_PROFILE` | Profile name (default: `default`) |
+| `PLERION_ENDPOINT_URL` | Custom API base URL (for development) |
+| `NO_COLOR` | Set to any value to disable colour output |
+
+## Regions
+
+| Region | Code | Base URL |
+|---|---|---|
+| Australia | `au` | `https://au.api.plerion.com` |
+| Singapore | `sg1` | `https://sg1.api.plerion.com` |
+| India | `in1` | `https://in1.api.plerion.com` |
+| United States | `us1` | `https://us1.api.plerion.com` |
+
+## Multiple profiles
+
+```bash
+# Use a named profile for a single command
+plerion --profile prod findings list --severity CRITICAL
+
+# Set the default profile for the session
+export PLERION_PROFILE=prod
+plerion findings list
+```

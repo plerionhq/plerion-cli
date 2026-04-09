@@ -1,0 +1,26 @@
+# Build output
+/target/
+Cargo.lock
+
+# Credentials — never commit API keys
+.plerion/
+*.credentials
+*.env
+.env
+.env.*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Test artifacts
+*.tmp
+/tmp/

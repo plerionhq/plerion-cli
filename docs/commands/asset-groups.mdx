@@ -1,0 +1,81 @@
+---
+title: plerion asset-groups
+sidebarTitle: asset-groups
+description: Create, update, list, and delete asset groups
+icon: layer-group
+---
+
+## Synopsis
+
+```bash
+plerion asset-groups <subcommand> [options]
+```
+
+## Subcommands
+
+### list
+
+```bash
+plerion asset-groups list [--name <n>] [--per-page N]
+```
+
+### get
+
+```bash
+plerion asset-groups get --id <id>
+```
+
+### create
+
+```bash
+plerion asset-groups create --name <name> [--rules <json>]
+```
+
+### update
+
+```bash
+plerion asset-groups update --id <id> [--name <n>] [--rules <json>]
+```
+
+### delete
+
+```bash
+plerion asset-groups delete --id <id>
+```
+
+## Examples
+
+```bash
+# List all asset groups
+plerion asset-groups list
+
+# Create a new group
+plerion asset-groups create --name "Production AWS"
+
+# Create with rules
+plerion asset-groups create --name "Critical Servers" \
+  --rules '[{"field":"provider","operator":"equals","value":"AWS"}]'
+
+# Update a group name
+plerion asset-groups update --id ag-abc123 --name "Production - All Providers"
+
+# Delete a group
+plerion asset-groups delete --id ag-abc123
+
+# Get group details
+plerion asset-groups get --id ag-abc123 --output json
+```
+
+### Output columns
+
+| Column | Description |
+|---|---|
+| ID | Asset group ID |
+| NAME | Asset group name |
+| STATUS | Group status |
+| ASSETS | Total asset count |
+| RISK SCORE | Numeric risk score |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |
+| CREATED AT | Creation timestamp |
+| UPDATED AT | Update timestamp |

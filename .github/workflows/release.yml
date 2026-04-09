@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            use_cross: true
+            artifact_name: plerion
+            asset_name: plerion-linux-x86_64
+
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            use_cross: true
+            artifact_name: plerion
+            asset_name: plerion-linux-arm64
+
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            use_cross: false
+            artifact_name: plerion.exe
+            asset_name: plerion-windows-x86_64.exe
+
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            use_cross: false
+            artifact_name: plerion
+            asset_name: plerion-macos-x86_64
+
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            use_cross: false
+            artifact_name: plerion
+            asset_name: plerion-macos-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.use_cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build with cross
+        if: matrix.use_cross
+        run: cross build --release --target ${{ matrix.target }}
+
+      - name: Build native
+        if: ${{ !matrix.use_cross }}
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME:-v0.0.0}"
+          # Rename each artifact to its directory name (the asset_name from the matrix)
+          mkdir -p release-assets
+          for dir in artifacts/*/; do
+            asset_name=$(basename "$dir")
+            # Find the binary inside (plerion or plerion.exe)
+            for file in "$dir"*; do
+              if [ -f "$file" ]; then
+                cp "$file" "release-assets/${asset_name}"
+                chmod +x "release-assets/${asset_name}"
+              fi
+            done
+          done
+          ls -la release-assets/
+          gh release create "$TAG" release-assets/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$TAG" \
+            --generate-notes

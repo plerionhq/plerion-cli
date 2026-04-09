@@ -1,0 +1,64 @@
+---
+title: plerion audit-logs
+sidebarTitle: audit-logs
+description: View audit logs for tenant operations
+icon: clock-rotate-left
+---
+
+## Synopsis
+
+```bash
+plerion audit-logs list [options]
+```
+
+## Subcommands
+
+### list
+
+List audit log entries with filtering.
+
+```bash
+plerion audit-logs list [options]
+```
+
+#### Options
+
+| Flag | Type | Description |
+|---|---|---|
+| `--start` | ISO 8601 | Start time (e.g. `2024-01-01T00:00:00Z`) |
+| `--end` | ISO 8601 | End time (e.g. `2024-01-31T23:59:59Z`) |
+| `--user-id` | string | Filter by operator user ID |
+| `--operation` | string | Filter by operation type (e.g. `UserLogin`, `CreatedApiKey`) |
+| `--per-page` | number | Results per page (max 1000) |
+
+## Examples
+
+```bash
+# Logs for January 2024
+plerion audit-logs list --start 2024-01-01T00:00:00Z --end 2024-01-31T23:59:59Z
+
+# All login events
+plerion audit-logs list --operation UserLogin
+
+# Logs by a specific user
+plerion audit-logs list --user-id user-abc123 --output json
+```
+
+### Output columns
+
+Table output includes all fields returned by the API:
+
+| Column | Description |
+|---|---|
+| ID | Audit log entry ID |
+| OPERATION | Operation type (e.g. `UserLogin`, `CreatedApiKey`) |
+| TIME | Operation timestamp |
+| USER ID | Operator user ID |
+| EMAIL | Operator email address |
+| IP | IP address |
+| USER AGENT | Browser/client user agent |
+| COUNTRY | Country (from IP geolocation) |
+| CITY | City (from IP geolocation) |
+| REGION | Region (from IP geolocation) |
+| TENANT ID | Tenant ID |
+| ORG ID | Organization ID |

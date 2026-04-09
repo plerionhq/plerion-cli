@@ -1,0 +1,138 @@
+use mockito::Server;
+use plerion::api::{client::PlerionClient, endpoints::iac};
+
+#[tokio::test]
+async fn test_list_iac_scans() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [
+            {
+                "id": "scan-1",
+                "artifactName": "infra.zip",
+                "status": "SUCCESS",
+                "createdAt": "2025-01-01T00:00:00Z",
+                "updatedAt": "2025-01-01T00:01:00Z",
+                "tenantId": "t-1",
+                "organizationId": "o-1",
+                "summary": {
+                    "totalFindings": 10,
+                    "totalFailedFindings": 3,
+                    "totalPassedFindings": 7,
+                    "totalVulnerabilities": 2
+                },
+                "types": ["terraform"]
+            }
+        ]
+    });
+    let _mock = server
+        .mock("GET", "/v1/tenant/shiftleft/iac/scans")
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let resp = iac::list_iac_scans(&client).await.unwrap();
+    assert_eq!(resp.data.len(), 1);
+    assert_eq!(resp.data[0].id.as_deref(), Some("scan-1"));
+    assert_eq!(resp.data[0].artifact_name.as_deref(), Some("infra.zip"));
+    assert_eq!(resp.data[0].status.as_deref(), Some("SUCCESS"));
+    assert_eq!(resp.data[0].types, vec!["terraform"]);
+    let summary = resp.data[0].summary.as_ref().unwrap();
+    assert_eq!(summary.total_findings, Some(10));
+    assert_eq!(summary.total_failed_findings, Some(3));
+}
+
+#[tokio::test]
+async fn test_get_iac_findings() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [
+            {
+                "id": "f-1",
+                "scanId": "scan-1",
+                "detectionId": "PLERION-K8S-108",
+                "detectionTitle": "Ensure privileged is false",
+                "type": "terraform",
+                "result": "FAILED",
+                "severityLevel": "HIGH",
+                "file": "main.tf",
+                "repositoryPath": "/repo/main.tf",
+                "lineRange": [10, 42],
+                "resource": "aws_s3_bucket.data",
+                "dashboardURL": "https://example.com/finding/f-1"
+            }
+        ]
+    });
+    let _mock = server
+        .mock("GET", "/v1/tenant/shiftleft/iac/scans/scan-1/findings")
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let resp = iac::get_iac_findings(&client, "scan-1").await.unwrap();
+    assert_eq!(resp.data.len(), 1);
+    assert_eq!(resp.data[0].severity_level.as_deref(), Some("HIGH"));
+    assert_eq!(resp.data[0].file.as_deref(), Some("main.tf"));
+    assert_eq!(resp.data[0].line_range.as_ref().unwrap(), &vec![10, 42]);
+    assert_eq!(resp.data[0].detection_id.as_deref(), Some("PLERION-K8S-108"));
+    assert_eq!(resp.data[0].resource.as_deref(), Some("aws_s3_bucket.data"));
+}
+
+#[tokio::test]
+async fn test_get_iac_vulnerabilities() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [{
+            "id": "v-1",
+            "vulnerabilityId": "CVE-2023-12345",
+            "title": "Sample Vulnerability",
+            "severityLevel": "HIGH",
+            "hasKev": true,
+            "hasExploit": false,
+            "packages": [{"name": "openssl", "type": "npm", "installedVersion": "1.0.0", "fixedVersion": "1.0.1"}]
+        }]
+    });
+    let _mock = server
+        .mock("GET", "/v1/tenant/shiftleft/iac/scans/scan-1/vulnerabilities")
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let resp = iac::get_iac_vulnerabilities(&client, "scan-1").await.unwrap();
+    assert_eq!(resp.data.len(), 1);
+    assert_eq!(resp.data[0].vulnerability_id.as_deref(), Some("CVE-2023-12345"));
+    assert_eq!(resp.data[0].has_kev, Some(true));
+}
+
+#[tokio::test]
+async fn test_upload_iac_scan() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": "ok",
+        "meta": {
+            "scanId": "scan-new",
+            "artifactName": "test.zip",
+            "tenantId": "t-1",
+            "organizationId": "o-1"
+        }
+    });
+    let mock = server
+        .mock("POST", "/v1/tenant/shiftleft/iac/scan")
+        .match_query(mockito::Matcher::UrlEncoded("artifactName".to_string(), "test.zip".to_string()))
+        .with_status(202)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let resp = iac::upload_iac_scan(&client, "test.zip", bytes::Bytes::from_static(b"PK\x03\x04"))
+        .await
+        .unwrap();
+    assert_eq!(resp.meta.scan_id.as_deref(), Some("scan-new"));
+    mock.assert_async().await;
+}
