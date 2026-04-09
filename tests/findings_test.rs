@@ -122,3 +122,32 @@ async fn test_list_findings_pagination_meta() {
     assert_eq!(resp.meta.cursor.as_deref(), Some("next_cursor_token"));
     assert_eq!(resp.meta.has_next_page, Some(true));
 }
+
+#[tokio::test]
+async fn test_list_findings_with_ids_and_asset_id() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/findings")
+        .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("ids".to_string(), "f-1,f-2".to_string()),
+            mockito::Matcher::UrlEncoded("assetIds".to_string(), "a-1".to_string()),
+        ]))
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(serde_json::json!({
+            "data": [],
+            "meta": { "cursor": null, "perPage": 50, "total": 0, "hasNextPage": false }
+        }).to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "test_key").unwrap();
+    let params = ListFindingsParams {
+        ids: Some("f-1,f-2".to_string()),
+        asset_ids: Some("a-1".to_string()),
+        ..Default::default()
+    };
+    let resp = list_findings(&client, &params).await.unwrap();
+    assert_eq!(resp.data.len(), 0);
+    mock.assert_async().await;
+}

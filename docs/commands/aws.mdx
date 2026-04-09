@@ -26,8 +26,12 @@ plerion aws get-external-id
 Returns the CloudFormation template for setting up a Plerion AWS integration.
 
 ```bash
-plerion aws get-cloudformation-template
+plerion aws get-cloudformation-template [--type <type>]
 ```
+
+| Option | Type | Description |
+|---|---|---|
+| `--type` | string | Template type (e.g. `AWSAccount`) |
 
 ### generate-token
 

@@ -116,6 +116,81 @@ async fn test_get_iac_vulnerabilities() {
 }
 
 #[tokio::test]
+async fn test_list_iac_scans_with_ids() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [],
+        "meta": { "page": 1, "perPage": 50, "total": 0, "hasNextPage": false, "hasPreviousPage": false }
+    });
+    let mock = server
+        .mock("GET", "/v1/tenant/shiftleft/iac/scans")
+        .match_query(mockito::Matcher::UrlEncoded("ids".to_string(), "scan-1,scan-2".to_string()))
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let params = iac::ListIacScansParams {
+        ids: Some("scan-1,scan-2".to_string()),
+        ..Default::default()
+    };
+    let resp = iac::list_iac_scans(&client, &params).await.unwrap();
+    assert_eq!(resp.data.len(), 0);
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_get_iac_findings_with_ids() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [],
+        "meta": { "page": 1, "perPage": 50, "total": 0, "hasNextPage": false, "hasPreviousPage": false }
+    });
+    let mock = server
+        .mock("GET", "/v1/tenant/shiftleft/iac/scans/scan-1/findings")
+        .match_query(mockito::Matcher::UrlEncoded("ids".to_string(), "f-1,f-2".to_string()))
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let params = iac::ListIacFindingsParams {
+        ids: Some("f-1,f-2".to_string()),
+        ..Default::default()
+    };
+    let resp = iac::get_iac_findings(&client, "scan-1", &params).await.unwrap();
+    assert_eq!(resp.data.len(), 0);
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_get_iac_vulnerabilities_with_ids() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [],
+        "meta": { "page": 1, "perPage": 50, "total": 0, "hasNextPage": false, "hasPreviousPage": false }
+    });
+    let mock = server
+        .mock("GET", "/v1/tenant/shiftleft/iac/scans/scan-1/vulnerabilities")
+        .match_query(mockito::Matcher::UrlEncoded("ids".to_string(), "v-1,v-2".to_string()))
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let params = iac::ListIacVulnerabilitiesParams {
+        ids: Some("v-1,v-2".to_string()),
+        ..Default::default()
+    };
+    let resp = iac::get_iac_vulnerabilities(&client, "scan-1", &params).await.unwrap();
+    assert_eq!(resp.data.len(), 0);
+    mock.assert_async().await;
+}
+
+#[tokio::test]
 async fn test_list_iac_scans_with_filters() {
     let mut server = Server::new_async().await;
     let body = serde_json::json!({

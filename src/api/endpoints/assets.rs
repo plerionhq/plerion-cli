@@ -19,6 +19,13 @@ pub struct ListAssetsParams {
     pub has_exploit: Option<bool>,
     pub has_admin_privileges: Option<bool>,
     pub is_susceptible_to_privilege_escalation: Option<bool>,
+    pub execution_ids: Option<String>,
+    pub secrets_levels: Option<String>,
+    pub first_observed_at_start: Option<String>,
+    pub first_observed_at_end: Option<String>,
+    pub has_overly_permissive_privileges: Option<bool>,
+    pub is_exploitable: Option<bool>,
+    pub metadata: Option<String>,
     pub query: Option<String>,
     pub risk_score_gte: Option<f64>,
     pub operational_states: Option<String>,
@@ -49,6 +56,13 @@ pub async fn list_assets(
     if let Some(v) = params.has_exploit { req = req.query(&[("hasExploit", v)]); }
     if let Some(v) = params.has_admin_privileges { req = req.query(&[("hasAdminPrivileges", v)]); }
     if let Some(v) = params.is_susceptible_to_privilege_escalation { req = req.query(&[("isSusceptibleToPrivilegeEscalation", v)]); }
+    if let Some(v) = &params.execution_ids { req = req.query(&[("executionIds", v)]); }
+    if let Some(v) = &params.secrets_levels { req = req.query(&[("secretsLevels", v)]); }
+    if let Some(v) = &params.first_observed_at_start { req = req.query(&[("firstObservedAtStart", v)]); }
+    if let Some(v) = &params.first_observed_at_end { req = req.query(&[("firstObservedAtEnd", v)]); }
+    if let Some(v) = params.has_overly_permissive_privileges { req = req.query(&[("hasOverlyPermissivePrivileges", v)]); }
+    if let Some(v) = params.is_exploitable { req = req.query(&[("isExploitable", v)]); }
+    if let Some(v) = &params.metadata { req = req.query(&[("metadata", v)]); }
     if let Some(v) = &params.query { req = req.query(&[("query", v)]); }
     if let Some(v) = params.risk_score_gte { req = req.query(&[("riskScoreGte", v)]); }
     if let Some(v) = &params.operational_states { req = req.query(&[("operationalStates", v)]); }
@@ -63,8 +77,11 @@ pub async fn list_assets(
 pub async fn get_asset(
     client: &PlerionClient,
     asset_id: &str,
+    include: Option<&str>,
 ) -> Result<serde_json::Value, PlerionError> {
-    client.execute(client.get(&format!("/v1/tenant/assets/{asset_id}"))).await
+    let mut req = client.get(&format!("/v1/tenant/assets/{asset_id}"));
+    if let Some(v) = include { req = req.query(&[("include", v)]); }
+    client.execute(req).await
 }
 
 pub async fn get_asset_sbom(

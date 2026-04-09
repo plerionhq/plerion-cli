@@ -6,6 +6,11 @@ pub async fn get_tenant(client: &PlerionClient) -> Result<TenantResponse, Plerio
     client.execute(client.get("/v1/tenant")).await
 }
 
-pub async fn get_tenant_usage(client: &PlerionClient) -> Result<TenantUsageResponse, PlerionError> {
-    client.execute(client.get("/v1/tenant/usage")).await
+pub async fn get_tenant_usage(
+    client: &PlerionClient,
+    date: Option<&str>,
+) -> Result<TenantUsageResponse, PlerionError> {
+    let mut req = client.get("/v1/tenant/usage");
+    if let Some(v) = date { req = req.query(&[("date", v)]); }
+    client.execute(req).await
 }

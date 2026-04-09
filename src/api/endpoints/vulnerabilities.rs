@@ -24,6 +24,10 @@ pub struct ListVulnerabilitiesParams {
     pub sort_order: Option<String>,
     pub page: Option<u32>,
     pub per_page: Option<u32>,
+    pub execution_ids: Option<String>,
+    pub target_name: Option<String>,
+    pub target_type: Option<String>,
+    pub target_class: Option<String>,
 }
 
 pub async fn list_vulnerabilities(
@@ -52,6 +56,10 @@ pub async fn list_vulnerabilities(
     if let Some(v) = &params.sort_order { req = req.query(&[("sortOrder", v)]); }
     if let Some(v) = params.page { req = req.query(&[("page", v)]); }
     if let Some(v) = params.per_page { req = req.query(&[("perPage", v)]); }
+    if let Some(v) = &params.execution_ids { req = req.query(&[("executionIds", v)]); }
+    if let Some(v) = &params.target_name { req = req.query(&[("targetName", v)]); }
+    if let Some(v) = &params.target_type { req = req.query(&[("targetType", v)]); }
+    if let Some(v) = &params.target_class { req = req.query(&[("targetClass", v)]); }
 
     client.execute(req).await
 }

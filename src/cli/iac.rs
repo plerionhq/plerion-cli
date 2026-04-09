@@ -33,6 +33,9 @@ pub struct ScanArgs {
 
 #[derive(Args, Debug)]
 pub struct ListScansArgs {
+    /// Filter by IDs (comma-separated)
+    #[arg(long)]
+    pub ids: Option<String>,
     /// Filter by artifact names (comma-separated)
     #[arg(long)]
     pub artifact_name: Option<String>,
@@ -58,6 +61,9 @@ pub struct GetFindingsArgs {
     /// The scan ID returned from `iac scan`
     #[arg(long)]
     pub scan_id: String,
+    /// Filter by IDs (comma-separated)
+    #[arg(long)]
+    pub ids: Option<String>,
     /// Filter by result status: PASSED, FAILED (comma-separated)
     #[arg(long)]
     pub status: Option<String>,
@@ -92,6 +98,9 @@ pub struct GetVulnerabilitiesArgs {
     /// The scan ID returned from `iac scan`
     #[arg(long)]
     pub scan_id: String,
+    /// Filter by IDs (comma-separated)
+    #[arg(long)]
+    pub ids: Option<String>,
     /// Filter by severity level: CRITICAL, HIGH, MEDIUM, LOW (comma-separated)
     #[arg(long)]
     pub severity: Option<String>,
@@ -135,6 +144,7 @@ pub async fn run(args: &IacArgs, config: &Config) -> anyhow::Result<()> {
         }
         IacCommands::ListScans(a) => {
             let params = ListIacScansParams {
+                ids: a.ids.clone(),
                 artifact_names: a.artifact_name.clone(),
                 statuses: a.status.clone(),
                 sort_by: a.sort_by.clone(),
@@ -149,11 +159,11 @@ pub async fn run(args: &IacArgs, config: &Config) -> anyhow::Result<()> {
                     let p = ListIacScansParams {
                         page: Some(page),
                         per_page: Some(1000),
+                        ids: params.ids.clone(),
                         artifact_names: params.artifact_names.clone(),
                         statuses: params.statuses.clone(),
                         sort_by: params.sort_by.clone(),
                         sort_order: params.sort_order.clone(),
-                        ..Default::default()
                     };
                     let resp = list_iac_scans(&client, &p).await?;
                     let has_next = resp.meta.has_next_page.unwrap_or(false);
@@ -169,6 +179,7 @@ pub async fn run(args: &IacArgs, config: &Config) -> anyhow::Result<()> {
         }
         IacCommands::GetFindings(a) => {
             let params = ListIacFindingsParams {
+                ids: a.ids.clone(),
                 results: a.status.clone(),
                 severity_levels: a.severity.clone(),
                 detection_ids: a.detection_id.clone(),
@@ -186,6 +197,7 @@ pub async fn run(args: &IacArgs, config: &Config) -> anyhow::Result<()> {
                     let p = ListIacFindingsParams {
                         page: Some(page),
                         per_page: Some(1000),
+                        ids: params.ids.clone(),
                         results: params.results.clone(),
                         severity_levels: params.severity_levels.clone(),
                         detection_ids: params.detection_ids.clone(),
@@ -193,7 +205,6 @@ pub async fn run(args: &IacArgs, config: &Config) -> anyhow::Result<()> {
                         files: params.files.clone(),
                         sort_by: params.sort_by.clone(),
                         sort_order: params.sort_order.clone(),
-                        ..Default::default()
                     };
                     let resp = get_iac_findings(&client, &a.scan_id, &p).await?;
                     let has_next = resp.meta.has_next_page.unwrap_or(false);
@@ -209,6 +220,7 @@ pub async fn run(args: &IacArgs, config: &Config) -> anyhow::Result<()> {
         }
         IacCommands::GetVulnerabilities(a) => {
             let params = ListIacVulnerabilitiesParams {
+                ids: a.ids.clone(),
                 severity_levels: a.severity.clone(),
                 vulnerability_ids: a.vulnerability_id.clone(),
                 severity_sources: a.severity_source.clone(),
@@ -227,6 +239,7 @@ pub async fn run(args: &IacArgs, config: &Config) -> anyhow::Result<()> {
                     let p = ListIacVulnerabilitiesParams {
                         page: Some(page),
                         per_page: Some(1000),
+                        ids: params.ids.clone(),
                         severity_levels: params.severity_levels.clone(),
                         vulnerability_ids: params.vulnerability_ids.clone(),
                         severity_sources: params.severity_sources.clone(),
@@ -235,7 +248,6 @@ pub async fn run(args: &IacArgs, config: &Config) -> anyhow::Result<()> {
                         has_exploits: params.has_exploits,
                         sort_by: params.sort_by.clone(),
                         sort_order: params.sort_order.clone(),
-                        ..Default::default()
                     };
                     let resp = get_iac_vulnerabilities(&client, &a.scan_id, &p).await?;
                     let has_next = resp.meta.has_next_page.unwrap_or(false);

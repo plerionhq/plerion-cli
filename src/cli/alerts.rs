@@ -16,6 +16,10 @@ pub enum AlertsCommands {
 
 #[derive(Args, Debug)]
 pub struct ListAlertsArgs {
+    #[arg(long)] pub ids: Option<String>,
+    #[arg(long)] pub workflow_id: Option<String>,
+    #[arg(long)] pub asset_group_id: Option<String>,
+    #[arg(long)] pub resource_type: Option<String>,
     #[arg(long)] pub status: Option<String>,
     #[arg(long)] pub provider: Option<String>,
     #[arg(long)] pub alert_type: Option<String>,
@@ -34,6 +38,10 @@ pub async fn run(args: &AlertsArgs, config: &Config) -> anyhow::Result<()> {
     match &args.command {
         AlertsCommands::List(a) => {
             let params = ListAlertsParams {
+                ids: a.ids.clone(),
+                workflow_ids: a.workflow_id.clone(),
+                asset_group_ids: a.asset_group_id.clone(),
+                resource_types: a.resource_type.clone(),
                 statuses: a.status.clone(),
                 providers: a.provider.clone(),
                 alert_types: a.alert_type.clone(),
@@ -52,6 +60,10 @@ pub async fn run(args: &AlertsArgs, config: &Config) -> anyhow::Result<()> {
                     let p = ListAlertsParams {
                         cursor: cursor.clone(),
                         per_page: Some(1000),
+                        ids: params.ids.clone(),
+                        workflow_ids: params.workflow_ids.clone(),
+                        asset_group_ids: params.asset_group_ids.clone(),
+                        resource_types: params.resource_types.clone(),
                         statuses: params.statuses.clone(),
                         providers: params.providers.clone(),
                         alert_types: params.alert_types.clone(),
@@ -60,7 +72,6 @@ pub async fn run(args: &AlertsArgs, config: &Config) -> anyhow::Result<()> {
                         acknowledged: params.acknowledged,
                         sort_by: params.sort_by.clone(),
                         sort_order: params.sort_order.clone(),
-                        ..Default::default()
                     };
                     let resp = list_alerts(&client, &p).await?;
                     let has_next = resp.meta.has_next_page.unwrap_or(false);

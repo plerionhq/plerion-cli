@@ -19,6 +19,7 @@ pub struct ListRisksParams {
     pub sort_order: Option<String>,
     pub cursor: Option<String>,
     pub per_page: Option<u32>,
+    pub fields: Option<String>,
 }
 
 pub async fn list_risks(
@@ -42,6 +43,7 @@ pub async fn list_risks(
     if let Some(v) = &params.sort_order { req = req.query(&[("sortOrder", v)]); }
     if let Some(v) = &params.cursor { req = req.query(&[("cursor", v)]); }
     if let Some(v) = params.per_page { req = req.query(&[("perPage", v)]); }
+    if let Some(v) = &params.fields { req = req.query(&[("fields", v)]); }
 
     client.execute(req).await
 }

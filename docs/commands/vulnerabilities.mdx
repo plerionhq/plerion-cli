@@ -30,8 +30,20 @@ plerion vulnerabilities list [options]
 | `--has-kev` | flag | Only CISA Known Exploited Vulnerabilities |
 | `--has-exploit` | flag | Only vulnerabilities with known exploits |
 | `--has-vendor-fix` | flag | Only vulnerabilities with a vendor fix available |
+| `--is-exploitable` | flag | Only exploitable vulnerabilities |
+| `--is-exempted` | boolean | Filter by exemption status (`true` or `false`) |
 | `--asset-id` | string | Filter by asset ID(s) |
+| `--vulnerability-id` | string | Filter by CVE/vulnerability IDs (comma-separated) |
+| `--asset-group-id` | string | Filter by asset group IDs (comma-separated) |
+| `--environment-id` | string | Filter by environment IDs or names (comma-separated) |
+| `--execution-id` | string | Filter by execution IDs (comma-separated) |
 | `--region` | string | Filter by cloud region(s) |
+| `--package-name` | string | Filter by package name |
+| `--target-name` | string | Filter by target name |
+| `--target-type` | string | Filter by target type |
+| `--target-class` | string | Filter by target class (e.g. `lang-pkgs`, `os-pkgs`) |
+| `--start` | string | First observed start date (ISO 8601) |
+| `--end` | string | First observed end date (ISO 8601) |
 | `--per-page` | number | Results per page (max 2000) |
 | `--all` | flag | Fetch all pages automatically |
 
@@ -58,8 +70,12 @@ plerion vulnerabilities exemptions get --profile-id <id> --id <exemption-id>
 ### exemptions create
 
 ```bash
-plerion vulnerabilities exemptions create --profile-id <id> --name <n> --reason <r> [--rules <json>]
+plerion vulnerabilities exemptions create --profile-id <id> --name <n> --reason <r> --audit-note <note> [--rules <json>]
 ```
+
+| Flag | Type | Description |
+|---|---|---|
+| `--audit-note` | string | **(required)** Audit note (max 250 chars) |
 
 #### Reason values
 
@@ -74,8 +90,13 @@ plerion vulnerabilities exemptions create --profile-id <id> --name <n> --reason 
 ### exemptions update
 
 ```bash
-plerion vulnerabilities exemptions update --profile-id <id> --id <exemption-id> [--name <n>] [--reason <r>]
+plerion vulnerabilities exemptions update --profile-id <id> --id <exemption-id> [--name <n>] [--reason <r>] [--audit-note <note>] [--conditions <json>]
 ```
+
+| Flag | Type | Description |
+|---|---|---|
+| `--audit-note` | string | Updated audit note |
+| `--conditions` | string | Updated conditions (JSON) |
 
 ### exemptions delete
 

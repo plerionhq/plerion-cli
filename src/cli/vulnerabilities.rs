@@ -13,7 +13,7 @@ pub struct VulnerabilitiesArgs {
 #[derive(Subcommand, Debug)]
 pub enum VulnerabilitiesCommands {
     /// List vulnerabilities
-    List(ListVulnArgs),
+    List(Box<ListVulnArgs>),
     /// Manage vulnerability exemptions
     Exemptions(ExemptionsArgs),
 }
@@ -32,6 +32,18 @@ pub struct ListVulnArgs {
     #[arg(long)] pub sort_order: Option<String>,
     #[arg(long, default_value = "50")] pub per_page: u32,
     #[arg(long)] pub all: bool,
+    #[arg(long)] pub vulnerability_id: Option<String>,
+    #[arg(long)] pub asset_group_id: Option<String>,
+    #[arg(long)] pub environment_id: Option<String>,
+    #[arg(long)] pub package_name: Option<String>,
+    #[arg(long)] pub is_exempted: Option<bool>,
+    #[arg(long)] pub is_exploitable: bool,
+    #[arg(long)] pub start: Option<String>,
+    #[arg(long)] pub end: Option<String>,
+    #[arg(long)] pub execution_id: Option<String>,
+    #[arg(long)] pub target_name: Option<String>,
+    #[arg(long)] pub target_type: Option<String>,
+    #[arg(long)] pub target_class: Option<String>,
 }
 
 #[derive(Args, Debug)]
@@ -61,6 +73,7 @@ pub enum ExemptionsCommands {
         #[arg(long)] name: String,
         #[arg(long)] reason: String,
         #[arg(long)] rules: Option<String>,
+        #[arg(long)] audit_note: String,
     },
     Update {
         #[arg(long)] profile_id: String,
@@ -68,6 +81,8 @@ pub enum ExemptionsCommands {
         #[arg(long)] id: String,
         #[arg(long)] name: Option<String>,
         #[arg(long)] reason: Option<String>,
+        #[arg(long)] audit_note: Option<String>,
+        #[arg(long)] conditions: Option<String>,
     },
     Delete {
         #[arg(long)] profile_id: String,
@@ -92,6 +107,18 @@ pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<
                 sort_by: a.sort_by.clone(),
                 sort_order: a.sort_order.clone(),
                 per_page: Some(a.per_page),
+                vulnerability_ids: a.vulnerability_id.clone(),
+                asset_group_ids: a.asset_group_id.clone(),
+                environment_ids: a.environment_id.clone(),
+                package_name: a.package_name.clone(),
+                is_exempted: a.is_exempted,
+                is_exploitable: if a.is_exploitable { Some(true) } else { None },
+                first_observed_at_start: a.start.clone(),
+                first_observed_at_end: a.end.clone(),
+                execution_ids: a.execution_id.clone(),
+                target_name: a.target_name.clone(),
+                target_type: a.target_type.clone(),
+                target_class: a.target_class.clone(),
                 ..Default::default()
             };
             if a.all {
@@ -111,7 +138,18 @@ pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<
                         regions: params.regions.clone(),
                         sort_by: params.sort_by.clone(),
                         sort_order: params.sort_order.clone(),
-                        ..Default::default()
+                        vulnerability_ids: params.vulnerability_ids.clone(),
+                        asset_group_ids: params.asset_group_ids.clone(),
+                        environment_ids: params.environment_ids.clone(),
+                        package_name: params.package_name.clone(),
+                        is_exempted: params.is_exempted,
+                        is_exploitable: params.is_exploitable,
+                        first_observed_at_start: params.first_observed_at_start.clone(),
+                        first_observed_at_end: params.first_observed_at_end.clone(),
+                        execution_ids: params.execution_ids.clone(),
+                        target_name: params.target_name.clone(),
+                        target_type: params.target_type.clone(),
+                        target_class: params.target_class.clone(),
                     };
                     let resp = list_vulnerabilities(&client, &p).await?;
                     let has_next = resp.meta.has_next_page.unwrap_or(false);
@@ -147,7 +185,7 @@ pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<
                 let resp = get_exemption(&client, profile_id, id).await?;
                 output::render_json_value(&resp, config.output, config.query.as_deref())?;
             }
-            ExemptionsCommands::Create { profile_id, name, reason, rules } => {
+            ExemptionsCommands::Create { profile_id, name, reason, rules, audit_note } => {
                 let rules_val: Option<serde_json::Value> = rules.as_ref()
                     .map(|r| serde_json::from_str(r))
                     .transpose()
@@ -155,15 +193,22 @@ pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<
                 let body = serde_json::json!({
                     "name": name,
                     "reason": reason,
-                    "rules": rules_val
+                    "rules": rules_val,
+                    "auditNote": audit_note
                 });
                 let resp = create_exemption(&client, profile_id, body).await?;
                 output::render_json_value(&resp, config.output, config.query.as_deref())?;
             }
-            ExemptionsCommands::Update { profile_id, id, name, reason } => {
+            ExemptionsCommands::Update { profile_id, id, name, reason, audit_note, conditions } => {
                 let mut body = serde_json::Map::new();
                 if let Some(n) = name { body.insert("name".to_string(), serde_json::json!(n)); }
                 if let Some(r) = reason { body.insert("reason".to_string(), serde_json::json!(r)); }
+                if let Some(a) = audit_note { body.insert("auditNote".to_string(), serde_json::json!(a)); }
+                if let Some(c) = conditions {
+                    let cond_val: serde_json::Value = serde_json::from_str(c)
+                        .map_err(|e| anyhow::anyhow!("Invalid JSON for --conditions: {e}"))?;
+                    body.insert("conditions".to_string(), cond_val);
+                }
                 let resp = update_exemption(&client, profile_id, id, serde_json::Value::Object(body)).await?;
                 output::render_json_value(&resp, config.output, config.query.as_deref())?;
             }

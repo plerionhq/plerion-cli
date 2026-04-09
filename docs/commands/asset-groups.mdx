@@ -16,8 +16,15 @@ plerion asset-groups <subcommand> [options]
 ### list
 
 ```bash
-plerion asset-groups list [--name <n>] [--per-page N] [--all]
+plerion asset-groups list [--name <n>] [--include-total] [--per-page N] [--all]
 ```
+
+| Option | Type | Description |
+|---|---|---|
+| `--name` | string | Filter by name |
+| `--include-total` | flag | Include total count in response |
+| `--per-page` | number | Results per page |
+| `--all` | flag | Fetch all pages automatically |
 
 ### get
 

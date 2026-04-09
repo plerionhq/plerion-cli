@@ -134,3 +134,26 @@ async fn test_delete_exemption_error() {
     let result = vulnerabilities::delete_exemption(&client, "prof-1", "bad").await;
     assert!(result.is_err());
 }
+
+#[tokio::test]
+async fn test_create_exemption_with_audit_note() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({ "data": { "id": "ex-new" } });
+    let mock = server
+        .mock("POST", "/v1/tenant/profiles/prof-1/vulnerability/exemptions")
+        .match_query(mockito::Matcher::Any)
+        .with_status(201)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let req_body = serde_json::json!({
+        "name": "test",
+        "reason": "ACCEPTED_RISK",
+        "auditNote": "Reviewed by security team"
+    });
+    let resp = vulnerabilities::create_exemption(&client, "prof-1", req_body).await.unwrap();
+    assert_eq!(resp["data"]["id"], "ex-new");
+    mock.assert_async().await;
+}

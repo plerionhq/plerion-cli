@@ -37,6 +37,7 @@ plerion iac list-scans [options]
 
 | Option | Description |
 |---|---|
+| `--ids` | Filter by scan IDs (comma-separated) |
 | `--artifact-name <names>` | Filter by artifact names (comma-separated) |
 | `--status <statuses>` | Filter by status: `SUCCESS`, `FAILURE` (comma-separated) |
 | `--sort-by <field>` | Sort by field (`id`, `createdAt`, `updatedAt`, `artifactName`, `status`) |
@@ -55,6 +56,7 @@ plerion iac get-findings --scan-id <scan-id> [options]
 | Option | Description |
 |---|---|
 | `--scan-id <id>` | **(required)** Scan ID returned from `iac scan` |
+| `--ids` | Filter by finding IDs (comma-separated) |
 | `--status <results>` | Filter by result: `PASSED`, `FAILED` (comma-separated) |
 | `--severity <levels>` | Filter by severity: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` (comma-separated) |
 | `--detection-id <ids>` | Filter by detection IDs (comma-separated) |
@@ -76,6 +78,7 @@ plerion iac get-vulnerabilities --scan-id <scan-id> [options]
 | Option | Description |
 |---|---|
 | `--scan-id <id>` | **(required)** Scan ID returned from `iac scan` |
+| `--ids` | Filter by vulnerability IDs (comma-separated) |
 | `--severity <levels>` | Filter by severity: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` (comma-separated) |
 | `--vulnerability-id <ids>` | Filter by CVE/vulnerability IDs (comma-separated) |
 | `--severity-source <sources>` | Filter by severity source (comma-separated, e.g. `nvd`, `github`) |

@@ -16,6 +16,12 @@ pub enum RisksCommands {
 
 #[derive(Args, Debug)]
 pub struct ListRisksArgs {
+    #[arg(long)] pub ids: Option<String>,
+    #[arg(long)] pub risk_type_id: Option<String>,
+    #[arg(long)] pub primary_asset_id: Option<String>,
+    #[arg(long)] pub discovered_at_start: Option<String>,
+    #[arg(long)] pub discovered_at_end: Option<String>,
+    #[arg(long)] pub fields: Option<String>,
     #[arg(long)] pub severity: Option<String>,
     #[arg(long)] pub lifecycle_state: Option<String>,
     #[arg(long)] pub integration_id: Option<String>,
@@ -34,6 +40,12 @@ pub async fn run(args: &RisksArgs, config: &Config) -> anyhow::Result<()> {
     match &args.command {
         RisksCommands::List(a) => {
             let params = ListRisksParams {
+                ids: a.ids.clone(),
+                risk_type_ids: a.risk_type_id.clone(),
+                primary_asset_ids: a.primary_asset_id.clone(),
+                discovered_at_start: a.discovered_at_start.clone(),
+                discovered_at_end: a.discovered_at_end.clone(),
+                fields: a.fields.clone(),
                 severity_levels: a.severity.clone(),
                 lifecycle_states: a.lifecycle_state.clone(),
                 integration_ids: a.integration_id.clone(),
@@ -52,6 +64,12 @@ pub async fn run(args: &RisksArgs, config: &Config) -> anyhow::Result<()> {
                     let p = ListRisksParams {
                         cursor: cursor.clone(),
                         per_page: Some(1000),
+                        ids: params.ids.clone(),
+                        risk_type_ids: params.risk_type_ids.clone(),
+                        primary_asset_ids: params.primary_asset_ids.clone(),
+                        discovered_at_start: params.discovered_at_start.clone(),
+                        discovered_at_end: params.discovered_at_end.clone(),
+                        fields: params.fields.clone(),
                         severity_levels: params.severity_levels.clone(),
                         lifecycle_states: params.lifecycle_states.clone(),
                         integration_ids: params.integration_ids.clone(),
@@ -60,7 +78,6 @@ pub async fn run(args: &RisksArgs, config: &Config) -> anyhow::Result<()> {
                         include: params.include.clone(),
                         sort_by: params.sort_by.clone(),
                         sort_order: params.sort_order.clone(),
-                        ..Default::default()
                     };
                     let resp = list_risks(&client, &p).await?;
                     let has_next = resp.meta.has_next_page.unwrap_or(false);

@@ -17,6 +17,14 @@ pub enum FindingsCommands {
 
 #[derive(Args, Debug)]
 pub struct ListFindingsArgs {
+    /// Filter by finding IDs (comma-separated)
+    #[arg(long)]
+    pub ids: Option<String>,
+
+    /// Filter by asset IDs (comma-separated)
+    #[arg(long)]
+    pub asset_id: Option<String>,
+
     /// Filter by severity: CRITICAL,HIGH,MEDIUM,LOW
     #[arg(long)]
     pub severity: Option<String>,
@@ -91,6 +99,8 @@ pub async fn run(args: &FindingsArgs, config: &Config) -> anyhow::Result<()> {
     match &args.command {
         FindingsCommands::List(list_args) => {
             let params = ListFindingsParams {
+                ids: list_args.ids.clone(),
+                asset_ids: list_args.asset_id.clone(),
                 severity_levels: list_args.severity.clone(),
                 statuses: list_args.status.clone(),
                 providers: list_args.provider.clone(),
@@ -117,6 +127,8 @@ pub async fn run(args: &FindingsArgs, config: &Config) -> anyhow::Result<()> {
                     let p = ListFindingsParams {
                         cursor: cursor.clone(),
                         ..ListFindingsParams {
+                            ids: params.ids.clone(),
+                            asset_ids: params.asset_ids.clone(),
                             severity_levels: params.severity_levels.clone(),
                             statuses: params.statuses.clone(),
                             providers: params.providers.clone(),

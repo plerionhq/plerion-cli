@@ -14,7 +14,11 @@ pub enum TenantCommands {
     /// Get tenant details
     Get,
     /// Get tenant usage details
-    GetUsage,
+    GetUsage {
+        /// Usage date in yyyy-MM-dd format (defaults to today)
+        #[arg(long)]
+        date: Option<String>,
+    },
 }
 
 pub async fn run(args: &TenantArgs, config: &Config) -> anyhow::Result<()> {
@@ -29,8 +33,8 @@ pub async fn run(args: &TenantArgs, config: &Config) -> anyhow::Result<()> {
                 config.no_color,
             )?;
         }
-        TenantCommands::GetUsage => {
-            let resp = tenant::get_tenant_usage(&client).await?;
+        TenantCommands::GetUsage { date } => {
+            let resp = tenant::get_tenant_usage(&client, date.as_deref()).await?;
             output::render_json_value(&resp.data, config.output, config.query.as_deref())?;
         }
     }

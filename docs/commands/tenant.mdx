@@ -24,10 +24,14 @@ Returns tenant ID, organization ID, name, risk score, and timestamps.
 ### get-usage
 
 ```bash
-plerion tenant get-usage
+plerion tenant get-usage [--date <yyyy-MM-dd>]
 ```
 
 Returns tenant usage details.
+
+| Option | Type | Description |
+|---|---|---|
+| `--date` | string | Usage date in `yyyy-MM-dd` format (defaults to today) |
 
 ## Examples
 

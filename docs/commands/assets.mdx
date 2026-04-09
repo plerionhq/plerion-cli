@@ -30,14 +30,23 @@ plerion assets list [options]
 | `--resource-type` | string | Resource type (e.g. `AWS::EC2::Instance`) |
 | `--service` | string | Service filter (e.g. `AWS::S3`) |
 | `--severity` | string | Vulnerability severity levels |
+| `--ids` | string | Filter by asset IDs (comma-separated) |
+| `--execution-id` | string | Filter by execution IDs (comma-separated) |
 | `--is-publicly-exposed` | flag | Show only publicly exposed assets |
 | `--is-vulnerable` | flag | Show only assets with vulnerabilities |
+| `--is-exploitable` | flag | Only exploitable assets |
 | `--has-kev` | flag | Show only assets with CISA KEV vulnerabilities |
 | `--has-exploit` | flag | Show only assets with known exploits |
 | `--has-admin-privileges` | flag | Show only assets with admin privileges |
+| `--has-overly-permissive-privileges` | flag | Only assets with overly permissive privileges |
+| `--is-susceptible-to-privilege-escalation` | flag | Only assets susceptible to privilege escalation |
 | `--risk-score-gte` | float | Minimum risk score (0-10) |
+| `--secrets-level` | string | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` (comma-separated) |
 | `--query-string` | string | Filter by asset name substring |
+| `--metadata` | string | Substring search against asset metadata |
 | `--operational-state` | string | `active` or `inactive` |
+| `--first-observed-at-start` | string | First observed start date (ISO 8601) |
+| `--first-observed-at-end` | string | First observed end date (ISO 8601) |
 | `--sort-by` | string | Sort field |
 | `--sort-order` | string | `ASC` or `DESC` |
 | `--per-page` | number | Results per page (default: 50, max: 1000) |
@@ -48,8 +57,14 @@ plerion assets list [options]
 Get full details for a single asset.
 
 ```bash
-plerion assets get --asset-id <asset-id>
+plerion assets get --asset-id <asset-id> [--include <fields>]
 ```
+
+#### Options
+
+| Flag | Type | Description |
+|---|---|---|
+| `--include` | string | Include additional data (e.g. `rawData`) |
 
 ### get-sbom
 
