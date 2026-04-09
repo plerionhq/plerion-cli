@@ -32,24 +32,60 @@ Maximum upload size is 4.4 MB. Zip your IaC files before uploading.
 List previous IaC scans.
 
 ```bash
-plerion iac list-scans
+plerion iac list-scans [options]
 ```
+
+| Option | Description |
+|---|---|
+| `--artifact-name <names>` | Filter by artifact names (comma-separated) |
+| `--status <statuses>` | Filter by status: `SUCCESS`, `FAILURE` (comma-separated) |
+| `--sort-by <field>` | Sort by field (`id`, `createdAt`, `updatedAt`, `artifactName`, `status`) |
+| `--sort-order <order>` | Sort order (`asc` or `desc`) |
+| `--per-page <n>` | Results per page (default: 50, max: 1000) |
+| `--all` | Fetch all pages automatically |
 
 ### get-findings
 
 Get security findings from a completed scan.
 
 ```bash
-plerion iac get-findings --scan-id <scan-id>
+plerion iac get-findings --scan-id <scan-id> [options]
 ```
+
+| Option | Description |
+|---|---|
+| `--scan-id <id>` | **(required)** Scan ID returned from `iac scan` |
+| `--status <results>` | Filter by result: `PASSED`, `FAILED` (comma-separated) |
+| `--severity <levels>` | Filter by severity: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` (comma-separated) |
+| `--detection-id <ids>` | Filter by detection IDs (comma-separated) |
+| `--type <types>` | Filter by type (comma-separated, e.g. `terraform`, `kubernetes`) |
+| `--file <files>` | Filter by file paths (comma-separated) |
+| `--sort-by <field>` | Sort by field (`id`, `createdAt`, `updatedAt`, `artifactName`, `status`) |
+| `--sort-order <order>` | Sort order (`asc` or `desc`) |
+| `--per-page <n>` | Results per page (default: 50, max: 1000) |
+| `--all` | Fetch all pages automatically |
 
 ### get-vulnerabilities
 
 Get vulnerabilities from a completed scan.
 
 ```bash
-plerion iac get-vulnerabilities --scan-id <scan-id>
+plerion iac get-vulnerabilities --scan-id <scan-id> [options]
 ```
+
+| Option | Description |
+|---|---|
+| `--scan-id <id>` | **(required)** Scan ID returned from `iac scan` |
+| `--severity <levels>` | Filter by severity: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` (comma-separated) |
+| `--vulnerability-id <ids>` | Filter by CVE/vulnerability IDs (comma-separated) |
+| `--severity-source <sources>` | Filter by severity source (comma-separated, e.g. `nvd`, `github`) |
+| `--file <files>` | Filter by file paths (comma-separated) |
+| `--has-kev` | Filter for CISA Known Exploited Vulnerabilities |
+| `--has-exploit` | Filter for vulnerabilities with known exploits |
+| `--sort-by <field>` | Sort by field (`id`, `vulnerabilityId`, `severityLevel`, `hasKev`, `hasExploit`, `file`, `createdAt`, `updatedAt`) |
+| `--sort-order <order>` | Sort order (`asc` or `desc`) |
+| `--per-page <n>` | Results per page (default: 50, max: 1000) |
+| `--all` | Fetch all pages automatically |
 
 ## Examples
 
@@ -61,17 +97,27 @@ plerion iac scan --file infra.zip --name infra.zip
 # List all scans
 plerion iac list-scans --output table
 
-# Get findings from a scan
-plerion iac get-findings --scan-id scan-abc123
+# List only successful scans
+plerion iac list-scans --status SUCCESS
 
-# Get vulnerabilities from a scan
-plerion iac get-vulnerabilities --scan-id scan-abc123 --output json
+# Get all findings from a scan
+plerion iac get-findings --scan-id scan-abc123 --all
+
+# Get only failed findings
+plerion iac get-findings --scan-id scan-abc123 --status FAILED
+
+# Get critical and high severity findings
+plerion iac get-findings --scan-id scan-abc123 --severity CRITICAL,HIGH
+
+# Get vulnerabilities with known exploits
+plerion iac get-vulnerabilities --scan-id scan-abc123 --has-exploit --output json
 
 # Full workflow
 zip -r infra.zip ./terraform/
 plerion iac scan --file infra.zip --name infra.zip
 # Note the scan ID from output, then:
-plerion iac get-findings --scan-id <scan-id> --output table
+plerion iac get-findings --scan-id <scan-id> --status FAILED --output table
+plerion iac get-vulnerabilities --scan-id <scan-id> --severity CRITICAL,HIGH --all
 ```
 
 ### Output columns (list-scans)
@@ -80,7 +126,7 @@ plerion iac get-findings --scan-id <scan-id> --output table
 |---|---|
 | ID | Scan ID |
 | ARTIFACT | Artifact name (uploaded zip filename) |
-| STATUS | Scan status (e.g. `COMPLETED`, `PROCESSING`) |
+| STATUS | Scan status (e.g. `SUCCESS`, `FAILURE`) |
 | TYPES | Detected IaC types (e.g. `terraform`, `kubernetes`) |
 | FINDINGS | Total findings count |
 | FAILED | Failed findings count |

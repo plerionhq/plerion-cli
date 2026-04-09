@@ -16,7 +16,7 @@ plerion asset-groups <subcommand> [options]
 ### list
 
 ```bash
-plerion asset-groups list [--name <n>] [--per-page N]
+plerion asset-groups list [--name <n>] [--per-page N] [--all]
 ```
 
 ### get
@@ -48,6 +48,9 @@ plerion asset-groups delete --id <id>
 ```bash
 # List all asset groups
 plerion asset-groups list
+
+# Fetch all asset groups across all pages
+plerion asset-groups list --all
 
 # Create a new group
 plerion asset-groups create --name "Production AWS"

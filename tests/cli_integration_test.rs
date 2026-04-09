@@ -503,10 +503,12 @@ async fn test_cli_asset_groups_get() {
 async fn test_cli_iac_list_scans() {
     let mut server = Server::new_async().await;
     let body = serde_json::json!({
-        "data": [{ "id": "scan-1", "artifactName": "test.zip", "status": "COMPLETED", "types": [] }]
+        "data": [{ "id": "scan-1", "artifactName": "test.zip", "status": "COMPLETED", "types": [] }],
+        "meta": { "page": 1, "perPage": 50, "total": 1, "hasNextPage": false, "hasPreviousPage": false }
     });
     let _mock = server
         .mock("GET", "/v1/tenant/shiftleft/iac/scans")
+        .match_query(mockito::Matcher::Any)
         .with_status(200)
         .with_body(body.to_string())
         .create_async()
@@ -522,10 +524,12 @@ async fn test_cli_iac_list_scans() {
 async fn test_cli_iac_get_findings() {
     let mut server = Server::new_async().await;
     let body = serde_json::json!({
-        "data": [{ "id": "f-1", "severityLevel": "HIGH", "detectionTitle": "Insecure" }]
+        "data": [{ "id": "f-1", "severityLevel": "HIGH", "detectionTitle": "Insecure" }],
+        "meta": { "page": 1, "perPage": 50, "total": 1, "hasNextPage": false, "hasPreviousPage": false }
     });
     let _mock = server
         .mock("GET", "/v1/tenant/shiftleft/iac/scans/scan-1/findings")
+        .match_query(mockito::Matcher::Any)
         .with_status(200)
         .with_body(body.to_string())
         .create_async()

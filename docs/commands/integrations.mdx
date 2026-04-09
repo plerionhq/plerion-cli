@@ -25,8 +25,9 @@ plerion integrations list [options]
 
 | Flag | Type | Description |
 |---|---|---|
-| `--per-page` | number | Results per page |
+| `--per-page` | number | Results per page (default: 50) |
 | `--include-total` | flag | Include total count in response metadata |
+| `--all` | flag | Fetch all pages automatically |
 
 ## Examples
 
@@ -39,6 +40,9 @@ plerion integrations list --include-total --output json
 
 # Extract integration IDs
 plerion integrations list --output json --query 'data[*].integrationId'
+
+# Fetch all integrations across all pages
+plerion integrations list --all --output json
 ```
 
 ### Output columns

@@ -22,9 +22,36 @@ async fn test_list_exemptions() {
         .await;
 
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
-    let resp = vulnerabilities::list_exemptions(&client, "prof-1").await.unwrap();
+    let resp = vulnerabilities::list_exemptions(&client, "prof-1", None, None).await.unwrap();
     assert_eq!(resp.data.len(), 1);
     assert_eq!(resp.data[0].reason.as_deref(), Some("ACCEPTED_RISK"));
+}
+
+#[tokio::test]
+async fn test_list_exemptions_with_pagination_params() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [{ "id": "ex-1", "reason": "ACCEPTED_RISK" }],
+        "meta": { "hasNext": true, "nextCursor": "cursor-abc", "total": 5 }
+    });
+    let mock = server
+        .mock("GET", "/v1/tenant/profiles/prof-1/vulnerability/exemptions")
+        .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("limit".to_string(), "10".to_string()),
+            mockito::Matcher::UrlEncoded("cursor".to_string(), "prev-cursor".to_string()),
+        ]))
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let resp = vulnerabilities::list_exemptions(&client, "prof-1", Some(10), Some("prev-cursor")).await.unwrap();
+    assert_eq!(resp.data.len(), 1);
+    assert_eq!(resp.meta.has_next, Some(true));
+    assert_eq!(resp.meta.next_cursor.as_deref(), Some("cursor-abc"));
+    assert_eq!(resp.meta.total, Some(5));
+    mock.assert_async().await;
 }
 
 #[tokio::test]

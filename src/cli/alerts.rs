@@ -25,6 +25,8 @@ pub struct ListAlertsArgs {
     #[arg(long)] pub sort_by: Option<String>,
     #[arg(long)] pub sort_order: Option<String>,
     #[arg(long, default_value = "50")] pub per_page: u32,
+    /// Fetch all pages automatically
+    #[arg(long)] pub all: bool,
 }
 
 pub async fn run(args: &AlertsArgs, config: &Config) -> anyhow::Result<()> {
@@ -43,8 +45,34 @@ pub async fn run(args: &AlertsArgs, config: &Config) -> anyhow::Result<()> {
                 per_page: Some(a.per_page),
                 ..Default::default()
             };
-            let resp = list_alerts(&client, &params).await?;
-            output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
+            if a.all {
+                let mut all_items = Vec::new();
+                let mut cursor: Option<String> = None;
+                loop {
+                    let p = ListAlertsParams {
+                        cursor: cursor.clone(),
+                        per_page: Some(1000),
+                        statuses: params.statuses.clone(),
+                        providers: params.providers.clone(),
+                        alert_types: params.alert_types.clone(),
+                        integration_ids: params.integration_ids.clone(),
+                        flagged: params.flagged,
+                        acknowledged: params.acknowledged,
+                        sort_by: params.sort_by.clone(),
+                        sort_order: params.sort_order.clone(),
+                        ..Default::default()
+                    };
+                    let resp = list_alerts(&client, &p).await?;
+                    let has_next = resp.meta.has_next_page.unwrap_or(false);
+                    cursor = resp.meta.cursor.clone();
+                    all_items.extend(resp.data);
+                    if !has_next { break; }
+                }
+                output::render_list(&all_items, config.output, config.query.as_deref(), config.no_color)?;
+            } else {
+                let resp = list_alerts(&client, &params).await?;
+                output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
+            }
         }
     }
     Ok(())

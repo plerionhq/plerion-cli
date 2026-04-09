@@ -59,10 +59,13 @@ pub async fn list_vulnerabilities(
 pub async fn list_exemptions(
     client: &PlerionClient,
     profile_id: &str,
+    limit: Option<u32>,
+    cursor: Option<&str>,
 ) -> Result<ExemptionsResponse, PlerionError> {
-    client
-        .execute(client.get(&format!("/v1/tenant/profiles/{profile_id}/vulnerability/exemptions")))
-        .await
+    let mut req = client.get(&format!("/v1/tenant/profiles/{profile_id}/vulnerability/exemptions"));
+    if let Some(v) = limit { req = req.query(&[("limit", v)]); }
+    if let Some(v) = cursor { req = req.query(&[("cursor", v)]); }
+    client.execute(req).await
 }
 
 pub async fn get_exemption(

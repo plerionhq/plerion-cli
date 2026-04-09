@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
+use crate::api::models::assets::{PagePaginationMeta, deserialize_option_u32_or_string};
 use crate::output::TableRenderable;
-use crate::api::models::assets::PagePaginationMeta;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -110,6 +110,17 @@ pub struct VulnerabilityExemption {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ExemptionsResponse {
     pub data: Vec<VulnerabilityExemption>,
+    #[serde(default)]
+    pub meta: ExemptionsPaginationMeta,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ExemptionsPaginationMeta {
+    pub has_next: Option<bool>,
+    pub next_cursor: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_option_u32_or_string")]
+    pub total: Option<u32>,
 }
 
 impl TableRenderable for VulnerabilityExemption {

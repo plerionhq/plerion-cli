@@ -33,7 +33,8 @@ plerion risks list [options]
 | `--include` | string | Load relationships: `primaryAsset`, `integration` |
 | `--sort-by` | string | `discoveredAt` or `score` |
 | `--sort-order` | string | `asc` or `desc` |
-| `--per-page` | number | Results per page (1-100) |
+| `--per-page` | number | Results per page (default: 50) |
+| `--all` | flag | Fetch all pages automatically |
 
 ## Examples
 
@@ -46,6 +47,9 @@ plerion risks list --lifecycle-state OPEN --include primaryAsset
 
 # Risks for a specific integration
 plerion risks list --integration-id int-abc123 --output json
+
+# Fetch all risks across all pages
+plerion risks list --all --output json
 ```
 
 ### Output columns

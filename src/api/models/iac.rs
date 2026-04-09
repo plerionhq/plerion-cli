@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::api::models::assets::PagePaginationMeta;
 use crate::output::TableRenderable;
 
 // --- Scan upload response ---
@@ -23,6 +24,7 @@ pub struct IacScanMeta {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct IacScansResponse {
     pub data: Vec<IacScan>,
+    pub meta: PagePaginationMeta,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -88,6 +90,7 @@ impl TableRenderable for IacScan {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct IacFindingsResponse {
     pub data: Vec<IacFinding>,
+    pub meta: PagePaginationMeta,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -156,6 +159,7 @@ impl TableRenderable for IacFinding {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct IacVulnerabilitiesResponse {
     pub data: Vec<IacVulnerability>,
+    pub meta: PagePaginationMeta,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

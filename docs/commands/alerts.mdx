@@ -32,7 +32,8 @@ plerion alerts list [options]
 | `--acknowledged` | string | Filter by acknowledged status (`true`/`false`) |
 | `--sort-by` | string | `riskScore` or `discoveredDate` |
 | `--sort-order` | string | `ASC` or `DESC` |
-| `--per-page` | number | Results per page (max 1000) |
+| `--per-page` | number | Results per page (default: 50, max: 1000) |
+| `--all` | flag | Fetch all pages automatically |
 
 ## Examples
 
@@ -48,6 +49,9 @@ plerion alerts list --alert-type ASSET --output table
 
 # All AWS alerts as JSON
 plerion alerts list --provider AWS --output json
+
+# Fetch all alerts across all pages
+plerion alerts list --all --output json
 ```
 
 ### Output columns

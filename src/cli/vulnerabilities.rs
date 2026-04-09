@@ -42,7 +42,15 @@ pub struct ExemptionsArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum ExemptionsCommands {
-    List { #[arg(long)] profile_id: String },
+    List {
+        #[arg(long)] profile_id: String,
+        /// Number of results per page (max 1000)
+        #[arg(long, default_value = "100")]
+        per_page: u32,
+        /// Fetch all pages automatically
+        #[arg(long)]
+        all: bool,
+    },
     Get {
         #[arg(long)] profile_id: String,
         /// Exemption ID
@@ -86,13 +94,54 @@ pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<
                 per_page: Some(a.per_page),
                 ..Default::default()
             };
-            let resp = list_vulnerabilities(&client, &params).await?;
-            output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
+            if a.all {
+                let mut all_items = Vec::new();
+                let mut page = 1u32;
+                loop {
+                    let p = ListVulnerabilitiesParams {
+                        page: Some(page),
+                        per_page: Some(1000),
+                        severity_levels: params.severity_levels.clone(),
+                        providers: params.providers.clone(),
+                        has_kev: params.has_kev,
+                        has_exploit: params.has_exploit,
+                        has_vendor_fix: params.has_vendor_fix,
+                        integration_ids: params.integration_ids.clone(),
+                        asset_ids: params.asset_ids.clone(),
+                        regions: params.regions.clone(),
+                        sort_by: params.sort_by.clone(),
+                        sort_order: params.sort_order.clone(),
+                        ..Default::default()
+                    };
+                    let resp = list_vulnerabilities(&client, &p).await?;
+                    let has_next = resp.meta.has_next_page.unwrap_or(false);
+                    all_items.extend(resp.data);
+                    if !has_next { break; }
+                    page += 1;
+                }
+                output::render_list(&all_items, config.output, config.query.as_deref(), config.no_color)?;
+            } else {
+                let resp = list_vulnerabilities(&client, &params).await?;
+                output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
+            }
         }
         VulnerabilitiesCommands::Exemptions(e) => match &e.command {
-            ExemptionsCommands::List { profile_id } => {
-                let resp = list_exemptions(&client, profile_id).await?;
-                output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
+            ExemptionsCommands::List { profile_id, per_page, all } => {
+                if *all {
+                    let mut all_items = Vec::new();
+                    let mut cursor: Option<String> = None;
+                    loop {
+                        let resp = list_exemptions(&client, profile_id, Some(1000), cursor.as_deref()).await?;
+                        let has_next = resp.meta.has_next.unwrap_or(false);
+                        cursor = resp.meta.next_cursor.clone();
+                        all_items.extend(resp.data);
+                        if !has_next { break; }
+                    }
+                    output::render_list(&all_items, config.output, config.query.as_deref(), config.no_color)?;
+                } else {
+                    let resp = list_exemptions(&client, profile_id, Some(*per_page), None).await?;
+                    output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
+                }
             }
             ExemptionsCommands::Get { profile_id, id } => {
                 let resp = get_exemption(&client, profile_id, id).await?;

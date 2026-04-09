@@ -161,13 +161,13 @@ plerion --profile prod findings list
 | `assets list` | Cloud assets (supports `--all`) |
 | `assets get --asset-id <id>` | Asset details |
 | `assets get-sbom --asset-id <id>` | Asset SBOM |
-| `asset-groups list/get/create/update/delete` | Manage asset groups |
-| `alerts list` | Risk-based alerts |
-| `audit-logs list` | Audit logs |
-| `integrations list` | Cloud integrations |
-| `risks list` | Security risks |
+| `asset-groups list/get/create/update/delete` | Manage asset groups (list supports `--all`) |
+| `alerts list` | Risk-based alerts (supports `--all`) |
+| `audit-logs list` | Audit logs (supports `--all`) |
+| `integrations list` | Cloud integrations (supports `--all`) |
+| `risks list` | Security risks (supports `--all`) |
 | `vulnerabilities list` | Vulnerabilities (supports `--all`) |
-| `vulnerabilities exemptions list/get/create/update/delete` | Vulnerability exemptions |
+| `vulnerabilities exemptions list/get/create/update/delete` | Vulnerability exemptions (list supports `--all`) |
 | `compliance-frameworks list` | Compliance frameworks |
 | `compliance-frameworks request-report --integration-id <id> --framework-id <id>` | Request compliance report |
 | `compliance-frameworks download --integration-id <id> --framework-id <id> [--output-file <path>]` | Download compliance report |
@@ -175,9 +175,9 @@ plerion --profile prod findings list
 | `well-architected-frameworks request-report --integration-id <id> --framework-id <id>` | Request WAF report |
 | `well-architected-frameworks download --integration-id <id> --framework-id <id> [--output-file <path>]` | Download WAF report |
 | `iac scan --file <file.zip> --name <name>` | Upload IaC for scanning (max 4.4 MB) |
-| `iac list-scans` | List IaC scans |
-| `iac get-findings --scan-id <id>` | IaC scan findings |
-| `iac get-vulnerabilities --scan-id <id>` | IaC scan vulnerabilities |
+| `iac list-scans` | List IaC scans (supports filtering and `--all`) |
+| `iac get-findings --scan-id <id>` | IaC scan findings (supports `--status`, `--severity`, `--all`) |
+| `iac get-vulnerabilities --scan-id <id>` | IaC scan vulnerabilities (supports `--severity`, `--all`) |
 | `aws get-external-id` | AWS external ID for role trust |
 | `aws get-cloudformation-template` | CloudFormation setup template |
 | `aws generate-token --integration-id <id>` | Temporary auth token |

@@ -38,10 +38,16 @@ plerion vulnerabilities list [options]
 ### exemptions list
 
 ```bash
-plerion vulnerabilities exemptions list --profile-id <id>
+plerion vulnerabilities exemptions list --profile-id <id> [--per-page N] [--all]
 ```
 
 List vulnerability exemptions for a profile.
+
+| Flag | Type | Description |
+|---|---|---|
+| `--profile-id` | string | **(required)** Profile ID or `default` |
+| `--per-page` | number | Results per page (default: 100, max: 1000) |
+| `--all` | flag | Fetch all pages automatically |
 
 ### exemptions get
 
@@ -97,6 +103,9 @@ plerion vulnerabilities exemptions create \
 
 # List exemptions
 plerion vulnerabilities exemptions list --profile-id my-profile
+
+# Fetch all exemptions across all pages
+plerion vulnerabilities exemptions list --profile-id my-profile --all
 
 # Delete an exemption
 plerion vulnerabilities exemptions delete --profile-id my-profile --id ex-abc123

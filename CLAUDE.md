@@ -9,7 +9,7 @@ A Rust CLI (`plerion`) that wraps the Plerion REST API (v1). It covers all 34 en
 ```bash
 cargo build                    # debug build
 cargo build --release          # release build (LTO, stripped)
-cargo test                     # run all 195+ tests
+cargo test                     # run all 243+ tests
 cargo tarpaulin --skip-clean   # measure coverage (~92%)
 ```
 
@@ -59,9 +59,10 @@ Colors are applied in `src/output/table.rs::colorize_cell()` using `Cell::fg(Col
 Custom endpoint via `--endpoint-url` bypasses region validation.
 
 ### Pagination
-- **Cursor-based**: findings, alerts, risks, audit-logs, integrations, asset-groups (use `cursor` param)
-- **Page-based**: assets, vulnerabilities (use `page` param)
-- `--all` flag auto-paginates through all pages
+- **Cursor-based**: findings, alerts, risks, audit-logs, integrations, asset-groups, vuln-exemptions (use `cursor` param)
+- **Page-based**: assets, vulnerabilities, iac-scans, iac-findings, iac-vulnerabilities (use `page` param)
+- `--all` flag auto-paginates through all pages on every list command that supports pagination
+- Vuln exemptions use `limit`/`cursor` params and `hasNext`/`nextCursor` response fields (different from standard `PaginationMeta`)
 
 ## Testing approach
 

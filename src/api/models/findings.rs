@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::api::models::assets::deserialize_option_u32_or_string;
 use crate::output::TableRenderable;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -51,8 +52,11 @@ pub struct FindingsResponse {
 #[serde(rename_all = "camelCase")]
 pub struct PaginationMeta {
     pub cursor: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_option_u32_or_string")]
     pub per_page: Option<u32>,
+    #[serde(default, deserialize_with = "deserialize_option_u32_or_string")]
     pub total: Option<u32>,
+    #[serde(default, deserialize_with = "deserialize_option_u32_or_string")]
     pub page: Option<u32>,
     pub has_next_page: Option<bool>,
     pub has_previous_page: Option<bool>,

@@ -29,7 +29,8 @@ plerion audit-logs list [options]
 | `--end` | ISO 8601 | End time (e.g. `2024-01-31T23:59:59Z`) |
 | `--user-id` | string | Filter by operator user ID |
 | `--operation` | string | Filter by operation type (e.g. `UserLogin`, `CreatedApiKey`) |
-| `--per-page` | number | Results per page (max 1000) |
+| `--per-page` | number | Results per page (default: 50, max: 1000) |
+| `--all` | flag | Fetch all pages automatically |
 
 ## Examples
 
@@ -42,6 +43,9 @@ plerion audit-logs list --operation UserLogin
 
 # Logs by a specific user
 plerion audit-logs list --user-id user-abc123 --output json
+
+# Fetch all audit logs across all pages
+plerion audit-logs list --all --output json
 ```
 
 ### Output columns

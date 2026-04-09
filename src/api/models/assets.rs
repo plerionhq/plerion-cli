@@ -1,5 +1,29 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use crate::output::TableRenderable;
+
+/// Deserialize a value that may be a number or a stringified number (e.g. `"1"` or `1`).
+pub(crate) fn deserialize_option_u32_or_string<'de, D>(deserializer: D) -> Result<Option<u32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de;
+
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrU32 {
+        U32(u32),
+        Str(String),
+    }
+
+    match Option::<StringOrU32>::deserialize(deserializer)? {
+        None => Ok(None),
+        Some(StringOrU32::U32(v)) => Ok(Some(v)),
+        Some(StringOrU32::Str(s)) => s
+            .parse::<u32>()
+            .map(Some)
+            .map_err(|_| de::Error::custom(format!("invalid numeric string: {s}"))),
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -71,8 +95,11 @@ pub struct AssetsResponse {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PagePaginationMeta {
+    #[serde(default, deserialize_with = "deserialize_option_u32_or_string")]
     pub page: Option<u32>,
+    #[serde(default, deserialize_with = "deserialize_option_u32_or_string")]
     pub per_page: Option<u32>,
+    #[serde(default, deserialize_with = "deserialize_option_u32_or_string")]
     pub total: Option<u32>,
     pub has_next_page: Option<bool>,
     pub has_previous_page: Option<bool>,
