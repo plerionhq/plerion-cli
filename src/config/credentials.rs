@@ -31,22 +31,15 @@ pub fn load_profile(profile: &str) -> Result<ProfileConfig, PlerionError> {
         }
     }
 
-    // Load region/output from config file
-    // Config uses [default] for default, [profile <name>] for named profiles
+    // Load region/output from config file (bare section names, same as credentials)
     if let Ok(cfg) = load_ini(&config_path()) {
-        let section = if profile == "default" {
-            profile.to_string()
-        } else {
-            format!("profile {profile}")
-        };
-
-        if let Some(r) = cfg.get(&section, "region") {
+        if let Some(r) = cfg.get(profile, "region") {
             result.region = Some(r);
         }
-        if let Some(o) = cfg.get(&section, "output") {
+        if let Some(o) = cfg.get(profile, "output") {
             result.output = OutputFormat::from_str(&o).ok();
         }
-        if let Some(u) = cfg.get(&section, "endpoint_url") {
+        if let Some(u) = cfg.get(profile, "endpoint_url") {
             result.endpoint_url = Some(u);
         }
     }
@@ -81,11 +74,7 @@ pub fn list_profiles() -> Vec<String> {
     }
     if let Ok(cfg) = load_ini(&config_path()) {
         for section in cfg.sections() {
-            let name = section
-                .strip_prefix("profile ")
-                .unwrap_or(&section)
-                .to_string();
-            names.insert(name);
+            names.insert(section);
         }
     }
 
@@ -124,13 +113,8 @@ pub fn write_profile(
         let p = cfg_path.to_str().unwrap();
         cfg.load(p).map_err(|e| PlerionError::ConfigError(e.to_string()))?;
     }
-    let section = if profile == "default" {
-        "default".to_string()
-    } else {
-        format!("profile {profile}")
-    };
-    cfg.set(&section, "region", Some(region.to_string()));
-    cfg.set(&section, "output", Some(output.to_string()));
+    cfg.set(profile, "region", Some(region.to_string()));
+    cfg.set(profile, "output", Some(output.to_string()));
     let cfg_str = cfg_path.to_str().unwrap().to_string();
     cfg.write(&cfg_str)
         .map_err(|e| PlerionError::ConfigError(e.to_string()))?;

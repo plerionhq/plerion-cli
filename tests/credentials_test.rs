@@ -44,11 +44,11 @@ fn test_write_multiple_profiles() {
 }
 
 #[test]
-fn test_config_file_with_profile_prefix() {
+fn test_config_file_with_named_profiles() {
     let dir = TempDir::new().unwrap();
     let path = dir.path().join("config");
 
-    let content = "[default]\nregion = au\noutput = table\n\n[profile prod]\nregion = us1\noutput = json\n";
+    let content = "[default]\nregion = au\noutput = table\n\n[prod]\nregion = us1\noutput = json\n";
     fs::write(&path, content).unwrap();
 
     let mut ini = configparser::ini::Ini::new();
@@ -56,8 +56,8 @@ fn test_config_file_with_profile_prefix() {
 
     assert_eq!(ini.get("default", "region").unwrap(), "au");
     assert_eq!(ini.get("default", "output").unwrap(), "table");
-    assert_eq!(ini.get("profile prod", "region").unwrap(), "us1");
-    assert_eq!(ini.get("profile prod", "output").unwrap(), "json");
+    assert_eq!(ini.get("prod", "region").unwrap(), "us1");
+    assert_eq!(ini.get("prod", "output").unwrap(), "json");
 }
 
 #[test]

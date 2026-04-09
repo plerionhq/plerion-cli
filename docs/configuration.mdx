@@ -64,18 +64,16 @@ api_key = pk_live_zzzzzzzzzzzzzzzzzz
 region = au
 output = table
 
-[profile prod]
+[prod]
 region = us1
 output = json
 
-[profile staging]
+[staging]
 region = sg1
 output = table
 ```
 
-<Note>
-Named profiles use the `[profile <name>]` prefix in the config file (mirroring AWS CLI), but use bare `[<name>]` in the credentials file.
-</Note>
+Both files use bare section names (e.g. `[prod]`, not `[profile prod]`).
 
 ## Environment variables
 
