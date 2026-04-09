@@ -99,9 +99,11 @@ fn test_config_load_defaults_to_au_region() {
 }
 
 #[test]
-fn test_config_load_defaults_to_table_output() {
+fn test_config_load_cli_output_overrides_file() {
+    // When output is provided via CLI override, it takes precedence over config file
     let overrides = ConfigOverrides {
         api_key: Some("key".to_string()),
+        output: Some(OutputFormat::Table),
         ..Default::default()
     };
     let config = Config::load(overrides).unwrap();
