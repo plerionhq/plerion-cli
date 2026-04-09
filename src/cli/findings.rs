@@ -93,7 +93,7 @@ pub async fn run(args: &FindingsArgs, config: &Config) -> anyhow::Result<()> {
             let params = ListFindingsParams {
                 severity_levels: list_args.severity.clone(),
                 statuses: list_args.status.clone(),
-                providers: list_args.provider.clone(),
+                providers: super::normalize_providers(list_args.provider.clone()),
                 regions: list_args.region.clone(),
                 resource_types: list_args.resource_type.clone(),
                 detection_ids: list_args.detection_id.clone(),

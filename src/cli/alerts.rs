@@ -35,7 +35,7 @@ pub async fn run(args: &AlertsArgs, config: &Config) -> anyhow::Result<()> {
         AlertsCommands::List(a) => {
             let params = ListAlertsParams {
                 statuses: a.status.clone(),
-                providers: a.provider.clone(),
+                providers: super::normalize_providers(a.provider.clone()),
                 alert_types: a.alert_type.clone(),
                 integration_ids: a.integration_id.clone(),
                 flagged: a.flagged,
