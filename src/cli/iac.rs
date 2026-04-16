@@ -43,10 +43,10 @@ pub struct ListScansArgs {
     #[arg(long)]
     pub status: Option<String>,
     /// Sort by field
-    #[arg(long)]
+    #[arg(long, value_parser = ["id", "createdAt", "updatedAt", "artifactName", "status"])]
     pub sort_by: Option<String>,
-    /// Sort order: asc or desc
-    #[arg(long)]
+    /// Sort order
+    #[arg(long, value_parser = ["asc", "desc"])]
     pub sort_order: Option<String>,
     /// Number of results per page (max 1000)
     #[arg(long, default_value = "50")]
@@ -80,10 +80,10 @@ pub struct GetFindingsArgs {
     #[arg(long)]
     pub file: Option<String>,
     /// Sort by field
-    #[arg(long)]
+    #[arg(long, value_parser = ["id", "createdAt", "updatedAt", "artifactName", "status"])]
     pub sort_by: Option<String>,
-    /// Sort order: asc or desc
-    #[arg(long)]
+    /// Sort order
+    #[arg(long, value_parser = ["asc", "desc"])]
     pub sort_order: Option<String>,
     /// Number of results per page (max 1000)
     #[arg(long, default_value = "50")]
@@ -120,10 +120,11 @@ pub struct GetVulnerabilitiesArgs {
     #[arg(long)]
     pub has_exploit: bool,
     /// Sort by field
-    #[arg(long)]
+    #[arg(long, value_parser = ["id", "vulnerabilityId", "severityLevel", "severitySource",
+        "hasKev", "hasExploit", "file", "createdAt", "updatedAt"])]
     pub sort_by: Option<String>,
-    /// Sort order: asc or desc
-    #[arg(long)]
+    /// Sort order
+    #[arg(long, value_parser = ["asc", "desc"])]
     pub sort_order: Option<String>,
     /// Number of results per page (max 1000)
     #[arg(long, default_value = "50")]

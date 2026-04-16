@@ -28,8 +28,12 @@ pub struct ListRisksArgs {
     #[arg(long)] pub environment_id: Option<String>,
     #[arg(long)] pub resource_type: Option<String>,
     #[arg(long)] pub include: Option<String>,
-    #[arg(long)] pub sort_by: Option<String>,
-    #[arg(long)] pub sort_order: Option<String>,
+    /// Sort by field
+    #[arg(long, value_parser = ["discoveredAt", "score"])]
+    pub sort_by: Option<String>,
+    /// Sort order
+    #[arg(long, value_parser = ["asc", "desc"])]
+    pub sort_order: Option<String>,
     #[arg(long, default_value = "50")] pub per_page: u32,
     /// Fetch all pages automatically
     #[arg(long)] pub all: bool,

@@ -26,8 +26,12 @@ pub struct ListAlertsArgs {
     #[arg(long)] pub integration_id: Option<String>,
     #[arg(long)] pub flagged: Option<bool>,
     #[arg(long)] pub acknowledged: Option<bool>,
-    #[arg(long)] pub sort_by: Option<String>,
-    #[arg(long)] pub sort_order: Option<String>,
+    /// Sort by field
+    #[arg(long, value_parser = ["riskScore", "discoveredDate"])]
+    pub sort_by: Option<String>,
+    /// Sort order
+    #[arg(long, value_parser = ["ASC", "DESC"])]
+    pub sort_order: Option<String>,
     #[arg(long, default_value = "50")] pub per_page: u32,
     /// Fetch all pages automatically
     #[arg(long)] pub all: bool,

@@ -59,8 +59,15 @@ pub struct ListAssetsArgs {
     #[arg(long)] pub first_observed_at_start: Option<String>,
     /// First observed at end date (ISO 8601)
     #[arg(long)] pub first_observed_at_end: Option<String>,
-    #[arg(long)] pub sort_by: Option<String>,
-    #[arg(long)] pub sort_order: Option<String>,
+    /// Sort by field
+    #[arg(long, value_parser = ["id", "executionId", "integrationId", "resourceType", "service",
+        "region", "name", "provider", "firstObservedAt", "lastObservedAt", "riskScore",
+        "vulnerabilityScore", "numberOfLowVulnerabilities", "numberOfMediumVulnerabilities",
+        "numberOfHighVulnerabilities", "numberOfCriticalVulnerabilities"])]
+    pub sort_by: Option<String>,
+    /// Sort order
+    #[arg(long, value_parser = ["ASC", "DESC"])]
+    pub sort_order: Option<String>,
     #[arg(long, default_value = "50")] pub per_page: u32,
     #[arg(long)] pub all: bool,
 }

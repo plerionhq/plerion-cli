@@ -78,11 +78,13 @@ pub struct ListFindingsArgs {
     pub end: Option<String>,
 
     /// Sort by field
-    #[arg(long)]
+    #[arg(long, value_parser = ["status", "provider", "resourceType", "service", "detectionId",
+        "firstObservedAt", "lastObservedAt", "severityLevel", "resourceFullName", "assetId",
+        "region", "integrationId"])]
     pub sort_by: Option<String>,
 
-    /// Sort order: ASC or DESC
-    #[arg(long)]
+    /// Sort order
+    #[arg(long, value_parser = ["ASC", "DESC"])]
     pub sort_order: Option<String>,
 
     /// Number of results per page (max 1000)

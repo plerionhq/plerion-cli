@@ -28,8 +28,12 @@ pub struct ListVulnArgs {
     #[arg(long)] pub integration_id: Option<String>,
     #[arg(long)] pub asset_id: Option<String>,
     #[arg(long)] pub region: Option<String>,
-    #[arg(long)] pub sort_by: Option<String>,
-    #[arg(long)] pub sort_order: Option<String>,
+    /// Sort by field
+    #[arg(long, value_parser = ["hasKev", "hasExploit", "lastObservedAt", "firstObservedAt", "severityLevelValue"])]
+    pub sort_by: Option<String>,
+    /// Sort order
+    #[arg(long, value_parser = ["ASC", "DESC"])]
+    pub sort_order: Option<String>,
     #[arg(long, default_value = "50")] pub per_page: u32,
     #[arg(long)] pub all: bool,
     #[arg(long)] pub vulnerability_id: Option<String>,
