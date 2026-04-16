@@ -45,7 +45,8 @@ pub struct ListAssetGroupsArgs {
 #[derive(Args, Debug)]
 pub struct CreateAssetGroupArgs {
     #[arg(long)] pub name: String,
-    #[arg(long)] pub rules: Option<String>,
+    /// Rules JSON defining the asset group membership criteria
+    #[arg(long)] pub rules: String,
 }
 
 #[derive(Args, Debug)]
@@ -82,9 +83,7 @@ pub async fn run(args: &AssetGroupsArgs, config: &Config) -> anyhow::Result<()> 
             output::render(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
         }
         AssetGroupsCommands::Create(a) => {
-            let rules = a.rules.as_ref()
-                .map(|r| serde_json::from_str(r))
-                .transpose()
+            let rules: serde_json::Value = serde_json::from_str(&a.rules)
                 .map_err(|e| anyhow::anyhow!("Invalid JSON for --rules: {e}"))?;
             let resp = create_asset_group(&client, CreateAssetGroupRequest {
                 name: a.name.clone(),

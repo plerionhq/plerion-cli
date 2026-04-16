@@ -7,10 +7,10 @@ pub async fn get_external_id(client: &PlerionClient) -> Result<serde_json::Value
 
 pub async fn get_cloudformation_template(
     client: &PlerionClient,
-    template_type: Option<&str>,
+    template_type: &str,
 ) -> Result<serde_json::Value, PlerionError> {
-    let mut req = client.get("/v1/tenant/cloudformation-templates");
-    if let Some(v) = template_type { req = req.query(&[("type", v)]); }
+    let req = client.get("/v1/tenant/cloudformation-templates")
+        .query(&[("type", template_type)]);
     client.execute(req).await
 }
 

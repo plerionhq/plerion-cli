@@ -75,8 +75,10 @@ pub enum ExemptionsCommands {
     Create {
         #[arg(long)] profile_id: String,
         #[arg(long)] name: String,
-        #[arg(long)] reason: String,
-        #[arg(long)] rules: Option<String>,
+        #[arg(long, value_parser = ["ACCEPTED_RISK", "COMPENSATING_CONTROL", "NO_VENDOR_FIX", "NOT_IN_USE", "OTHER_REASONS"])]
+        reason: String,
+        /// Conditions JSON (must include at least one of: vulnerabilityIds, assetGroupIds, assetIds, assetRegions, assetTags)
+        #[arg(long)] conditions: String,
         #[arg(long)] audit_note: String,
     },
     Update {
@@ -189,15 +191,13 @@ pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<
                 let resp = get_exemption(&client, profile_id, id).await?;
                 output::render_json_value(&resp, config.output, config.query.as_deref())?;
             }
-            ExemptionsCommands::Create { profile_id, name, reason, rules, audit_note } => {
-                let rules_val: Option<serde_json::Value> = rules.as_ref()
-                    .map(|r| serde_json::from_str(r))
-                    .transpose()
-                    .map_err(|e| anyhow::anyhow!("Invalid JSON for --rules: {e}"))?;
+            ExemptionsCommands::Create { profile_id, name, reason, conditions, audit_note } => {
+                let conditions_val: serde_json::Value = serde_json::from_str(conditions)
+                    .map_err(|e| anyhow::anyhow!("Invalid JSON for --conditions: {e}"))?;
                 let body = serde_json::json!({
                     "name": name,
                     "reason": reason,
-                    "rules": rules_val,
+                    "conditions": conditions_val,
                     "auditNote": audit_note
                 });
                 let resp = create_exemption(&client, profile_id, body).await?;

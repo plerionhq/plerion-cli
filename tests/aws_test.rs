@@ -20,22 +20,6 @@ async fn test_get_external_id() {
 #[tokio::test]
 async fn test_get_cloudformation_template() {
     let mut server = Server::new_async().await;
-    let body = serde_json::json!({ "data": { "template": "AWSTemplateFormatVersion: 2010-09-09" } });
-    let _mock = server
-        .mock("GET", "/v1/tenant/cloudformation-templates")
-        .with_status(200)
-        .with_body(body.to_string())
-        .create_async()
-        .await;
-
-    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
-    let resp = aws::get_cloudformation_template(&client, None).await.unwrap();
-    assert!(resp["data"]["template"].is_string());
-}
-
-#[tokio::test]
-async fn test_get_cloudformation_template_with_type() {
-    let mut server = Server::new_async().await;
     let body = serde_json::json!({ "data": { "templateURL": "https://example.com/template.yaml" } });
     let mock = server
         .mock("GET", "/v1/tenant/cloudformation-templates")
@@ -46,7 +30,7 @@ async fn test_get_cloudformation_template_with_type() {
         .await;
 
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
-    let resp = aws::get_cloudformation_template(&client, Some("AWSAccount")).await.unwrap();
+    let resp = aws::get_cloudformation_template(&client, "AWSAccount").await.unwrap();
     assert_eq!(resp["data"]["templateURL"], "https://example.com/template.yaml");
     mock.assert_async().await;
 }

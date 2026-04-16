@@ -461,12 +461,13 @@ async fn test_cli_aws_get_cloudformation_template() {
     let body = serde_json::json!({ "data": { "template": "AWSTemplate" } });
     let _mock = server
         .mock("GET", "/v1/tenant/cloudformation-templates")
+        .match_query(mockito::Matcher::UrlEncoded("type".to_string(), "AWSAccount".to_string()))
         .with_status(200)
         .with_body(body.to_string())
         .create_async()
         .await;
 
-    let output = run_plerion(&["aws", "get-cloudformation-template", "--output", "json"], "test-key", &server.url());
+    let output = run_plerion(&["aws", "get-cloudformation-template", "--type", "AWSAccount", "--output", "json"], "test-key", &server.url());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(output.status.success());
     assert!(stdout.contains("AWSTemplate"));

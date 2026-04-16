@@ -61,8 +61,7 @@ impl TableRenderable for AssetGroup {
 #[serde(rename_all = "camelCase")]
 pub struct CreateAssetGroupRequest {
     pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rules: Option<serde_json::Value>,
+    pub rules: serde_json::Value,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

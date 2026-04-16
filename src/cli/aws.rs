@@ -15,9 +15,9 @@ pub enum AwsCommands {
     GetExternalId,
     /// Get the CloudFormation template for AWS integration
     GetCloudformationTemplate {
-        /// Template type (e.g. AWSAccount)
-        #[arg(long, name = "type")]
-        template_type: Option<String>,
+        /// Template type
+        #[arg(long = "type", value_parser = ["AWSAccount"])]
+        template_type: String,
     },
     /// Generate a temporary integration token
     GenerateToken { #[arg(long)] integration_id: String },
@@ -31,7 +31,7 @@ pub async fn run(args: &AwsArgs, config: &Config) -> anyhow::Result<()> {
             output::render_json_value(&resp, config.output, config.query.as_deref())?;
         }
         AwsCommands::GetCloudformationTemplate { template_type } => {
-            let resp = get_cloudformation_template(&client, template_type.as_deref()).await?;
+            let resp = get_cloudformation_template(&client, template_type).await?;
             output::render_json_value(&resp, config.output, config.query.as_deref())?;
         }
         AwsCommands::GenerateToken { integration_id } => {

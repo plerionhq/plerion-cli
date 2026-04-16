@@ -26,7 +26,7 @@ async fn test_cli_asset_groups_create() {
         .await;
 
     let output = run_plerion(
-        &["asset-groups", "create", "--name", "NewGroup", "--output", "json"],
+        &["asset-groups", "create", "--name", "NewGroup", "--rules", "[]", "--output", "json"],
         "key", &server.url(),
     );
     let stdout = String::from_utf8(output.stdout).unwrap();
@@ -128,7 +128,7 @@ async fn test_cli_vuln_exemptions_create() {
 
     let output = run_plerion(
         &["vulnerabilities", "exemptions", "create", "--profile-id", "prof-1",
-          "--name", "New Exemption", "--reason", "NOT_IN_USE", "--audit-note", "Reviewed", "--output", "json"],
+          "--name", "New Exemption", "--reason", "NOT_IN_USE", "--conditions", "{\"vulnerabilityIds\":[\"CVE-2024-0001\"]}", "--audit-note", "Reviewed", "--output", "json"],
         "key", &server.url(),
     );
     let stdout = String::from_utf8(output.stdout).unwrap();

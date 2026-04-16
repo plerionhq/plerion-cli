@@ -88,7 +88,7 @@ async fn test_create_asset_group() {
         &client,
         CreateAssetGroupRequest {
             name: "Production".to_string(),
-            rules: None,
+            rules: serde_json::json!([]),
         },
     )
     .await
