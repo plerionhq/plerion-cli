@@ -4,6 +4,7 @@
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli/actions)
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli)
 [![API Version](https://img.shields.io/badge/Plerion%20API-v1-blue?style=flat-square)](https://docs.plerion.com/api-reference)
+[![Docs](https://img.shields.io/badge/docs-plerion.com-blue?style=flat-square)](https://docs.plerion.com/cli-reference/)
 
 Cross-platform CLI for the [Plerion](https://plerion.com) cloud security platform.
 
