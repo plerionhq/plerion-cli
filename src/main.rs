@@ -8,8 +8,18 @@ use clap::Parser;
 use cli::{Cli, Commands};
 use config::{Config, ConfigOverrides};
 
+/// Reset SIGPIPE to the default behavior (terminate) so that piping to
+/// programs like `head` doesn't cause a panic on broken-pipe writes.
+fn reset_sigpipe() {
+    #[cfg(unix)]
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_DFL);
+    }
+}
+
 #[tokio::main]
 async fn main() {
+    reset_sigpipe();
     let cli = Cli::parse();
 
     let overrides = ConfigOverrides {

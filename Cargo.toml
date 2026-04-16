@@ -1,6 +1,6 @@
 [package]
 name = "plerion"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "Plerion CLI — manage cloud security findings, assets, risks and more"
 license = "MIT"
@@ -30,6 +30,7 @@ anyhow = "1"
 thiserror = "1"
 indicatif = "0.17"
 chrono = { version = "0.4", features = ["serde"] }
+libc = "0.2"
 
 [dev-dependencies]
 mockito = "1"
