@@ -9,7 +9,15 @@ set -e
 
 REPO="plerionhq/plerion-cli"
 VERSION="${VERSION:-latest}"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+
+# Resolve install directory: explicit override > /usr/local/bin (if writable) > ~/.local/bin
+if [ -n "$INSTALL_DIR" ]; then
+  : # user explicitly set INSTALL_DIR, use it as-is
+elif [ -w /usr/local/bin ]; then
+  INSTALL_DIR="/usr/local/bin"
+else
+  INSTALL_DIR="$HOME/.local/bin"
+fi
 
 # Detect OS and architecture
 OS=$(uname -s)
@@ -47,6 +55,7 @@ DEST="$INSTALL_DIR/plerion"
 
 echo "Detected: $OS/$ARCH"
 echo "Downloading $BINARY ($VERSION)..."
+mkdir -p "$INSTALL_DIR"
 curl -fsSL "$URL" -o "$DEST"
 chmod +x "$DEST"
 
@@ -58,3 +67,17 @@ fi
 echo ""
 echo "Installed: $DEST"
 "$DEST" --version
+
+# Warn if the install directory is not on PATH
+case ":$PATH:" in
+  *":$INSTALL_DIR:"*) ;;
+  *)
+    echo ""
+    echo "WARNING: $INSTALL_DIR is not in your PATH."
+    echo "Add it by running:"
+    echo ""
+    echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
+    echo ""
+    echo "To make it permanent, add that line to your ~/.bashrc, ~/.zshrc, or equivalent."
+    ;;
+esac
