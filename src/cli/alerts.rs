@@ -30,7 +30,7 @@ pub struct ListAlertsArgs {
     #[arg(long, value_parser = ["riskScore", "discoveredDate"])]
     pub sort_by: Option<String>,
     /// Sort order
-    #[arg(long, value_parser = ["ASC", "DESC"])]
+    #[arg(long, value_parser = ["asc", "desc"])]
     pub sort_order: Option<String>,
     #[arg(long, default_value = "50")] pub per_page: u32,
     /// Fetch all pages automatically

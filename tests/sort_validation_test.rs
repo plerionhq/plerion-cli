@@ -58,7 +58,7 @@ async fn test_findings_accepts_valid_sort_by() {
         .mock("GET", "/v1/tenant/findings")
         .match_query(mockito::Matcher::AllOf(vec![
             mockito::Matcher::UrlEncoded("sortBy".to_string(), "severityLevel".to_string()),
-            mockito::Matcher::UrlEncoded("sortOrder".to_string(), "DESC".to_string()),
+            mockito::Matcher::UrlEncoded("sortOrder".to_string(), "desc".to_string()),
         ]))
         .with_status(200)
         .with_body(serde_json::json!({
@@ -69,7 +69,7 @@ async fn test_findings_accepts_valid_sort_by() {
         .await;
 
     let output = run_plerion(
-        &["findings", "list", "--sort-by", "severityLevel", "--sort-order", "DESC", "--output", "json"],
+        &["findings", "list", "--sort-by", "severityLevel", "--sort-order", "desc", "--output", "json"],
         "test-key",
         &server.url(),
     );
@@ -99,7 +99,7 @@ async fn test_alerts_accepts_valid_sort_by() {
         .mock("GET", "/v1/tenant/alerts")
         .match_query(mockito::Matcher::AllOf(vec![
             mockito::Matcher::UrlEncoded("sortBy".to_string(), "riskScore".to_string()),
-            mockito::Matcher::UrlEncoded("sortOrder".to_string(), "ASC".to_string()),
+            mockito::Matcher::UrlEncoded("sortOrder".to_string(), "asc".to_string()),
         ]))
         .with_status(200)
         .with_body(serde_json::json!({
@@ -110,7 +110,7 @@ async fn test_alerts_accepts_valid_sort_by() {
         .await;
 
     let output = run_plerion(
-        &["alerts", "list", "--sort-by", "riskScore", "--sort-order", "ASC", "--output", "json"],
+        &["alerts", "list", "--sort-by", "riskScore", "--sort-order", "asc", "--output", "json"],
         "test-key",
         &server.url(),
     );
@@ -192,7 +192,7 @@ async fn test_assets_accepts_valid_sort_by() {
         .mock("GET", "/v1/tenant/assets")
         .match_query(mockito::Matcher::AllOf(vec![
             mockito::Matcher::UrlEncoded("sortBy".to_string(), "riskScore".to_string()),
-            mockito::Matcher::UrlEncoded("sortOrder".to_string(), "DESC".to_string()),
+            mockito::Matcher::UrlEncoded("sortOrder".to_string(), "desc".to_string()),
         ]))
         .with_status(200)
         .with_body(serde_json::json!({
@@ -203,7 +203,7 @@ async fn test_assets_accepts_valid_sort_by() {
         .await;
 
     let output = run_plerion(
-        &["assets", "list", "--sort-by", "riskScore", "--sort-order", "DESC", "--output", "json"],
+        &["assets", "list", "--sort-by", "riskScore", "--sort-order", "desc", "--output", "json"],
         "test-key",
         &server.url(),
     );
@@ -233,7 +233,7 @@ async fn test_vulnerabilities_accepts_valid_sort_by() {
         .mock("GET", "/v1/tenant/vulnerabilities")
         .match_query(mockito::Matcher::AllOf(vec![
             mockito::Matcher::UrlEncoded("sortBy".to_string(), "severityLevelValue".to_string()),
-            mockito::Matcher::UrlEncoded("sortOrder".to_string(), "ASC".to_string()),
+            mockito::Matcher::UrlEncoded("sortOrder".to_string(), "asc".to_string()),
         ]))
         .with_status(200)
         .with_body(serde_json::json!({
@@ -244,7 +244,7 @@ async fn test_vulnerabilities_accepts_valid_sort_by() {
         .await;
 
     let output = run_plerion(
-        &["vulnerabilities", "list", "--sort-by", "severityLevelValue", "--sort-order", "ASC", "--output", "json"],
+        &["vulnerabilities", "list", "--sort-by", "severityLevelValue", "--sort-order", "asc", "--output", "json"],
         "test-key",
         &server.url(),
     );
@@ -362,7 +362,7 @@ fn test_findings_help_shows_sort_values() {
         "Help should list possible sort-by values, got: {stdout}"
     );
     assert!(
-        stdout.contains("ASC") && stdout.contains("DESC"),
+        stdout.contains("asc") && stdout.contains("desc"),
         "Help should list possible sort-order values, got: {stdout}"
     );
 }

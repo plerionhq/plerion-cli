@@ -1,6 +1,6 @@
 [package]
 name = "plerion"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 description = "Plerion CLI — manage cloud security findings, assets, risks and more"
 license = "MIT"

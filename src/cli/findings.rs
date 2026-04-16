@@ -84,7 +84,7 @@ pub struct ListFindingsArgs {
     pub sort_by: Option<String>,
 
     /// Sort order
-    #[arg(long, value_parser = ["ASC", "DESC"])]
+    #[arg(long, value_parser = ["asc", "desc"])]
     pub sort_order: Option<String>,
 
     /// Number of results per page (max 1000)
