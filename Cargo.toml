@@ -31,6 +31,11 @@ thiserror = "1"
 indicatif = "0.17"
 chrono = { version = "0.4", features = ["serde"] }
 libc = "0.2"
+async-trait = "0.1"
+aws-config = { version = "1", features = ["behavior-version-latest"] }
+aws-sdk-sts = "1"
+aws-sdk-iam = "1"
+aws-sdk-cloudformation = "1"
 
 [dev-dependencies]
 mockito = "1"
