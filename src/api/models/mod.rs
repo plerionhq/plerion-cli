@@ -2,6 +2,7 @@ pub mod alerts;
 pub mod asset_groups;
 pub mod assets;
 pub mod audit_logs;
+pub mod aws;
 pub mod compliance;
 pub mod findings;
 pub mod iac;

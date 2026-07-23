@@ -36,19 +36,41 @@ async fn test_get_cloudformation_template() {
 }
 
 #[tokio::test]
-async fn test_generate_token() {
+async fn test_generate_token_for_integration() {
     let mut server = Server::new_async().await;
     let body = serde_json::json!({ "data": { "token": "tmp-token-xyz" } });
     let mock = server
         .mock("POST", "/v1/tenant/integrations/token")
+        .match_body(mockito::Matcher::JsonString(
+            r#"{"integrationId":"int-123"}"#.to_string(),
+        ))
         .with_status(200)
         .with_body(body.to_string())
         .create_async()
         .await;
 
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
-    let resp = aws::generate_token(&client, "int-123").await.unwrap();
+    let resp = aws::generate_token(&client, Some("int-123")).await.unwrap();
     assert_eq!(resp["data"]["token"], "tmp-token-xyz");
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_generate_token_bare_post_for_onboarding() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({ "data": { "token": "tmp-onboard-token" } });
+    // The onboarding variant must NOT send an integrationId body.
+    let mock = server
+        .mock("POST", "/v1/tenant/integrations/token")
+        .match_body(mockito::Matcher::Exact(String::new()))
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let resp = aws::generate_token(&client, None).await.unwrap();
+    assert_eq!(resp["data"]["token"], "tmp-onboard-token");
     mock.assert_async().await;
 }
 

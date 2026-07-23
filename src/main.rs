@@ -2,6 +2,7 @@ mod api;
 mod cli;
 mod config;
 mod error;
+mod onboard;
 mod output;
 
 use clap::Parser;
@@ -68,6 +69,12 @@ async fn main() {
 
     if let Err(e) = result {
         eprintln!("Error: {e}");
-        std::process::exit(1);
+        // `integrations add aws` has a documented exit-code contract
+        // (2 preflight, 3 deploy, 4 already onboarded); everything else exits 1.
+        let code = e
+            .downcast_ref::<onboard::OnboardError>()
+            .map(|oe| oe.exit_code())
+            .unwrap_or(1);
+        std::process::exit(code);
     }
 }

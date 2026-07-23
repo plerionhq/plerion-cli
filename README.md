@@ -164,6 +164,7 @@ plerion --profile prod findings list
 | `alerts list` | Risk-based alerts (supports `--all`) |
 | `audit-logs list` | Audit logs (supports `--all`) |
 | `integrations list` | Cloud integrations (supports `--all`) |
+| `integrations add aws` | Onboard an AWS account end-to-end (preflight, CloudFormation deploy, registration) |
 | `risks list` | Security risks (supports `--all`) |
 | `vulnerabilities list` | Vulnerabilities (supports `--all`) |
 | `vulnerabilities exemptions list/get/create/update/delete` | Vulnerability exemptions (list supports `--all`) |
@@ -182,6 +183,32 @@ plerion --profile prod findings list
 | `aws generate-token --integration-id <id>` | Temporary auth token |
 
 Most list commands accept `--per-page <n>` (default 50) and `--sort-by`/`--sort-order`. Run `plerion <command> <subcommand> --help` for all options.
+
+### Onboarding an AWS account
+
+```bash
+# Preview everything the command would do (no network calls)
+plerion integrations add aws --dry-run
+
+# Run all checks without deploying
+plerion integrations add aws --aws-profile prod --aws-region ap-southeast-2 --validate-only
+
+# Onboard (interactive confirmation before anything is created)
+plerion integrations add aws --aws-profile prod --aws-region ap-southeast-2
+
+# Non-interactive (CI): pin the expected account and skip the prompt
+plerion integrations add aws --yes --expect-account-id 123456789012
+```
+
+AWS credentials come from the standard AWS credential chain (`--aws-profile`
+selects a profile; SSO/Identity Center works out of the box). The command runs
+preflight checks (account identity, existing stacks/integrations, an advisory
+IAM permission simulation, template validation), asks for one confirmation,
+deploys Plerion's CloudFormation stack, and the stack registers the
+integration automatically. Exit codes: `0` success, `1` config/API error,
+`2` preflight failure, `3` deploy failure, `4` account already onboarded
+(override with `--allow-existing`). If the Plerion-managed scanning service
+account cannot be resolved automatically, pass `--service-account-id <id>`.
 
 > **Note:** The global `--region` flag selects the API endpoint region. Some commands like `findings list` also have a `--region` flag that filters by cloud resource region (e.g. `us-east-1`). These are independent.
 
