@@ -1,7 +1,3 @@
-// Constructed via deserialization by the onboarding engine; the binary
-// doesn't reference these until `integrations add aws` lands (follow-up PR).
-#![allow(dead_code)]
-
 use serde::{Deserialize, Serialize};
 
 /// Typed envelopes for the AWS integration endpoints, used by the onboarding
