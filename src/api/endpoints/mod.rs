@@ -1,3 +1,4 @@
+pub mod access_grants;
 pub mod alerts;
 pub mod asset_groups;
 pub mod assets;

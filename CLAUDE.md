@@ -2,14 +2,14 @@
 
 ## What this project is
 
-A Rust CLI (`plerion`) that wraps the Plerion REST API (v1). It covers all 34 endpoints defined in the [OpenAPI spec](https://github.com/plerionhq/docs/blob/main/api-reference/openapi.yaml). It follows the AWS CLI UX pattern: INI profiles, `--output`, `--query`, coloured table output.
+A Rust CLI (`plerion`) that wraps the Plerion REST API (v1), covering the endpoints defined in the [OpenAPI spec](https://github.com/plerionhq/docs/blob/main/api-reference/openapi.yaml). It follows the AWS CLI UX pattern: INI profiles, `--output`, `--query`, coloured table output.
 
 ## Build & test
 
 ```bash
 cargo build                    # debug build
 cargo build --release          # release build (LTO, stripped)
-cargo test                     # run all 243+ tests
+cargo test                     # run all 315+ tests
 cargo tarpaulin --skip-clean   # measure coverage (~92%)
 ```
 
@@ -25,9 +25,9 @@ src/
     credentials.rs  → INI read/write for ~/.plerion/credentials and ~/.plerion/config
   api/
     client.rs       → PlerionClient: reqwest wrapper with auth, base_url, HTTP methods
-    models/*.rs     → 13 files: serde structs + TableRenderable impls
-    endpoints/*.rs  → 13 files: async functions that call client methods
-  cli/*.rs          → 14 files: clap Args/Subcommand + run() handlers
+    models/*.rs     → 14 files: serde structs + TableRenderable impls
+    endpoints/*.rs  → 15 files: async functions that call client methods
+  cli/*.rs          → 16 files: clap Args/Subcommand + run() handlers
   output/
     mod.rs          → OutputFormat enum, apply_query (JMESPath), render/render_list/render_json_value
     table.rs        → comfy-table renderer, colorize_cell() applies Cell::fg(Color)
@@ -59,10 +59,11 @@ Colors are applied in `src/output/table.rs::colorize_cell()` using `Cell::fg(Col
 Custom endpoint via `--endpoint-url` bypasses region validation.
 
 ### Pagination
-- **Cursor-based**: findings, alerts, risks, audit-logs, integrations, asset-groups, vuln-exemptions (use `cursor` param)
+- **Cursor-based**: findings, alerts, risks, audit-logs, integrations, asset-groups, vuln-exemptions, access-grants (use `cursor` param)
 - **Page-based**: assets, vulnerabilities, iac-scans, iac-findings, iac-vulnerabilities (use `page` param)
 - `--all` flag auto-paginates through all pages on every list command that supports pagination
 - Vuln exemptions use `limit`/`cursor` params and `hasNext`/`nextCursor` response fields (different from standard `PaginationMeta`)
+- Access grants return no `hasNextPage`: `meta.cursor` is null on the last page and is the only end-of-pages signal, so `--all` loops until the cursor is null. `meta.total` is returned on the first page only
 
 ## Testing approach
 
@@ -87,7 +88,7 @@ Custom endpoint via `--endpoint-url` bypasses region validation.
 
 ## OpenAPI coverage
 
-All 34 endpoints from the Plerion OpenAPI spec are implemented. A GitHub Action (`openapi-monitor.yml`) checks weekly for upstream spec changes.
+A GitHub Action (`openapi-monitor.yml`) checks weekly for upstream spec changes. The spec grows faster than this doc, so treat `src/api/endpoints/` as the source of truth for what is covered rather than a count recorded here.
 
 ## Release
 
