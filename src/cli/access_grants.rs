@@ -34,7 +34,7 @@ pub enum AccessGrantsCommands {
 pub struct ListAccessGrantsArgs {
     /// Grant IDs (comma-separated UUIDs)
     #[arg(long)] pub ids: Option<String>,
-    /// Whether the principal is outside the organization
+    /// Whether the principal is outside the organization and not blocked by an RCP
     #[arg(long, value_parser = ["external", "internal"])]
     pub grant_origin: Option<String>,
     /// Trust statuses (comma-separated: trusted, untrusted)
@@ -101,6 +101,24 @@ fn review_field(value: Option<&String>, clear: bool) -> Option<serde_json::Value
     }
 }
 
+/// Grant IDs are UUIDs. Checking here stops a word like `stats` being sent as a
+/// path segment, where it resolves to a sibling route and fails on deserialization
+/// instead of returning a legible error.
+fn ensure_grant_id(id: &str) -> anyhow::Result<()> {
+    let looks_like_uuid = id.len() == 36
+        && id.as_bytes().iter().enumerate().all(|(i, b)| match i {
+            8 | 13 | 18 | 23 => *b == b'-',
+            _ => b.is_ascii_hexdigit(),
+        });
+    if looks_like_uuid {
+        return Ok(());
+    }
+    anyhow::bail!(
+        "'{id}' is not a valid grant ID. Grant IDs are UUIDs; run \
+         `plerion access-grants list` to find one."
+    )
+}
+
 fn list_params(a: &ListAccessGrantsArgs) -> ListAccessGrantsParams {
     ListAccessGrantsParams {
         ids: a.ids.clone(),
@@ -152,6 +170,7 @@ pub async fn run(args: &AccessGrantsArgs, config: &Config) -> anyhow::Result<()>
             }
         }
         AccessGrantsCommands::Get { id } => {
+            ensure_grant_id(id)?;
             let resp = get_access_grant(&client, id).await?;
             output::render(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
         }
@@ -164,6 +183,7 @@ pub async fn run(args: &AccessGrantsArgs, config: &Config) -> anyhow::Result<()>
             output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
         }
         AccessGrantsCommands::Update(a) => {
+            ensure_grant_id(&a.id)?;
             let body = UpdateAccessGrantRequest {
                 review_decision: review_field(a.review_decision.as_ref(), a.clear_review_decision),
                 review_comment: review_field(a.review_comment.as_ref(), a.clear_review_comment),

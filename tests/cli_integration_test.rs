@@ -755,7 +755,7 @@ async fn test_cli_access_grants_list_renders_renamed_columns() {
 fn test_cli_access_grants_update_requires_a_field() {
     let binary = env!("CARGO_BIN_EXE_plerion");
     let output = Command::new(binary)
-        .args(["access-grants", "update", "g-1"])
+        .args(["access-grants", "update", "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3"])
         .env("PLERION_API_KEY", "k")
         .env("PLERION_ENDPOINT_URL", "http://127.0.0.1:1")
         .output()
@@ -771,7 +771,7 @@ fn test_cli_access_grants_update_rejects_set_and_clear_together() {
     let binary = env!("CARGO_BIN_EXE_plerion");
     let output = Command::new(binary)
         .args([
-            "access-grants", "update", "g-1",
+            "access-grants", "update", "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3",
             "--review-decision", "keep", "--clear-review-decision",
         ])
         .env("PLERION_API_KEY", "k")
@@ -780,4 +780,29 @@ fn test_cli_access_grants_update_rejects_set_and_clear_together() {
     let stderr = String::from_utf8(output.stderr).unwrap();
     assert!(!output.status.success());
     assert!(stderr.contains("cannot be used with"), "stderr was: {stderr}");
+}
+
+/// A non-UUID id is caught locally, so it never reaches the API as a path
+/// segment where it could resolve to a sibling route.
+#[test]
+fn test_cli_access_grants_rejects_a_non_uuid_id() {
+    let binary = env!("CARGO_BIN_EXE_plerion");
+    for args in [
+        vec!["access-grants", "get", "stats"],
+        vec!["access-grants", "get", "external-principals"],
+        vec!["access-grants", "update", "stats", "--review-decision", "keep"],
+    ] {
+        let output = Command::new(binary)
+            .args(&args)
+            .env("PLERION_API_KEY", "k")
+            .env("PLERION_ENDPOINT_URL", "http://127.0.0.1:1")
+            .output()
+            .expect("failed to execute plerion binary");
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(!output.status.success(), "expected failure for {args:?}");
+        assert!(
+            stderr.contains("is not a valid grant ID"),
+            "for {args:?} stderr was: {stderr}"
+        );
+    }
 }
