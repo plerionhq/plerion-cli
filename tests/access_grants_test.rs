@@ -278,3 +278,60 @@ fn test_update_request_is_empty_detects_a_no_op_body() {
     };
     assert!(!clearing.is_empty());
 }
+
+/// The endpoint functions are callable without the CLI's id guard, so they must
+/// encode the segment themselves or an id could inject a path or query.
+#[tokio::test]
+async fn test_id_is_percent_encoded_in_the_path() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/aws/access-grants/a%2Fb%3Fx%3D1")
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(serde_json::json!({ "data": grant_json() }).to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "test_key").unwrap();
+    get_access_grant(&client, "a/b?x=1").await.unwrap();
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_patch_id_is_percent_encoded_too() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("PATCH", "/v1/tenant/aws/access-grants/a%2Fb")
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(serde_json::json!({ "data": grant_json() }).to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "test_key").unwrap();
+    let body = UpdateAccessGrantRequest {
+        review_decision: Some(serde_json::Value::String("keep".into())),
+        ..Default::default()
+    };
+    update_access_grant(&client, "a/b", body).await.unwrap();
+    mock.assert_async().await;
+}
+
+/// A normal UUID must pass through untouched, or every real call breaks.
+#[tokio::test]
+async fn test_a_uuid_is_not_altered_by_encoding() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/aws/access-grants/0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3")
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(serde_json::json!({ "data": grant_json() }).to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "test_key").unwrap();
+    get_access_grant(&client, "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3")
+        .await
+        .unwrap();
+    mock.assert_async().await;
+}

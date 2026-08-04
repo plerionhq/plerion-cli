@@ -1,9 +1,33 @@
+use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
+
 use crate::api::client::PlerionClient;
 use crate::api::models::access_grants::{
     AccessGrantExternalPrincipalsResponse, AccessGrantResponse, AccessGrantStatsResponse,
     AccessGrantsResponse, UpdateAccessGrantRequest,
 };
 use crate::error::PlerionError;
+
+/// Matches what encodeURIComponent escapes, so an id can never inject a path
+/// segment or query. The Pleri client encodes the same id the same way.
+const PATH_SEGMENT: &AsciiSet = &CONTROLS
+    .add(b' ')
+    .add(b'"')
+    .add(b'<')
+    .add(b'>')
+    .add(b'`')
+    .add(b'#')
+    .add(b'?')
+    .add(b'{')
+    .add(b'}')
+    .add(b'/')
+    .add(b'%')
+    .add(b'=')
+    .add(b'&')
+    .add(b'+');
+
+fn segment(id: &str) -> String {
+    utf8_percent_encode(id, PATH_SEGMENT).to_string()
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct ListAccessGrantsParams {
@@ -59,7 +83,7 @@ pub async fn get_access_grant(
     client: &PlerionClient,
     id: &str,
 ) -> Result<AccessGrantResponse, PlerionError> {
-    client.execute(client.get(&format!("/v1/tenant/aws/access-grants/{id}"))).await
+    client.execute(client.get(&format!("/v1/tenant/aws/access-grants/{}", segment(id)))).await
 }
 
 pub async fn get_access_grant_stats(
@@ -82,6 +106,6 @@ pub async fn update_access_grant(
     body: UpdateAccessGrantRequest,
 ) -> Result<AccessGrantResponse, PlerionError> {
     client
-        .execute(client.patch(&format!("/v1/tenant/aws/access-grants/{id}")).json(&body))
+        .execute(client.patch(&format!("/v1/tenant/aws/access-grants/{}", segment(id))).json(&body))
         .await
 }
