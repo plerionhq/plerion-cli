@@ -692,3 +692,117 @@ fn test_cli_configure_list() {
     assert!(output.status.success());
     assert!(stdout.contains("profile") || stdout.contains("No profiles"));
 }
+
+// --- access grants ---
+
+#[tokio::test]
+async fn test_cli_access_grants_stats() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/v1/tenant/aws/access-grants/stats")
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(
+            serde_json::json!({
+                "data": { "total": 531, "external": 337, "untrustedExternal": 0, "crossOrg": 298 }
+            })
+            .to_string(),
+        )
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["access-grants", "stats"], "k", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success());
+    assert!(stdout.contains("531"));
+    assert!(stdout.contains("CROSS ORG"));
+}
+
+#[tokio::test]
+async fn test_cli_access_grants_list_renders_renamed_columns() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/v1/tenant/aws/access-grants")
+        .match_query(mockito::Matcher::Any)
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(
+            serde_json::json!({
+                "data": [{
+                    "id": "g-1",
+                    "resourceType": "AWS::S3::Bucket",
+                    "awsAccountId": "111122223333",
+                    "assetName": "acme-prod-exports",
+                    "grantOrigin": "external"
+                }],
+                "meta": { "perPage": 50, "total": 1, "cursor": null }
+            })
+            .to_string(),
+        )
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["access-grants", "list", "--per-page", "1"], "k", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success());
+    assert!(stdout.contains("RESOURCE TYPE"));
+    assert!(stdout.contains("AWS ACCOUNT ID"));
+    assert!(stdout.contains("acme-prod-exports"));
+}
+
+/// A body with no review fields is rejected locally, before any HTTP call.
+#[test]
+fn test_cli_access_grants_update_requires_a_field() {
+    let binary = env!("CARGO_BIN_EXE_plerion");
+    let output = Command::new(binary)
+        .args(["access-grants", "update", "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3"])
+        .env("PLERION_API_KEY", "k")
+        .env("PLERION_ENDPOINT_URL", "http://127.0.0.1:1")
+        .output()
+        .expect("failed to execute plerion binary");
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(stderr.contains("Nothing to update"));
+}
+
+/// Setting and clearing the same field is a clap-level conflict.
+#[test]
+fn test_cli_access_grants_update_rejects_set_and_clear_together() {
+    let binary = env!("CARGO_BIN_EXE_plerion");
+    let output = Command::new(binary)
+        .args([
+            "access-grants", "update", "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3",
+            "--review-decision", "keep", "--clear-review-decision",
+        ])
+        .env("PLERION_API_KEY", "k")
+        .output()
+        .expect("failed to execute plerion binary");
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(stderr.contains("cannot be used with"), "stderr was: {stderr}");
+}
+
+/// A non-UUID id is caught locally, so it never reaches the API as a path
+/// segment where it could resolve to a sibling route.
+#[test]
+fn test_cli_access_grants_rejects_a_non_uuid_id() {
+    let binary = env!("CARGO_BIN_EXE_plerion");
+    for args in [
+        vec!["access-grants", "get", "stats"],
+        vec!["access-grants", "get", "external-principals"],
+        vec!["access-grants", "update", "stats", "--review-decision", "keep"],
+    ] {
+        let output = Command::new(binary)
+            .args(&args)
+            .env("PLERION_API_KEY", "k")
+            .env("PLERION_ENDPOINT_URL", "http://127.0.0.1:1")
+            .output()
+            .expect("failed to execute plerion binary");
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(!output.status.success(), "expected failure for {args:?}");
+        assert!(
+            stderr.contains("is not a valid grant ID"),
+            "for {args:?} stderr was: {stderr}"
+        );
+    }
+}

@@ -1,3 +1,4 @@
+pub mod access_grants;
 pub mod alerts;
 pub mod asset_groups;
 pub mod assets;
@@ -92,6 +93,8 @@ pub enum Commands {
     Assets(assets::AssetsArgs),
     /// Asset group management
     AssetGroups(asset_groups::AssetGroupsArgs),
+    /// Resource access grant inventory and review
+    AccessGrants(access_grants::AccessGrantsArgs),
     /// Alert management
     Alerts(alerts::AlertsArgs),
     /// Audit log operations
