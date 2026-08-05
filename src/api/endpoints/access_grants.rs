@@ -7,23 +7,35 @@ use crate::api::models::access_grants::{
 };
 use crate::error::PlerionError;
 
-/// Matches what encodeURIComponent escapes, so an id can never inject a path
-/// segment or query. The Pleri client encodes the same id the same way.
+/// Every ASCII character `encodeURIComponent` escapes, so this client and the
+/// Pleri client encode the same id identically. `encodeURIComponent` leaves only
+/// `A-Z a-z 0-9 - _ . ! ~ * ' ( )` unescaped; everything else is listed here.
+/// Kept honest by `test_encoding_matches_encode_uri_component`.
 const PATH_SEGMENT: &AsciiSet = &CONTROLS
     .add(b' ')
     .add(b'"')
-    .add(b'<')
-    .add(b'>')
-    .add(b'`')
     .add(b'#')
-    .add(b'?')
-    .add(b'{')
-    .add(b'}')
-    .add(b'/')
+    .add(b'$')
     .add(b'%')
-    .add(b'=')
     .add(b'&')
-    .add(b'+');
+    .add(b'+')
+    .add(b',')
+    .add(b'/')
+    .add(b':')
+    .add(b';')
+    .add(b'<')
+    .add(b'=')
+    .add(b'>')
+    .add(b'?')
+    .add(b'@')
+    .add(b'[')
+    .add(b'\\')
+    .add(b']')
+    .add(b'^')
+    .add(b'`')
+    .add(b'{')
+    .add(b'|')
+    .add(b'}');
 
 fn segment(id: &str) -> String {
     utf8_percent_encode(id, PATH_SEGMENT).to_string()
@@ -108,4 +120,42 @@ pub async fn update_access_grant(
     client
         .execute(client.patch(&format!("/v1/tenant/aws/access-grants/{}", segment(id))).json(&body))
         .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::segment;
+
+    /// The only ASCII characters `encodeURIComponent` leaves unescaped.
+    const UNRESERVED: &str =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.!~*'()";
+
+    /// Pins the comment on PATH_SEGMENT: escape exactly what encodeURIComponent
+    /// escapes, so this client and the Pleri client encode an id identically.
+    #[test]
+    fn test_encoding_matches_encode_uri_component() {
+        for byte in 0x20u8..0x7f {
+            let ch = char::from(byte);
+            let input = ch.to_string();
+            let escaped = segment(&input) != input;
+            assert_eq!(
+                escaped,
+                !UNRESERVED.contains(ch),
+                "{ch:?} (0x{byte:02x}) escaped={escaped}, encoded as {}",
+                segment(&input)
+            );
+        }
+    }
+
+    #[test]
+    fn test_control_characters_are_escaped() {
+        assert_eq!(segment("\n"), "%0A");
+        assert_eq!(segment("\t"), "%09");
+    }
+
+    #[test]
+    fn test_a_uuid_passes_through_unchanged() {
+        let id = "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3";
+        assert_eq!(segment(id), id);
+    }
 }
