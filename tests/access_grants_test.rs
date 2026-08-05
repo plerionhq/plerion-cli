@@ -335,3 +335,23 @@ async fn test_a_uuid_is_not_altered_by_encoding() {
         .unwrap();
     mock.assert_async().await;
 }
+
+/// `..` is resolved by the URL layer before sending, so it would call a
+/// different endpoint. Prove no request is made at all.
+#[tokio::test]
+async fn test_dot_segment_id_is_refused_before_any_request() {
+    let mut server = Server::new_async().await;
+    let any = server
+        .mock("GET", mockito::Matcher::Any)
+        .with_status(200)
+        .with_body(r#"{"data":{}}"#)
+        .expect(0)
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "test_key").unwrap();
+    for id in ["..", ".", "..."] {
+        assert!(get_access_grant(&client, id).await.is_err(), "{id} should be refused");
+    }
+    any.assert_async().await;
+}
