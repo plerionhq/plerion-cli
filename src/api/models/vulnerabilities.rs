@@ -50,10 +50,12 @@ impl TableRenderable for Vulnerability {
             "CVE / ID", "TITLE", "SEVERITY", "SEVERITY VALUE", "SEVERITY SOURCE",
             "PROVIDER", "ASSET ID", "ASSET TYPE", "TARGET NAME",
             "DESCRIPTION", "PRIMARY URL",
-            "KEV", "EXPLOIT", "FIX", "EPSS", "EPSS DATE",
+            "KEV", "EXPLOIT", "FIX",
             "PUBLISHED", "FIRST OBSERVED", "LAST OBSERVED",
             "INTEGRATION ID", "TENANT ID", "ORG ID", "EXECUTION ID",
             "SCHEMA VERSION",
+            // Added later, so last: text output has no header and scripts index by position.
+            "EPSS", "EPSS DATE",
         ]
     }
 
@@ -84,8 +86,6 @@ impl Vulnerability {
             bool_icon(self.has_kev),
             bool_icon(self.has_exploit),
             bool_icon(self.has_vendor_fix),
-            epss,
-            self.epss_score_date.clone().unwrap_or_default(),
             self.published_date.clone().unwrap_or_default(),
             self.first_observed_at.clone().unwrap_or_default(),
             self.last_observed_at.clone().unwrap_or_default(),
@@ -94,6 +94,8 @@ impl Vulnerability {
             self.organization_id.clone().unwrap_or_default(),
             self.execution_id.clone().unwrap_or_default(),
             self.schema_version.clone().unwrap_or_default(),
+            epss,
+            self.epss_score_date.clone().unwrap_or_default(),
         ]
     }
 }

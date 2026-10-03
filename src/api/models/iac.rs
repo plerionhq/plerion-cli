@@ -206,8 +206,10 @@ impl TableRenderable for IacVulnerability {
         vec![
             "ID", "CVE / VULN ID", "TITLE", "SEVERITY", "SEVERITY VALUE",
             "DESCRIPTION", "FILE",
-            "KEV", "EXPLOIT", "EPSS", "EPSS DATE", "PACKAGES", "PRIMARY URL", "PUBLISHED",
+            "KEV", "EXPLOIT", "PACKAGES", "PRIMARY URL", "PUBLISHED",
             "TENANT ID", "ORG ID", "CREATED AT", "UPDATED AT",
+            // Added later, so last: text output has no header and scripts index by position.
+            "EPSS", "EPSS DATE",
         ]
     }
 
@@ -239,8 +241,6 @@ impl IacVulnerability {
             self.file.clone().unwrap_or_default(),
             bool_str(self.has_kev),
             bool_str(self.has_exploit),
-            epss,
-            self.epss_score_date.clone().unwrap_or_default(),
             packages,
             self.primary_url.clone().unwrap_or_default(),
             self.published_date.clone().unwrap_or_default(),
@@ -248,6 +248,8 @@ impl IacVulnerability {
             self.organization_id.clone().unwrap_or_default(),
             self.created_at.clone().unwrap_or_default(),
             self.updated_at.clone().unwrap_or_default(),
+            epss,
+            self.epss_score_date.clone().unwrap_or_default(),
         ]
     }
 }
