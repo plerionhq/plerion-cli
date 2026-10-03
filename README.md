@@ -1,6 +1,6 @@
 # Plerion CLI
 
-[![Release](https://img.shields.io/badge/release-v0.1.9-blue?style=flat-square)](https://github.com/plerionhq/plerion-cli/releases)
+[![Release](https://img.shields.io/badge/release-v0.1.10-blue?style=flat-square)](https://github.com/plerionhq/plerion-cli/releases)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli/actions)
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli)
 [![API Version](https://img.shields.io/badge/Plerion%20API-v1-blue?style=flat-square)](https://docs.plerion.com/api-reference)

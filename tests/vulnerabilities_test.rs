@@ -243,3 +243,31 @@ fn test_check_epss_range() {
     assert!(check_epss_range(Some(0.1), None, Some(false)).is_err());
     assert!(check_epss_range(Some(0.0), None, Some(false)).is_err());
 }
+
+#[test]
+fn test_epss_columns_come_last_so_text_output_keeps_earlier_positions() {
+    use plerion::api::models::iac::IacVulnerability;
+    use plerion::api::models::vulnerabilities::Vulnerability;
+    use plerion::output::TableRenderable;
+    let json = serde_json::json!({
+        "vulnerabilityId": "CVE-2021-44228",
+        "schemaVersion": "1",
+        "updatedAt": "2026-10-03",
+        "epssScore": 0.943,
+        "epssScoreDate": "2026-10-04"
+    });
+
+    let headers = Vulnerability::headers();
+    assert_eq!(&headers[headers.len() - 3..], ["SCHEMA VERSION", "EPSS", "EPSS DATE"]);
+    let v: Vulnerability = serde_json::from_value(json.clone()).unwrap();
+    let text = v.text_row();
+    assert_eq!(text.len(), headers.len());
+    assert_eq!(&text[text.len() - 3..], ["1", "0.943", "2026-10-04"]);
+
+    let headers = IacVulnerability::headers();
+    assert_eq!(&headers[headers.len() - 3..], ["UPDATED AT", "EPSS", "EPSS DATE"]);
+    let v: IacVulnerability = serde_json::from_value(json).unwrap();
+    let text = v.text_row();
+    assert_eq!(text.len(), headers.len());
+    assert_eq!(&text[text.len() - 3..], ["2026-10-03", "0.943", "2026-10-04"]);
+}
