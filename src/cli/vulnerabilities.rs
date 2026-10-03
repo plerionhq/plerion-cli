@@ -24,11 +24,11 @@ pub struct ListVulnArgs {
     #[arg(long)] pub provider: Option<String>,
     #[arg(long)] pub has_kev: bool,
     /// Only vulnerabilities whose EPSS score is at least this probability, from 0 to 1
-    /// (0.5 = 50% chance of exploitation in the next 30 days). Unscored ones never match.
+    /// (0.5 = 50% chance of exploitation in the next 30 days). 0 or 1 means no bound; otherwise unscored ones never match. Use --has-epss-score true for scored only.
     #[arg(long, value_parser = parse_epss_score, value_name = "0-1")]
     pub epss_score_gte: Option<f64>,
     /// Only vulnerabilities whose EPSS score is at most this probability, from 0 to 1
-    /// (0.01 = 1% chance of exploitation in the next 30 days). Unscored ones never match.
+    /// (0.01 = 1% chance of exploitation in the next 30 days). 0 or 1 means no bound; otherwise unscored ones never match. Use --has-epss-score true for scored only.
     #[arg(long, value_parser = parse_epss_score, value_name = "0-1")]
     pub epss_score_lte: Option<f64>,
     /// Filter on whether the vulnerability has an EPSS score (true or false)
