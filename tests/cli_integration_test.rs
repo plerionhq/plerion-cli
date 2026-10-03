@@ -806,3 +806,67 @@ fn test_cli_access_grants_rejects_a_non_uuid_id() {
         );
     }
 }
+
+#[tokio::test]
+async fn test_cli_vulnerabilities_epss_filters_drop_bound_at_scale_end() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/vulnerabilities")
+        .match_query(mockito::Matcher::Exact("epssScoreLte=0.5&hasEpssScore=true&perPage=50".to_string()))
+        .with_status(200)
+        .with_body(serde_json::json!({ "data": [], "meta": { "page": 1, "perPage": 50, "total": 0 } }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["vulnerabilities", "list", "--epss-score-gte", "0", "--epss-score-lte", "0.5", "--has-epss-score", "true", "--output", "json"],
+        "test-key",
+        &server.url(),
+    );
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_vulnerabilities_table_shows_epss_percent() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [{ "vulnerabilityId": "CVE-2021-44228", "epssScore": 0.943, "epssScoreDate": "2026-10-04" }],
+        "meta": { "page": 1, "perPage": 50, "total": 1 }
+    });
+    let _mock = server
+        .mock("GET", "/v1/tenant/vulnerabilities")
+        .match_query(mockito::Matcher::Any)
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let table = run_plerion(&["vulnerabilities", "list", "--output", "table"], "test-key", &server.url());
+    assert!(table.status.success(), "stderr: {}", String::from_utf8_lossy(&table.stderr));
+    assert!(String::from_utf8(table.stdout).unwrap().contains("94.3%"));
+
+    let json = run_plerion(&["vulnerabilities", "list", "--output", "json"], "test-key", &server.url());
+    let stdout = String::from_utf8(json.stdout).unwrap();
+    assert!(stdout.contains("\"epssScore\": 0.943"), "{stdout}");
+    assert!(stdout.contains("\"epssScoreDate\": \"2026-10-04\""), "{stdout}");
+}
+
+#[test]
+fn test_cli_vulnerabilities_rejects_bad_epss_input() {
+    let cases: [&[&str]; 4] = [
+        &["--epss-score-gte", "1.5"],
+        &["--epss-score-lte", "abc"],
+        &["--epss-score-gte", "0.6", "--epss-score-lte", "0.5"],
+        &["--epss-score-gte", "0.1", "--has-epss-score", "false"],
+    ];
+    for extra in cases {
+        let mut args = vec!["vulnerabilities", "list"];
+        args.extend_from_slice(extra);
+        // The endpoint is unreachable, so a request would also fail; check the message names the problem.
+        let output = run_plerion(&args, "test-key", "http://127.0.0.1:1");
+        assert!(!output.status.success(), "{extra:?} should fail");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(stderr.contains("epss") || stderr.contains("probability"), "{extra:?}: {stderr}");
+    }
+}

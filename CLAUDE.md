@@ -96,4 +96,4 @@ Tag-triggered via `.github/workflows/release.yml`. Builds 5 platform binaries us
 
 ## Docs
 
-`docs/` contains Mintlify-compatible `.mdx` files for docs.plerion.com. Uses the same component set (`<Steps>`, `<Tabs>`, `<Note>`, etc.) as the main plerion docs.
+The CLI reference lives in plerionhq/docs under `cli-reference/`. It is hand-written, so update it in that repo when you add or change a flag or column.

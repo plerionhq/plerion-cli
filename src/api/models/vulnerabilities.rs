@@ -28,6 +28,10 @@ pub struct Vulnerability {
     pub has_kev: Option<bool>,
     pub has_exploit: Option<bool>,
     pub has_vendor_fix: Option<bool>,
+    /// Probability (0 to 1) of exploitation in the next 30 days. None means no score, never 0.
+    pub epss_score: Option<f64>,
+    /// Date FIRST published `epss_score`, YYYY-MM-DD.
+    pub epss_score_date: Option<String>,
     pub known_exploit: Option<serde_json::Value>,
     pub exploits: Option<serde_json::Value>,
     pub exemptions: Option<serde_json::Value>,
@@ -46,7 +50,7 @@ impl TableRenderable for Vulnerability {
             "CVE / ID", "TITLE", "SEVERITY", "SEVERITY VALUE", "SEVERITY SOURCE",
             "PROVIDER", "ASSET ID", "ASSET TYPE", "TARGET NAME",
             "DESCRIPTION", "PRIMARY URL",
-            "KEV", "EXPLOIT", "FIX",
+            "KEV", "EXPLOIT", "FIX", "EPSS", "EPSS DATE",
             "PUBLISHED", "FIRST OBSERVED", "LAST OBSERVED",
             "INTEGRATION ID", "TENANT ID", "ORG ID", "EXECUTION ID",
             "SCHEMA VERSION",
@@ -54,6 +58,17 @@ impl TableRenderable for Vulnerability {
     }
 
     fn row(&self) -> Vec<String> {
+        self.cells(format_epss(self.epss_score))
+    }
+
+    // Text output is for scripts, so it keeps the raw score.
+    fn text_row(&self) -> Vec<String> {
+        self.cells(self.epss_score.map(|s| s.to_string()).unwrap_or_default())
+    }
+}
+
+impl Vulnerability {
+    fn cells(&self, epss: String) -> Vec<String> {
         vec![
             self.vulnerability_id.clone().unwrap_or_default(),
             self.title.clone().unwrap_or_default(),
@@ -69,6 +84,8 @@ impl TableRenderable for Vulnerability {
             bool_icon(self.has_kev),
             bool_icon(self.has_exploit),
             bool_icon(self.has_vendor_fix),
+            epss,
+            self.epss_score_date.clone().unwrap_or_default(),
             self.published_date.clone().unwrap_or_default(),
             self.first_observed_at.clone().unwrap_or_default(),
             self.last_observed_at.clone().unwrap_or_default(),
@@ -78,6 +95,17 @@ impl TableRenderable for Vulnerability {
             self.execution_id.clone().unwrap_or_default(),
             self.schema_version.clone().unwrap_or_default(),
         ]
+    }
+}
+
+/// Formats an EPSS score (0 to 1) as a percentage with one decimal: 94.3%, <0.1%, 0%.
+/// No score renders as an empty cell.
+pub fn format_epss(score: Option<f64>) -> String {
+    match score {
+        None => String::new(),
+        Some(s) if s <= 0.0 => "0%".to_string(),
+        Some(s) if s < 0.001 => "<0.1%".to_string(),
+        Some(s) => format!("{:.1}%", s * 100.0),
     }
 }
 

@@ -1,6 +1,6 @@
 # Plerion CLI
 
-[![Release](https://img.shields.io/badge/release-v0.1.7-blue?style=flat-square)](https://github.com/plerionhq/plerion-cli/releases)
+[![Release](https://img.shields.io/badge/release-v0.1.9-blue?style=flat-square)](https://github.com/plerionhq/plerion-cli/releases)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli/actions)
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli)
 [![API Version](https://img.shields.io/badge/Plerion%20API-v1-blue?style=flat-square)](https://docs.plerion.com/api-reference)
@@ -145,6 +145,7 @@ plerion tenant get --output json
 plerion findings list --output json --query 'data[0].detectionId'
 plerion assets list --is-publicly-exposed
 plerion vulnerabilities list --severity CRITICAL,HIGH --all
+plerion vulnerabilities list --epss-score-gte 0.1 --sort-by epssScore --sort-order desc
 plerion --profile prod findings list
 ```
 
@@ -165,7 +166,7 @@ plerion --profile prod findings list
 | `audit-logs list` | Audit logs (supports `--all`) |
 | `integrations list` | Cloud integrations (supports `--all`) |
 | `risks list` | Security risks (supports `--all`) |
-| `vulnerabilities list` | Vulnerabilities (supports `--all`) |
+| `vulnerabilities list` | Vulnerabilities (supports `--all`; EPSS filters `--epss-score-gte`/`--epss-score-lte` take a 0 to 1 probability) |
 | `vulnerabilities exemptions list/get/create/update/delete` | Vulnerability exemptions (list supports `--all`) |
 | `compliance-frameworks list` | Compliance frameworks |
 | `compliance-frameworks request-report --integration-id <id> --framework-id <id>` | Request compliance report |

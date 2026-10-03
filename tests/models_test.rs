@@ -282,6 +282,8 @@ fn test_vulnerability_table_renderable() {
         has_kev: Some(true),
         has_exploit: Some(false),
         has_vendor_fix: Some(true),
+        epss_score: None,
+        epss_score_date: None,
         known_exploit: None,
         exploits: None,
         exemptions: None,
