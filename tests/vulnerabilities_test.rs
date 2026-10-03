@@ -178,13 +178,20 @@ async fn test_list_vulnerabilities_sends_epss_filters() {
 fn test_format_epss() {
     use plerion::api::models::vulnerabilities::format_epss;
     assert_eq!(format_epss(None), "");
+    assert_eq!(format_epss(Some(f64::NAN)), "");
+    assert_eq!(format_epss(Some(f64::INFINITY)), "");
     assert_eq!(format_epss(Some(0.0)), "0%");
     assert_eq!(format_epss(Some(0.00004)), "<0.1%");
+    assert_eq!(format_epss(Some(0.0004)), "<0.1%");
     assert_eq!(format_epss(Some(0.00099)), "<0.1%");
     assert_eq!(format_epss(Some(0.001)), "0.1%");
-    assert_eq!(format_epss(Some(0.943)), "94.3%");
     assert_eq!(format_epss(Some(0.5)), "50.0%");
-    assert_eq!(format_epss(Some(1.0)), "100.0%");
+    assert_eq!(format_epss(Some(0.91969)), "92.0%");
+    assert_eq!(format_epss(Some(0.943)), "94.3%");
+    assert_eq!(format_epss(Some(0.95404)), "95.4%");
+    assert_eq!(format_epss(Some(0.999)), "99.9%");
+    assert_eq!(format_epss(Some(0.99988)), ">99.9%");
+    assert_eq!(format_epss(Some(1.0)), ">99.9%");
 }
 
 #[test]
