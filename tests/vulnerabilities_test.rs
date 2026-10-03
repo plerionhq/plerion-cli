@@ -226,14 +226,13 @@ fn test_iac_vulnerability_shows_epss() {
 }
 
 #[test]
-fn test_epss_bounds() {
-    use plerion::cli::vulnerabilities::epss_bounds;
-    assert_eq!(epss_bounds(Some(0.1), Some(0.5), None).unwrap(), (Some(0.1), Some(0.5)));
-    assert_eq!(epss_bounds(Some(0.3), Some(0.3), None).unwrap(), (Some(0.3), Some(0.3)));
-    // A bound at the end of the scale filters nothing, so it is dropped.
-    assert_eq!(epss_bounds(Some(0.0), Some(1.0), None).unwrap(), (None, None));
-    assert_eq!(epss_bounds(Some(0.0), Some(0.2), Some(true)).unwrap(), (None, Some(0.2)));
-    assert!(epss_bounds(Some(0.6), Some(0.5), None).is_err());
-    assert!(epss_bounds(Some(0.1), None, Some(false)).is_err());
-    assert_eq!(epss_bounds(None, None, Some(false)).unwrap(), (None, None));
+fn test_check_epss_range() {
+    use plerion::cli::vulnerabilities::check_epss_range;
+    assert!(check_epss_range(Some(0.1), Some(0.5), None).is_ok());
+    assert!(check_epss_range(Some(0.3), Some(0.3), None).is_ok());
+    assert!(check_epss_range(Some(0.0), Some(1.0), Some(true)).is_ok());
+    assert!(check_epss_range(None, None, Some(false)).is_ok());
+    assert!(check_epss_range(Some(0.6), Some(0.5), None).is_err());
+    assert!(check_epss_range(Some(0.1), None, Some(false)).is_err());
+    assert!(check_epss_range(Some(0.0), None, Some(false)).is_err());
 }

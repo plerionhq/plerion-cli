@@ -808,18 +808,18 @@ fn test_cli_access_grants_rejects_a_non_uuid_id() {
 }
 
 #[tokio::test]
-async fn test_cli_vulnerabilities_epss_filters_drop_bound_at_scale_end() {
+async fn test_cli_vulnerabilities_epss_filters_send_bounds_at_scale_end() {
     let mut server = Server::new_async().await;
     let mock = server
         .mock("GET", "/v1/tenant/vulnerabilities")
-        .match_query(mockito::Matcher::Exact("epssScoreLte=0.5&hasEpssScore=true&perPage=50".to_string()))
+        .match_query(mockito::Matcher::Exact("epssScoreGte=0.0&epssScoreLte=1.0&perPage=50".to_string()))
         .with_status(200)
         .with_body(serde_json::json!({ "data": [], "meta": { "page": 1, "perPage": 50, "total": 0 } }).to_string())
         .create_async()
         .await;
 
     let output = run_plerion(
-        &["vulnerabilities", "list", "--epss-score-gte", "0", "--epss-score-lte", "0.5", "--has-epss-score", "true", "--output", "json"],
+        &["vulnerabilities", "list", "--epss-score-gte", "0", "--epss-score-lte", "1", "--output", "json"],
         "test-key",
         &server.url(),
     );
