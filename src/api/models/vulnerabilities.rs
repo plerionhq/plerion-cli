@@ -98,13 +98,16 @@ impl Vulnerability {
     }
 }
 
-/// Formats an EPSS score (0 to 1) as a percentage with one decimal: 94.3%, <0.1%, 0%.
-/// No score renders as an empty cell.
+/// Formats an EPSS score (0 to 1) as a percentage with one decimal: 94.3%, <0.1%, >99.9%, 0%.
+/// Matches the web app. No score renders as an empty cell.
 pub fn format_epss(score: Option<f64>) -> String {
     match score {
         None => String::new(),
-        Some(s) if s <= 0.0 => "0%".to_string(),
+        Some(s) if !s.is_finite() => String::new(),
+        Some(0.0) => "0%".to_string(),
         Some(s) if s < 0.001 => "<0.1%".to_string(),
+        // Rounding would show 100.0%, which overstates a probability.
+        Some(s) if s > 0.999 => ">99.9%".to_string(),
         Some(s) => format!("{:.1}%", s * 100.0),
     }
 }
