@@ -24,11 +24,11 @@ pub struct ListVulnArgs {
     #[arg(long)] pub provider: Option<String>,
     #[arg(long)] pub has_kev: bool,
     /// Only vulnerabilities whose EPSS score is at least this probability, from 0 to 1
-    /// (0.5 = 50% chance of exploitation in the next 30 days). 0 means no bound; otherwise unscored ones never match. Use --has-epss-score true for scored only.
+    /// (0.5 = 50% chance of exploitation in the next 30 days). Any bound, including 0 or 1, leaves out vulnerabilities with no score; use --has-epss-score false for unscored only.
     #[arg(long, value_parser = parse_epss_score, value_name = "0-1")]
     pub epss_score_gte: Option<f64>,
     /// Only vulnerabilities whose EPSS score is at most this probability, from 0 to 1
-    /// (0.01 = 1% chance of exploitation in the next 30 days). 1 means no bound; otherwise unscored ones never match. Use --has-epss-score true for scored only.
+    /// (0.01 = 1% chance of exploitation in the next 30 days). Any bound, including 0 or 1, leaves out vulnerabilities with no score; use --has-epss-score false for unscored only.
     #[arg(long, value_parser = parse_epss_score, value_name = "0-1")]
     pub epss_score_lte: Option<f64>,
     /// Filter on whether the vulnerability has an EPSS score (true or false)
@@ -89,7 +89,7 @@ pub enum ExemptionsCommands {
         #[arg(long, value_parser = ["ACCEPTED_RISK", "COMPENSATING_CONTROL", "NO_VENDOR_FIX", "NOT_IN_USE", "OTHER_REASONS"])]
         reason: String,
         /// Conditions JSON (must include at least one of: vulnerabilityIds, assetGroupIds, assetIds, assetRegions, assetTags).
-        /// epssScoreGte and epssScoreLte (0 to 1) narrow those and can't be used on their own.
+        /// EPSS conditions (hasEpssScore, epssScoreGte, epssScoreLte from 0 to 1) can also be used on their own.
         #[arg(long)] conditions: String,
         #[arg(long)] audit_note: String,
     },
@@ -117,12 +117,12 @@ fn parse_epss_score(s: &str) -> Result<f64, String> {
     }
 }
 
-/// Checks the EPSS range and drops a bound at the end of the scale, since it filters nothing.
-pub fn epss_bounds(
+/// Rejects an EPSS range that could never match. Bounds are sent as typed.
+pub fn check_epss_range(
     gte: Option<f64>,
     lte: Option<f64>,
     has_score: Option<bool>,
-) -> anyhow::Result<(Option<f64>, Option<f64>)> {
+) -> anyhow::Result<()> {
     if let (Some(g), Some(l)) = (gte, lte) {
         if g > l {
             anyhow::bail!("--epss-score-gte ({g}) must not be greater than --epss-score-lte ({l})");
@@ -131,21 +131,20 @@ pub fn epss_bounds(
     if has_score == Some(false) && (gte.is_some() || lte.is_some()) {
         anyhow::bail!("--has-epss-score false can't be combined with an EPSS score range: unscored vulnerabilities never match one");
     }
-    Ok((gte.filter(|&g| g > 0.0), lte.filter(|&l| l < 1.0)))
+    Ok(())
 }
 
 pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<()> {
     let client = PlerionClient::new(config)?;
     match &args.command {
         VulnerabilitiesCommands::List(a) => {
-            let (epss_score_gte, epss_score_lte) =
-                epss_bounds(a.epss_score_gte, a.epss_score_lte, a.has_epss_score)?;
+            check_epss_range(a.epss_score_gte, a.epss_score_lte, a.has_epss_score)?;
             let params = ListVulnerabilitiesParams {
                 severity_levels: a.severity.clone(),
                 providers: super::normalize_providers(a.provider.clone()),
                 has_kev: if a.has_kev { Some(true) } else { None },
-                epss_score_gte,
-                epss_score_lte,
+                epss_score_gte: a.epss_score_gte,
+                epss_score_lte: a.epss_score_lte,
                 has_epss_score: a.has_epss_score,
                 has_exploit: if a.has_exploit { Some(true) } else { None },
                 has_vendor_fix: if a.has_vendor_fix { Some(true) } else { None },
