@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::api::models::assets::PagePaginationMeta;
+use crate::api::models::vulnerabilities::format_epss;
 use crate::output::TableRenderable;
 
 // --- Scan upload response ---
@@ -176,6 +177,10 @@ pub struct IacVulnerability {
     pub file: Option<String>,
     pub has_kev: Option<bool>,
     pub has_exploit: Option<bool>,
+    /// Probability (0 to 1) of exploitation in the next 30 days. None means no score, never 0.
+    pub epss_score: Option<f64>,
+    /// Date FIRST published `epss_score`, YYYY-MM-DD.
+    pub epss_score_date: Option<String>,
     pub packages: Option<Vec<IacVulnPackage>>,
     pub cwes: Option<Vec<serde_json::Value>>,
     pub known_exploit: Option<serde_json::Value>,
@@ -201,12 +206,23 @@ impl TableRenderable for IacVulnerability {
         vec![
             "ID", "CVE / VULN ID", "TITLE", "SEVERITY", "SEVERITY VALUE",
             "DESCRIPTION", "FILE",
-            "KEV", "EXPLOIT", "PACKAGES", "PRIMARY URL", "PUBLISHED",
+            "KEV", "EXPLOIT", "EPSS", "EPSS DATE", "PACKAGES", "PRIMARY URL", "PUBLISHED",
             "TENANT ID", "ORG ID", "CREATED AT", "UPDATED AT",
         ]
     }
 
     fn row(&self) -> Vec<String> {
+        self.cells(format_epss(self.epss_score))
+    }
+
+    // Text output is for scripts, so it keeps the raw score.
+    fn text_row(&self) -> Vec<String> {
+        self.cells(self.epss_score.map(|s| s.to_string()).unwrap_or_default())
+    }
+}
+
+impl IacVulnerability {
+    fn cells(&self, epss: String) -> Vec<String> {
         let packages = self.packages.as_ref()
             .map(|pkgs| pkgs.iter()
                 .filter_map(|p| p.name.clone())
@@ -223,6 +239,8 @@ impl TableRenderable for IacVulnerability {
             self.file.clone().unwrap_or_default(),
             bool_str(self.has_kev),
             bool_str(self.has_exploit),
+            epss,
+            self.epss_score_date.clone().unwrap_or_default(),
             packages,
             self.primary_url.clone().unwrap_or_default(),
             self.published_date.clone().unwrap_or_default(),

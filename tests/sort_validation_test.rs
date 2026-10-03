@@ -252,6 +252,29 @@ async fn test_vulnerabilities_accepts_valid_sort_by() {
     mock.assert_async().await;
 }
 
+#[tokio::test]
+async fn test_vulnerabilities_accepts_epss_score_sort() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/vulnerabilities")
+        .match_query(mockito::Matcher::UrlEncoded("sortBy".to_string(), "epssScore".to_string()))
+        .with_status(200)
+        .with_body(serde_json::json!({
+            "data": [],
+            "meta": { "page": 1, "perPage": 50, "total": 0 }
+        }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["vulnerabilities", "list", "--sort-by", "epssScore", "--sort-order", "desc", "--output", "json"],
+        "test-key",
+        &server.url(),
+    );
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
 // ============================================================
 // IaC list-scans: --sort-by / --sort-order validation (uses asc/desc)
 // ============================================================

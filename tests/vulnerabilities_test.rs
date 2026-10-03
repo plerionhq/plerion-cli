@@ -113,3 +113,127 @@ async fn test_list_vulnerabilities_with_all_cli_filters() {
     assert_eq!(resp.data.len(), 0);
     mock.assert_async().await;
 }
+
+#[tokio::test]
+async fn test_list_vulnerabilities_deserializes_epss() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [
+            { "vulnerabilityId": "CVE-2021-44228", "epssScore": 0.943, "epssScoreDate": "2026-10-04" },
+            { "vulnerabilityId": "CVE-2099-0001", "epssScore": null, "epssScoreDate": null },
+            { "vulnerabilityId": "CVE-2099-0002" }
+        ],
+        "meta": { "page": 1, "perPage": 50, "total": 3, "hasNextPage": false, "hasPreviousPage": false }
+    });
+    let _mock = server
+        .mock("GET", "/v1/tenant/vulnerabilities")
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "test_key").unwrap();
+    let resp = list_vulnerabilities(&client, &ListVulnerabilitiesParams::default()).await.unwrap();
+
+    assert_eq!(resp.data[0].epss_score, Some(0.943));
+    assert_eq!(resp.data[0].epss_score_date.as_deref(), Some("2026-10-04"));
+    assert_eq!(resp.data[1].epss_score, None);
+    assert_eq!(resp.data[1].epss_score_date, None);
+    assert_eq!(resp.data[2].epss_score, None);
+}
+
+#[tokio::test]
+async fn test_list_vulnerabilities_sends_epss_filters() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [],
+        "meta": { "page": 1, "perPage": 50, "total": 0, "hasNextPage": false, "hasPreviousPage": false }
+    });
+    let mock = server
+        .mock("GET", "/v1/tenant/vulnerabilities")
+        .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("epssScoreGte".to_string(), "0.1".to_string()),
+            mockito::Matcher::UrlEncoded("epssScoreLte".to_string(), "0.5".to_string()),
+            mockito::Matcher::UrlEncoded("hasEpssScore".to_string(), "true".to_string()),
+        ]))
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "test_key").unwrap();
+    let params = ListVulnerabilitiesParams {
+        epss_score_gte: Some(0.1),
+        epss_score_lte: Some(0.5),
+        has_epss_score: Some(true),
+        ..Default::default()
+    };
+    list_vulnerabilities(&client, &params).await.unwrap();
+    mock.assert_async().await;
+}
+
+#[test]
+fn test_format_epss() {
+    use plerion::api::models::vulnerabilities::format_epss;
+    assert_eq!(format_epss(None), "");
+    assert_eq!(format_epss(Some(0.0)), "0%");
+    assert_eq!(format_epss(Some(0.00004)), "<0.1%");
+    assert_eq!(format_epss(Some(0.00099)), "<0.1%");
+    assert_eq!(format_epss(Some(0.001)), "0.1%");
+    assert_eq!(format_epss(Some(0.943)), "94.3%");
+    assert_eq!(format_epss(Some(0.5)), "50.0%");
+    assert_eq!(format_epss(Some(1.0)), "100.0%");
+}
+
+#[test]
+fn test_vulnerability_table_shows_percent_and_text_keeps_raw_score() {
+    use plerion::api::models::vulnerabilities::Vulnerability;
+    use plerion::output::TableRenderable;
+    let v: Vulnerability = serde_json::from_value(serde_json::json!({
+        "vulnerabilityId": "CVE-2021-44228",
+        "epssScore": 0.943,
+        "epssScoreDate": "2026-10-04"
+    }))
+    .unwrap();
+    let epss = Vulnerability::headers().iter().position(|h| *h == "EPSS").unwrap();
+    let date = Vulnerability::headers().iter().position(|h| *h == "EPSS DATE").unwrap();
+    assert_eq!(v.row()[epss], "94.3%");
+    assert_eq!(v.row()[date], "2026-10-04");
+    assert_eq!(v.text_row()[epss], "0.943");
+
+    let unscored: Vulnerability = serde_json::from_value(serde_json::json!({ "epssScore": null })).unwrap();
+    assert_eq!(unscored.row()[epss], "");
+    assert_eq!(unscored.text_row()[epss], "");
+}
+
+#[test]
+fn test_iac_vulnerability_shows_epss() {
+    use plerion::api::models::iac::IacVulnerability;
+    use plerion::output::TableRenderable;
+    let v: IacVulnerability = serde_json::from_value(serde_json::json!({
+        "vulnerabilityId": "CVE-2021-44228",
+        "epssScore": 0.0004,
+        "epssScoreDate": "2026-10-04"
+    }))
+    .unwrap();
+    let epss = IacVulnerability::headers().iter().position(|h| *h == "EPSS").unwrap();
+    assert_eq!(v.row().len(), IacVulnerability::headers().len());
+    assert_eq!(v.row()[epss], "<0.1%");
+    assert_eq!(v.text_row()[epss], "0.0004");
+    assert_eq!(v.row()[epss + 1], "2026-10-04");
+}
+
+#[test]
+fn test_epss_bounds() {
+    use plerion::cli::vulnerabilities::epss_bounds;
+    assert_eq!(epss_bounds(Some(0.1), Some(0.5), None).unwrap(), (Some(0.1), Some(0.5)));
+    assert_eq!(epss_bounds(Some(0.3), Some(0.3), None).unwrap(), (Some(0.3), Some(0.3)));
+    // A bound at the end of the scale filters nothing, so it is dropped.
+    assert_eq!(epss_bounds(Some(0.0), Some(1.0), None).unwrap(), (None, None));
+    assert_eq!(epss_bounds(Some(0.0), Some(0.2), Some(true)).unwrap(), (None, Some(0.2)));
+    assert!(epss_bounds(Some(0.6), Some(0.5), None).is_err());
+    assert!(epss_bounds(Some(0.1), None, Some(false)).is_err());
+    assert_eq!(epss_bounds(None, None, Some(false)).unwrap(), (None, None));
+}

@@ -13,6 +13,9 @@ pub struct ListVulnerabilitiesParams {
     pub package_name: Option<String>,
     pub regions: Option<String>,
     pub has_kev: Option<bool>,
+    pub epss_score_gte: Option<f64>,
+    pub epss_score_lte: Option<f64>,
+    pub has_epss_score: Option<bool>,
     pub is_exempted: Option<bool>,
     pub is_exploitable: Option<bool>,
     pub has_exploit: Option<bool>,
@@ -45,6 +48,9 @@ pub async fn list_vulnerabilities(
     if let Some(v) = &params.package_name { req = req.query(&[("packageName", v)]); }
     if let Some(v) = &params.regions { req = req.query(&[("regions", v)]); }
     if let Some(v) = params.has_kev { req = req.query(&[("hasKev", v)]); }
+    if let Some(v) = params.epss_score_gte { req = req.query(&[("epssScoreGte", v)]); }
+    if let Some(v) = params.epss_score_lte { req = req.query(&[("epssScoreLte", v)]); }
+    if let Some(v) = params.has_epss_score { req = req.query(&[("hasEpssScore", v)]); }
     if let Some(v) = params.is_exempted { req = req.query(&[("isExempted", v)]); }
     if let Some(v) = params.is_exploitable { req = req.query(&[("isExploitable", v)]); }
     if let Some(v) = params.has_exploit { req = req.query(&[("hasExploit", v)]); }
