@@ -870,3 +870,397 @@ fn test_cli_vulnerabilities_rejects_bad_epss_input() {
         assert!(stderr.contains("epss") || stderr.contains("probability"), "{extra:?}: {stderr}");
     }
 }
+
+// --- workload scans ---
+
+/// Runs the binary against an unreachable endpoint, for checks that must fail
+/// before any HTTP call.
+fn run_plerion_offline(args: &[&str]) -> std::process::Output {
+    run_plerion(args, "k", "http://127.0.0.1:1")
+}
+
+#[tokio::test]
+async fn test_cli_workload_scans_request_by_asset_id() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("POST", "/v1/tenant/workload/scans")
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "integrationId": "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3",
+            "assetId": "prn:assets:x"
+        })))
+        .with_status(200)
+        .with_body(r#"{"scanId":"scan-1","status":"PENDING","executionId":"exec-1"}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &[
+            "workload-scans",
+            "request",
+            "--integration-id",
+            "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3",
+            "--asset-id",
+            "prn:assets:x",
+        ],
+        "test-key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("SCAN ID"), "{stdout}");
+    assert!(stdout.contains("scan-1"));
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_workload_scans_request_by_resource() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("POST", "/v1/tenant/workload/scans")
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "integrationId": "i-1",
+            "resourceType": "ec2:image",
+            "resourceRegion": "us-east-1",
+            "resourceId": "ami-1"
+        })))
+        .with_status(200)
+        .with_body(r#"{"scanId":"scan-2","status":"PENDING"}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &[
+            "workload-scans",
+            "request",
+            "--integration-id",
+            "i-1",
+            "--resource-type",
+            "ec2:image",
+            "--resource-region",
+            "us-east-1",
+            "--resource-id",
+            "ami-1",
+            "--output",
+            "json",
+        ],
+        "test-key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("\"scanId\": \"scan-2\""), "{stdout}");
+    mock.assert_async().await;
+}
+
+/// An incomplete or mixed workload is rejected locally, before any HTTP call.
+#[test]
+fn test_cli_workload_scans_request_rejects_an_incomplete_target() {
+    for (args, expected) in [
+        (
+            vec!["workload-scans", "request", "--integration-id", "i-1"],
+            "Name the workload to scan",
+        ),
+        (
+            vec![
+                "workload-scans",
+                "request",
+                "--integration-id",
+                "i-1",
+                "--resource-id",
+                "i-0",
+            ],
+            "all of --resource-type",
+        ),
+        (
+            vec![
+                "workload-scans",
+                "request",
+                "--integration-id",
+                "i-1",
+                "--asset-id",
+                "a",
+                "--resource-region",
+                "us-east-1",
+            ],
+            "not both",
+        ),
+        (
+            vec![
+                "workload-scans",
+                "request",
+                "--integration-id",
+                " ",
+                "--asset-id",
+                "a",
+            ],
+            "--integration-id must not be empty",
+        ),
+    ] {
+        let output = run_plerion_offline(&args);
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(!output.status.success(), "expected failure for {args:?}");
+        assert!(
+            stderr.contains(expected),
+            "for {args:?} stderr was: {stderr}"
+        );
+        assert!(
+            !stderr.contains("Connection failed"),
+            "for {args:?} an HTTP call was made"
+        );
+    }
+}
+
+#[test]
+fn test_cli_workload_scans_request_rejects_an_unsupported_resource_type() {
+    let output = run_plerion_offline(&[
+        "workload-scans",
+        "request",
+        "--integration-id",
+        "i-1",
+        "--resource-type",
+        "lambda:function",
+        "--resource-region",
+        "r",
+        "--resource-id",
+        "x",
+    ]);
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(stderr.contains("invalid value"), "stderr was: {stderr}");
+}
+
+#[tokio::test]
+async fn test_cli_workload_scans_get() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/workload/scans/scan-1")
+        .with_status(200)
+        .with_body(
+            r#"{"id":"scan-1","type":"WORKLOAD","status":"STARTED","assetId":"prn:assets:x"}"#,
+        )
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["workload-scans", "get", "scan-1"],
+        "test-key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("STARTED"), "{stdout}");
+    assert!(stdout.contains("WORKLOAD"));
+    mock.assert_async().await;
+}
+
+// --- risks get ---
+
+#[tokio::test]
+async fn test_cli_risks_get() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/risks/risk-1")
+        .match_query(mockito::Matcher::UrlEncoded(
+            "fields".into(),
+            "severityLevel".into(),
+        ))
+        .with_status(200)
+        .with_body(r#"{"data":{"id":"risk-1","severityLevel":"CRITICAL"}}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &[
+            "risks",
+            "get",
+            "risk-1",
+            "--fields",
+            "severityLevel",
+            "--output",
+            "json",
+        ],
+        "test-key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("CRITICAL"), "{stdout}");
+    mock.assert_async().await;
+}
+
+/// The API answers an unknown ID with an empty object; the CLI says so.
+#[tokio::test]
+async fn test_cli_risks_get_unknown_id() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/v1/tenant/risks/nope")
+        .with_status(200)
+        .with_body(r#"{"data":{}}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["risks", "get", "nope"], "test-key", &server.url());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(
+        stderr.contains("Risk 'nope' not found"),
+        "stderr was: {stderr}"
+    );
+}
+
+// --- metrics query ---
+
+const METRICS_BODY: &str = r#"{
+    "data": [
+        { "timestamp": "2026-08-01T00:00:00.000Z", "metrics": { "open_count": 3, "open_count_by_asset_group": 1.5 } }
+    ],
+    "meta": { "namespace": "risk", "metricNames": ["open_count", "open_count_by_asset_group"] }
+}"#;
+
+fn metrics_args<'a>(extra: &[&'a str]) -> Vec<&'a str> {
+    let mut args = vec![
+        "metrics",
+        "query",
+        "--namespace",
+        "risk",
+        "--metric-names",
+        "open_count, open_count_by_asset_group",
+        "--interval",
+        "86400",
+        "--start",
+        "2026-08-01T00:00:00Z",
+        "--end",
+        "2026-08-02T00:00:00Z",
+        "--stat",
+        "max",
+    ];
+    args.extend_from_slice(extra);
+    args
+}
+
+#[tokio::test]
+async fn test_cli_metrics_query_table_has_one_row_per_value() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("POST", "/v1/tenant/metrics")
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "metric": { "namespace": "risk", "metricNames": ["open_count", "open_count_by_asset_group"] },
+            "period": { "interval": 86400, "start": "2026-08-01T00:00:00Z", "end": "2026-08-02T00:00:00Z", "stat": "max" },
+            "assetGroupIds": ["ag-1", "ag-2"]
+        })))
+        .with_status(200)
+        .with_body(METRICS_BODY)
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &metrics_args(&["--asset-group-ids", "ag-1,ag-2"]),
+        "test-key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("TIMESTAMP"), "{stdout}");
+    assert!(stdout.contains("open_count_by_asset_group"));
+    assert!(stdout.contains("1.5"));
+    mock.assert_async().await;
+}
+
+/// JSON keeps the API's shape: one entry per interval with a metrics map.
+#[tokio::test]
+async fn test_cli_metrics_query_json_keeps_api_shape() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("POST", "/v1/tenant/metrics")
+        .with_status(200)
+        .with_body(METRICS_BODY)
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &metrics_args(&["--output", "json"]),
+        "test-key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let value: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(value[0]["metrics"]["open_count"], 3);
+}
+
+#[test]
+fn test_cli_metrics_query_rejects_bad_input_locally() {
+    let bad_start = {
+        let mut a = metrics_args(&[]);
+        let i = a.iter().position(|x| *x == "2026-08-01T00:00:00Z").unwrap();
+        a[i] = "yesterday";
+        a
+    };
+    let reversed = {
+        let mut a = metrics_args(&[]);
+        let i = a.iter().position(|x| *x == "2026-08-01T00:00:00Z").unwrap();
+        a[i] = "2026-08-03T00:00:00Z";
+        a
+    };
+    let no_names = {
+        let mut a = metrics_args(&[]);
+        let i = a
+            .iter()
+            .position(|x| *x == "open_count, open_count_by_asset_group")
+            .unwrap();
+        a[i] = " , ";
+        a
+    };
+    for (args, expected) in [
+        (bad_start, "--start must be an ISO 8601 date-time"),
+        (reversed, "--start must be before --end"),
+        (no_names, "--metric-names must list at least one"),
+        (
+            metrics_args(&["--integration-ids", ","]),
+            "--integration-ids must list at least one ID",
+        ),
+    ] {
+        let output = run_plerion_offline(&args);
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(!output.status.success(), "expected failure for {args:?}");
+        assert!(
+            stderr.contains(expected),
+            "for {args:?} stderr was: {stderr}"
+        );
+    }
+}
+
+#[test]
+fn test_cli_metrics_query_rejects_an_out_of_range_interval() {
+    let mut args = metrics_args(&[]);
+    let i = args.iter().position(|x| *x == "86400").unwrap();
+    args[i] = "60";
+    let output = run_plerion_offline(&args);
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(stderr.contains("--interval"), "stderr was: {stderr}");
+}

@@ -1,5 +1,5 @@
 use clap::{Args, Subcommand};
-use crate::api::{client::PlerionClient, endpoints::risks::{list_risks, ListRisksParams}};
+use crate::api::{client::PlerionClient, endpoints::risks::{get_risk, list_risks, ListRisksParams}};
 use crate::config::Config;
 use crate::output;
 
@@ -11,7 +11,18 @@ pub struct RisksArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum RisksCommands {
-    List(ListRisksArgs),
+    List(Box<ListRisksArgs>),
+    /// Get a single risk by ID
+    Get(GetRiskArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct GetRiskArgs {
+    /// Risk ID, as returned by `risks list`
+    pub id: String,
+    /// Risk fields to include (comma-separated, e.g. riskTypeId,severityLevel,score); id is always included
+    #[arg(long)]
+    pub fields: Option<String>,
 }
 
 #[derive(Args, Debug)]
@@ -94,6 +105,19 @@ pub async fn run(args: &RisksArgs, config: &Config) -> anyhow::Result<()> {
                 let resp = list_risks(&client, &params).await?;
                 output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
             }
+        }
+        RisksCommands::Get(a) => {
+            let resp = get_risk(&client, &a.id, a.fields.as_deref()).await?;
+            // An unknown ID answers 200 with an empty object.
+            let Some(risk) = resp.data.filter(|r| r.id.is_some()) else {
+                anyhow::bail!("Risk '{}' not found.", a.id);
+            };
+            output::render(
+                &risk,
+                config.output,
+                config.query.as_deref(),
+                config.no_color,
+            )?;
         }
     }
     Ok(())

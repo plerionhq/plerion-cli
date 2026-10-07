@@ -11,10 +11,12 @@ pub mod custom_reports;
 pub mod findings;
 pub mod iac;
 pub mod integrations;
+pub mod metrics;
 pub mod risks;
 pub mod tenant;
 pub mod vulnerabilities;
 pub mod well_architected;
+pub mod workload_scans;
 
 use clap::{Parser, Subcommand};
 use crate::output::OutputFormat;
@@ -109,6 +111,10 @@ pub enum Commands {
     Integrations(integrations::IntegrationsArgs),
     /// Risk management
     Risks(risks::RisksArgs),
+    /// On-demand workload scans
+    WorkloadScans(workload_scans::WorkloadScansArgs),
+    /// Dashboard metric time series
+    Metrics(metrics::MetricsArgs),
     /// Vulnerability management
     Vulnerabilities(vulnerabilities::VulnerabilitiesArgs),
     /// Compliance framework operations
