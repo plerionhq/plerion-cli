@@ -91,7 +91,7 @@ Custom endpoint via `--endpoint-url` bypasses region validation.
 
 ## OpenAPI coverage
 
-`scripts/api_coverage.py` compares the `/v1/tenant/*` operations in the published API reference with the calls in `src/api/endpoints/` (and the IaC upload in `src/api/client.rs`) and lists any the CLI doesn't make. `.github/workflows/api-coverage.yml` runs it weekly and keeps one open issue, "CLI is missing customer API operations", up to date; it also runs on PRs that touch the endpoints, the script or the ignore file. Operations deliberately left out of the CLI go in `api-coverage-ignore.txt`, one operationId per line with a `#` reason. Use `--list-covered` to see what the script extracted.
+`scripts/api_coverage.py` compares the `/v1/tenant/*` operations in the published API reference with the calls in `src/api/endpoints/` (and the IaC upload in `src/api/client.rs`) and lists any the CLI doesn't make. Operations deliberately left out of the CLI go in `api-coverage-ignore.txt`, one operationId per line with a `#` reason. Use `--list-covered` to see what the script extracted.
 
 ## Release
 
