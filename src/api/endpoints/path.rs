@@ -32,7 +32,10 @@ const PATH_SEGMENT: &AsciiSet = &CONTROLS
     .add(b'|')
     .add(b'}');
 
-/// Percent-encodes an id for use as a single path segment.
+/// Percent-encodes an id for use as a single path segment. `label` names the
+/// id in the error, e.g. "grant ID".
+///
+/// An empty id is rejected, since it would call the parent collection route.
 ///
 /// A segment of only dots is rejected rather than encoded. It is an RFC 3986
 /// dot-segment, and the URL layer resolves it before the request is sent, so
@@ -40,11 +43,11 @@ const PATH_SEGMENT: &AsciiSet = &CONTROLS
 /// Encoding does not help: `%2E` is decoded and normalised the same way, so
 /// there is no way to express a literal dot-segment. Refusing is the only
 /// correct option, and no real id looks like this.
-pub(crate) fn segment(id: &str) -> Result<String, PlerionError> {
-    if !id.is_empty() && id.bytes().all(|b| b == b'.') {
+pub(crate) fn segment(id: &str, label: &str) -> Result<String, PlerionError> {
+    if id.bytes().all(|b| b == b'.') {
         return Err(PlerionError::ApiError {
             status: 400,
-            message: format!("'{id}' is not a valid ID"),
+            message: format!("'{id}' is not a valid {label}"),
         });
     }
     Ok(utf8_percent_encode(id, PATH_SEGMENT).to_string())
@@ -53,6 +56,10 @@ pub(crate) fn segment(id: &str) -> Result<String, PlerionError> {
 #[cfg(test)]
 mod tests {
     use super::segment;
+
+    fn seg(id: &str) -> Result<String, crate::error::PlerionError> {
+        segment(id, "ID")
+    }
 
     /// The only ASCII characters `encodeURIComponent` leaves unescaped.
     const UNRESERVED: &str =
@@ -69,37 +76,44 @@ mod tests {
                 continue;
             }
             let input = ch.to_string();
-            let escaped = segment(&input).unwrap() != input;
+            let escaped = seg(&input).unwrap() != input;
             assert_eq!(
                 escaped,
                 !UNRESERVED.contains(ch),
                 "{ch:?} (0x{byte:02x}) escaped={escaped}, encoded as {}",
-                segment(&input).unwrap()
+                seg(&input).unwrap()
             );
         }
     }
 
     #[test]
     fn test_control_characters_are_escaped() {
-        assert_eq!(segment("\n").unwrap(), "%0A");
-        assert_eq!(segment("\t").unwrap(), "%09");
+        assert_eq!(seg("\n").unwrap(), "%0A");
+        assert_eq!(seg("\t").unwrap(), "%09");
     }
 
     #[test]
     fn test_a_uuid_passes_through_unchanged() {
         let id = "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3";
-        assert_eq!(segment(id).unwrap(), id);
+        assert_eq!(seg(id).unwrap(), id);
     }
 
     /// A dot-only segment cannot be expressed in a URL, so it is refused rather
     /// than silently resolving to a different endpoint.
     #[test]
     fn test_dot_segments_are_rejected() {
-        assert!(segment(".").is_err());
-        assert!(segment("..").is_err());
-        assert!(segment("...").is_err());
+        assert!(seg("").is_err());
+        assert!(seg(".").is_err());
+        assert!(seg("..").is_err());
+        assert!(seg("...").is_err());
         // Dots inside a real value are fine.
-        assert_eq!(segment("a.b").unwrap(), "a.b");
-        assert_eq!(segment(".hidden").unwrap(), ".hidden");
+        assert_eq!(seg("a.b").unwrap(), "a.b");
+        assert_eq!(seg(".hidden").unwrap(), ".hidden");
+    }
+
+    #[test]
+    fn test_error_names_the_label() {
+        let err = segment("..", "risk ID").unwrap_err().to_string();
+        assert!(err.contains("is not a valid risk ID"), "{err}");
     }
 }

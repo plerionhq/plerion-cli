@@ -146,7 +146,7 @@ async fn test_get_custom_check_rejects_a_dot_segment() {
     let err = custom_checks::get_custom_check(&client(&server), "..")
         .await
         .unwrap_err();
-    assert!(err.to_string().contains("not a valid ID"), "{err}");
+    assert!(err.to_string().contains("not a valid custom check ID"), "{err}");
 }
 
 #[tokio::test]

@@ -39,7 +39,7 @@ pub async fn get_custom_check(
     id: &str,
 ) -> Result<CustomCheck, PlerionError> {
     client
-        .execute(client.get(&format!("/v1/tenant/custom-checks/{}", segment(id)?)))
+        .execute(client.get(&format!("/v1/tenant/custom-checks/{}", segment(id, "custom check ID")?)))
         .await
 }
 
@@ -60,7 +60,7 @@ pub async fn update_custom_check(
     client
         .execute(
             client
-                .put(&format!("/v1/tenant/custom-checks/{}", segment(id)?))
+                .put(&format!("/v1/tenant/custom-checks/{}", segment(id, "custom check ID")?))
                 .json(body),
         )
         .await
@@ -71,7 +71,7 @@ pub async fn delete_custom_check(
     id: &str,
 ) -> Result<DeleteCustomCheckResponse, PlerionError> {
     client
-        .execute(client.delete(&format!("/v1/tenant/custom-checks/{}", segment(id)?)))
+        .execute(client.delete(&format!("/v1/tenant/custom-checks/{}", segment(id, "custom check ID")?)))
         .await
 }
 
@@ -91,7 +91,7 @@ pub async fn get_custom_check_dry_run_status(
     client
         .execute(client.get(&format!(
             "/v1/tenant/custom-check-dry-runs/{}",
-            segment(dry_run_id)?
+            segment(dry_run_id, "dry run ID")?
         )))
         .await
 }

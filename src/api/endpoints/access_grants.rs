@@ -60,7 +60,7 @@ pub async fn get_access_grant(
     client: &PlerionClient,
     id: &str,
 ) -> Result<AccessGrantResponse, PlerionError> {
-    client.execute(client.get(&format!("/v1/tenant/aws/access-grants/{}", segment(id)?))).await
+    client.execute(client.get(&format!("/v1/tenant/aws/access-grants/{}", segment(id, "grant ID")?))).await
 }
 
 pub async fn get_access_grant_stats(
@@ -83,6 +83,6 @@ pub async fn update_access_grant(
     body: UpdateAccessGrantRequest,
 ) -> Result<AccessGrantResponse, PlerionError> {
     client
-        .execute(client.patch(&format!("/v1/tenant/aws/access-grants/{}", segment(id)?)).json(&body))
+        .execute(client.patch(&format!("/v1/tenant/aws/access-grants/{}", segment(id, "grant ID")?)).json(&body))
         .await
 }
