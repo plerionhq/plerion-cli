@@ -59,13 +59,15 @@ pub struct ListAccessGrantsArgs {
     #[arg(long)] pub principal: Option<String>,
     /// Substring match across principal, resource name and asset ID
     #[arg(long)] pub search: Option<String>,
-    /// Recorded review decisions (comma-separated: keep, remove, review_later)
-    #[arg(long)] pub review_decisions: Option<String>,
-    /// Substring match on the recorded owner
-    #[arg(long)] pub grant_owner: Option<String>,
+    /// Recorded review decisions (comma-separated: keep, remove, review_later, trust_until_review)
+    #[arg(long, value_parser = parse_review_decisions)]
+    pub review_decisions: Option<String>,
+    /// Substring match on the recorded grantee
+    #[arg(long, alias = "grant-owner")] pub grantee: Option<String>,
     /// Only grants due for review by this ISO 8601 date-time
     #[arg(long)] pub next_review_at_end: Option<String>,
-    #[arg(long, default_value = "50")] pub per_page: u32,
+    #[arg(long, default_value = "50", value_parser = clap::value_parser!(u32).range(1..=1000))]
+    pub per_page: u32,
     /// Fetch all pages automatically
     #[arg(long)] pub all: bool,
 }
@@ -73,23 +75,38 @@ pub struct ListAccessGrantsArgs {
 #[derive(Args, Debug)]
 pub struct UpdateAccessGrantArgs {
     pub id: String,
-    /// Review decision to record
-    #[arg(long, value_parser = ["keep", "remove", "review_later"])]
+    /// Review decision to record; trust_until_review also needs --next-review-at
+    #[arg(long, value_parser = REVIEW_DECISIONS)]
     pub review_decision: Option<String>,
     /// Free-text review comment
     #[arg(long)] pub review_comment: Option<String>,
-    /// Owner accountable for the grant
-    #[arg(long)] pub grant_owner: Option<String>,
+    /// Team, person or service accountable for the grant
+    #[arg(long, alias = "grant-owner")] pub grantee: Option<String>,
     /// When the grant is next due for review (ISO 8601 date-time)
     #[arg(long)] pub next_review_at: Option<String>,
     /// Clear the recorded review decision
     #[arg(long, conflicts_with = "review_decision")] pub clear_review_decision: bool,
     /// Clear the review comment
     #[arg(long, conflicts_with = "review_comment")] pub clear_review_comment: bool,
-    /// Clear the grant owner
-    #[arg(long, conflicts_with = "grant_owner")] pub clear_grant_owner: bool,
+    /// Clear the grantee
+    #[arg(long, alias = "clear-grant-owner", conflicts_with = "grantee")] pub clear_grantee: bool,
     /// Clear the next review date
     #[arg(long, conflicts_with = "next_review_at")] pub clear_next_review_at: bool,
+}
+
+const REVIEW_DECISIONS: [&str; 4] = ["keep", "remove", "review_later", "trust_until_review"];
+
+/// Checks each entry of a comma-separated --review-decisions list.
+fn parse_review_decisions(s: &str) -> Result<String, String> {
+    for v in s.split(',') {
+        if !REVIEW_DECISIONS.contains(&v.trim()) {
+            return Err(format!(
+                "'{v}' is not a review decision. Valid values: {}",
+                REVIEW_DECISIONS.join(", ")
+            ));
+        }
+    }
+    Ok(s.to_string())
 }
 
 /// A set value, an explicit null to clear, or absent to leave untouched.
@@ -135,7 +152,7 @@ fn list_params(a: &ListAccessGrantsArgs) -> ListAccessGrantsParams {
         principal: a.principal.clone(),
         search: a.search.clone(),
         review_decisions: a.review_decisions.clone(),
-        grant_owner: a.grant_owner.clone(),
+        grantee: a.grantee.clone(),
         next_review_at_end: a.next_review_at_end.clone(),
         cursor: None,
         per_page: Some(a.per_page),
@@ -187,13 +204,13 @@ pub async fn run(args: &AccessGrantsArgs, config: &Config) -> anyhow::Result<()>
             let body = UpdateAccessGrantRequest {
                 review_decision: review_field(a.review_decision.as_ref(), a.clear_review_decision),
                 review_comment: review_field(a.review_comment.as_ref(), a.clear_review_comment),
-                grant_owner: review_field(a.grant_owner.as_ref(), a.clear_grant_owner),
+                grantee: review_field(a.grantee.as_ref(), a.clear_grantee),
                 next_review_at: review_field(a.next_review_at.as_ref(), a.clear_next_review_at),
             };
             if body.is_empty() {
                 anyhow::bail!(
                     "Nothing to update. Pass at least one of --review-decision, --review-comment, \
-                     --grant-owner, --next-review-at, or a --clear-* flag."
+                     --grantee, --next-review-at, or a --clear-* flag."
                 );
             }
             let resp = update_access_grant(&client, &a.id, body).await?;

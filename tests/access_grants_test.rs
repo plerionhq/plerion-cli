@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 use mockito::Server;
 use plerion::api::{
     client::PlerionClient,
@@ -35,9 +37,11 @@ fn grant_json() -> serde_json::Value {
         "blockedByRcp": false,
         "rcpStatus": "not-applicable",
         "hasRuntimeConditions": true,
-        "trustStatus": "untrusted",
-        "grantOwner": "platform-team",
-        "reviewDecision": "keep",
+        "trustStatus": "trusted",
+        "trustedUntil": "2027-01-31T00:00:00.000Z",
+        "trustLapseReason": null,
+        "grantee": "platform-team",
+        "reviewDecision": "trust_until_review",
         "reviewComment": "Vendor export feed",
         "nextReviewAt": "2027-01-31T00:00:00.000Z",
         "reviewedBy": "ci-audit-key (API key)",
@@ -46,8 +50,10 @@ fn grant_json() -> serde_json::Value {
             {
                 "reviewedBy": "auditor@acme.com",
                 "reviewedAt": "2026-07-20T05:41:09.000Z",
-                "decision": "keep",
-                "owner": "platform-team"
+                "decision": "trust_until_review",
+                "grantee": "platform-team",
+                "nextReviewAt": "2027-01-31T00:00:00.000Z",
+                "trustedUntil": "2027-01-31T00:00:00.000Z"
             }
         ],
         "firstObservedAt": "2026-05-14T02:11:47.000Z",
@@ -80,10 +86,16 @@ async fn test_list_access_grants_deserializes_every_field() {
     assert_eq!(g.resource_type.as_deref(), Some("AWS::S3::Bucket"));
     assert_eq!(g.aws_account_id.as_deref(), Some("111122223333"));
     assert_eq!(g.grant_origin.as_deref(), Some("external"));
-    assert_eq!(g.trust_status.as_deref(), Some("untrusted"));
+    assert_eq!(g.trust_status.as_deref(), Some("trusted"));
+    assert_eq!(g.trusted_until.as_deref(), Some("2027-01-31T00:00:00.000Z"));
+    assert_eq!(g.grantee.as_deref(), Some("platform-team"));
+    assert_eq!(g.review_decision.as_deref(), Some("trust_until_review"));
     assert_eq!(g.blocked_by_rcp, Some(false));
     assert_eq!(g.allowed_actions.as_ref().unwrap().len(), 2);
-    assert_eq!(g.review_history.as_ref().unwrap()[0].decision.as_deref(), Some("keep"));
+    let review = &g.review_history.as_ref().unwrap()[0];
+    assert_eq!(review.decision.as_deref(), Some("trust_until_review"));
+    assert_eq!(review.grantee.as_deref(), Some("platform-team"));
+    assert_eq!(review.trusted_until.as_deref(), Some("2027-01-31T00:00:00.000Z"));
     assert_eq!(resp.meta.total, Some(412));
 }
 
@@ -107,7 +119,7 @@ async fn test_list_access_grants_sends_every_filter() {
             mockito::Matcher::UrlEncoded("principal".into(), "root".into()),
             mockito::Matcher::UrlEncoded("search".into(), "acme".into()),
             mockito::Matcher::UrlEncoded("reviewDecisions".into(), "keep".into()),
-            mockito::Matcher::UrlEncoded("grantOwner".into(), "platform-team".into()),
+            mockito::Matcher::UrlEncoded("grantee".into(), "platform-team".into()),
             mockito::Matcher::UrlEncoded("nextReviewAtEnd".into(), "2026-12-31T00:00:00Z".into()),
         ]))
         .with_status(200)
@@ -135,7 +147,7 @@ async fn test_list_access_grants_sends_every_filter() {
         principal: Some("root".into()),
         search: Some("acme".into()),
         review_decisions: Some("keep".into()),
-        grant_owner: Some("platform-team".into()),
+        grantee: Some("platform-team".into()),
         next_review_at_end: Some("2026-12-31T00:00:00Z".into()),
         ..Default::default()
     };
@@ -266,14 +278,14 @@ async fn test_update_access_grant_sends_explicit_null_to_clear() {
 #[test]
 fn test_update_request_is_empty_detects_a_no_op_body() {
     assert!(UpdateAccessGrantRequest::default().is_empty());
-    let with_owner = UpdateAccessGrantRequest {
-        grant_owner: Some(serde_json::Value::String("team".into())),
+    let with_grantee = UpdateAccessGrantRequest {
+        grantee: Some(serde_json::Value::String("team".into())),
         ..Default::default()
     };
-    assert!(!with_owner.is_empty());
+    assert!(!with_grantee.is_empty());
     // Clearing a field is a real change, not an empty body.
     let clearing = UpdateAccessGrantRequest {
-        grant_owner: Some(serde_json::Value::Null),
+        grantee: Some(serde_json::Value::Null),
         ..Default::default()
     };
     assert!(!clearing.is_empty());

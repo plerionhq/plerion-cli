@@ -147,5 +147,5 @@ async fn test_get_workload_scan_rejects_a_dot_segment() {
         .await
         .unwrap_err()
         .to_string();
-    assert!(err.contains("is not a valid scan ID"), "{err}");
+    assert_eq!(err, "'..' is not a valid scan ID");
 }

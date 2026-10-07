@@ -974,7 +974,12 @@ async fn test_cli_custom_checks_dry_run_status() {
         .mock("GET", "/v1/tenant/custom-check-dry-runs/dr-1")
         .with_status(200)
         .with_body(
-            serde_json::json!({ "dryRunId": "dr-1", "status": "SUCCEEDED", "output": { "findings": [{ "assetId": "a-1" }] } })
+            serde_json::json!({
+                "dryRunId": "dr-1",
+                "status": "SUCCEEDED",
+                "output": { "dryRun": true, "totalChecks": 1, "totalFindings": 1 },
+                "findings": [{ "assetId": "a-1" }]
+            })
                 .to_string(),
         )
         .create_async()
@@ -987,7 +992,9 @@ async fn test_cli_custom_checks_dry_run_status() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
     mock.assert_async().await;
-    assert!(stdout.contains("a-1"));
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(json["findings"][0]["assetId"], "a-1");
+    assert_eq!(json["output"]["totalFindings"], 1);
 }
 
 // --- custom-reports ---

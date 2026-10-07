@@ -122,7 +122,7 @@ async fn test_get_detection_exemptions_rejects_dot_segment() {
     let err = profiles::get_detection_exemptions(&client, "..", "PLERION-AWS-16")
         .await
         .unwrap_err();
-    assert!(err.to_string().contains("not a valid profile ID"));
+    assert_eq!(err.to_string(), "'..' is not a valid profile ID");
 }
 
 #[tokio::test]

@@ -57,7 +57,7 @@ pub enum CustomChecksCommands {
         #[arg(long)]
         file: String,
     },
-    /// Get a dry run's status; preview findings are in --output json
+    /// Get a dry run's status and findings count; findings are in --output json
     DryRunStatus {
         /// Dry run ID returned by dry-run
         #[arg(long)]
