@@ -1,0 +1,2 @@
+# Customer API operations deliberately left out of the CLI, one operationId per line.
+getAssetSbomByAssetId  # same data as assets sbom by path
