@@ -740,3 +740,318 @@ async fn test_cli_iac_list_scans_string_meta_values() {
     assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
     assert!(stdout.contains("scan-99"));
 }
+
+// --- custom-checks ---
+
+const CC_ID: &str = "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3";
+
+fn custom_check_json() -> serde_json::Value {
+    serde_json::json!({
+        "customCheckId": CC_ID,
+        "slug": "s3-no-public-acl",
+        "organizationId": "org-1",
+        "tenantId": "tenant-1",
+        "title": "No public S3",
+        "target": { "assetType": "AWS::S3::Bucket", "scope": "batch" },
+        "defaults": { "severityLevel": "HIGH", "message": "Public", "informational": false },
+        "type": "rego",
+        "body": "package plerion",
+        "version": 2,
+        "createdBy": "alice",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "updatedBy": "bob",
+        "updatedAt": "2026-01-02T00:00:00Z"
+    })
+}
+
+/// What a write should send for `custom_check_json()`: server-set fields and the id dropped.
+fn custom_check_input_json() -> serde_json::Value {
+    serde_json::json!({
+        "slug": "s3-no-public-acl",
+        "title": "No public S3",
+        "target": { "assetType": "AWS::S3::Bucket", "scope": "batch" },
+        "defaults": { "severityLevel": "HIGH", "message": "Public", "informational": false },
+        "type": "rego",
+        "body": "package plerion"
+    })
+}
+
+fn write_temp_json(name: &str, value: &serde_json::Value) -> std::path::PathBuf {
+    let path = std::env::temp_dir().join(format!("plerion-test-{}-{name}.json", std::process::id()));
+    std::fs::write(&path, value.to_string()).unwrap();
+    path
+}
+
+#[tokio::test]
+async fn test_cli_custom_checks_list_table() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/custom-checks")
+        .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("assetType".into(), "AWS::S3::Bucket".into()),
+            mockito::Matcher::UrlEncoded("scope".into(), "batch".into()),
+            mockito::Matcher::UrlEncoded("limit".into(), "50".into()),
+        ]))
+        .with_status(200)
+        .with_body(serde_json::json!({ "items": [custom_check_json()] }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["custom-checks", "list", "--asset-type", "AWS::S3::Bucket", "--scope", "batch"],
+        "key", &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+    assert!(stdout.contains("s3-no-public-acl"));
+    assert!(stdout.contains("SEVERITY"));
+}
+
+#[tokio::test]
+async fn test_cli_custom_checks_list_all_follows_next_cursor() {
+    let mut server = Server::new_async().await;
+    let page1 = server
+        .mock("GET", "/v1/tenant/custom-checks")
+        .match_query(mockito::Matcher::Exact("limit=200".into()))
+        .with_status(200)
+        .with_body(serde_json::json!({ "items": [{ "customCheckId": "cc-1" }], "nextCursor": "c2" }).to_string())
+        .create_async()
+        .await;
+    let page2 = server
+        .mock("GET", "/v1/tenant/custom-checks")
+        .match_query(mockito::Matcher::Exact("limit=200&cursor=c2".into()))
+        .with_status(200)
+        .with_body(serde_json::json!({ "items": [{ "customCheckId": "cc-2" }] }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["custom-checks", "list", "--all", "--output", "json"], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    page1.assert_async().await;
+    page2.assert_async().await;
+    assert!(stdout.contains("cc-1") && stdout.contains("cc-2"));
+}
+
+#[tokio::test]
+async fn test_cli_custom_checks_get() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", format!("/v1/tenant/custom-checks/{CC_ID}").as_str())
+        .with_status(200)
+        .with_body(custom_check_json().to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["custom-checks", "get", "--id", CC_ID, "--output", "json"], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+    assert!(stdout.contains("package plerion"));
+}
+
+/// `get` output fed straight back to `create` sends only the writable fields.
+#[tokio::test]
+async fn test_cli_custom_checks_create_from_file_drops_server_fields() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("POST", "/v1/tenant/custom-checks")
+        .match_body(mockito::Matcher::Json(custom_check_input_json()))
+        .with_status(200)
+        .with_body(custom_check_json().to_string())
+        .create_async()
+        .await;
+
+    let path = write_temp_json("create", &custom_check_json());
+    let output = run_plerion(
+        &["custom-checks", "create", "--file", path.to_str().unwrap(), "--output", "json"],
+        "key", &server.url(),
+    );
+    std::fs::remove_file(&path).ok();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_custom_checks_update_from_stdin() {
+    use std::io::Write;
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("PUT", format!("/v1/tenant/custom-checks/{CC_ID}").as_str())
+        .match_body(mockito::Matcher::Json(custom_check_input_json()))
+        .with_status(200)
+        .with_body(custom_check_json().to_string())
+        .create_async()
+        .await;
+
+    let mut child = Command::new(env!("CARGO_BIN_EXE_plerion"))
+        .args(["custom-checks", "update", "--id", CC_ID, "--file", "-", "--output", "json"])
+        .env("PLERION_API_KEY", "key")
+        .env("PLERION_ENDPOINT_URL", server.url())
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .unwrap();
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(custom_check_input_json().to_string().as_bytes())
+        .unwrap();
+    let output = child.wait_with_output().unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+/// An empty or non-object definition fails before any HTTP call.
+#[test]
+fn test_cli_custom_checks_rejects_an_empty_definition() {
+    for (name, body) in [("empty", serde_json::json!({})), ("array", serde_json::json!([]))] {
+        let path = write_temp_json(name, &body);
+        let output = run_plerion(
+            &["custom-checks", "create", "--file", path.to_str().unwrap()],
+            "key", "http://127.0.0.1:1",
+        );
+        std::fs::remove_file(&path).ok();
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(!output.status.success(), "expected failure for {name}");
+        assert!(stderr.contains("--file"), "for {name} stderr was: {stderr}");
+    }
+}
+
+#[tokio::test]
+async fn test_cli_custom_checks_delete() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("DELETE", format!("/v1/tenant/custom-checks/{CC_ID}").as_str())
+        .with_status(202)
+        .with_body(r#"{"accepted":true}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["custom-checks", "delete", "--id", CC_ID], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+    assert!(stdout.contains("deleted"));
+}
+
+/// A dry run keeps the check id, which labels its results.
+#[tokio::test]
+async fn test_cli_custom_checks_dry_run() {
+    let mut server = Server::new_async().await;
+    let mut check = custom_check_input_json();
+    check["customCheckId"] = serde_json::json!(CC_ID);
+    let mock = server
+        .mock("POST", "/v1/tenant/custom-check-dry-runs")
+        .match_body(mockito::Matcher::Json(serde_json::json!({ "integrationId": "int-1", "check": check })))
+        .with_status(202)
+        .with_body(
+            serde_json::json!({ "dryRunId": "dr-1", "status": "RUNNING", "pollUrl": "/v1/tenant/custom-check-dry-runs/dr-1" })
+                .to_string(),
+        )
+        .create_async()
+        .await;
+
+    let path = write_temp_json("dry-run", &custom_check_json());
+    let output = run_plerion(
+        &["custom-checks", "dry-run", "--integration-id", "int-1", "--file", path.to_str().unwrap()],
+        "key", &server.url(),
+    );
+    std::fs::remove_file(&path).ok();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+    assert!(stdout.contains("dr-1") && stdout.contains("RUNNING"));
+}
+
+#[tokio::test]
+async fn test_cli_custom_checks_dry_run_status() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/custom-check-dry-runs/dr-1")
+        .with_status(200)
+        .with_body(
+            serde_json::json!({ "dryRunId": "dr-1", "status": "SUCCEEDED", "output": { "findings": [{ "assetId": "a-1" }] } })
+                .to_string(),
+        )
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["custom-checks", "dry-run-status", "--id", "dr-1", "--output", "json"],
+        "key", &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+    assert!(stdout.contains("a-1"));
+}
+
+// --- custom-reports ---
+
+#[tokio::test]
+async fn test_cli_custom_reports_list() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/custom-reports")
+        .match_query(mockito::Matcher::Exact("perPage=20".into()))
+        .with_status(200)
+        .with_body(
+            serde_json::json!({ "data": [{ "id": "r-1", "name": "Posture" }], "meta": { "perPage": 20, "total": 1, "cursor": null } })
+                .to_string(),
+        )
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["custom-reports", "list", "--per-page", "20"], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+    assert!(stdout.contains("Posture"));
+}
+
+/// No hasNextPage on this endpoint: --all follows meta.cursor and stops on an
+/// empty page even if a cursor comes back with it.
+#[tokio::test]
+async fn test_cli_custom_reports_list_all_follows_cursor() {
+    let mut server = Server::new_async().await;
+    let page1 = server
+        .mock("GET", "/v1/tenant/custom-reports")
+        .match_query(mockito::Matcher::Exact("perPage=100".into()))
+        .with_status(200)
+        .with_body(serde_json::json!({ "data": [{ "id": "r-1" }], "meta": { "cursor": "c2" } }).to_string())
+        .create_async()
+        .await;
+    let page2 = server
+        .mock("GET", "/v1/tenant/custom-reports")
+        .match_query(mockito::Matcher::Exact("perPage=100&cursor=c2".into()))
+        .with_status(200)
+        .with_body(serde_json::json!({ "data": [{ "id": "r-2" }], "meta": { "cursor": "c3" } }).to_string())
+        .create_async()
+        .await;
+    let page3 = server
+        .mock("GET", "/v1/tenant/custom-reports")
+        .match_query(mockito::Matcher::Exact("perPage=100&cursor=c3".into()))
+        .with_status(200)
+        .with_body(serde_json::json!({ "data": [], "meta": { "cursor": "c4" } }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["custom-reports", "list", "--all", "--output", "json"], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    page1.assert_async().await;
+    page2.assert_async().await;
+    page3.assert_async().await;
+    assert!(stdout.contains("r-1") && stdout.contains("r-2"));
+}
+
+#[test]
+fn test_cli_custom_reports_rejects_per_page_over_100() {
+    let output = run_plerion(&["custom-reports", "list", "--per-page", "101"], "key", "http://127.0.0.1:1");
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("101"));
+}

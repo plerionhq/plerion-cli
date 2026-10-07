@@ -56,6 +56,8 @@ async fn main() {
         Commands::Assets(args) => cli::assets::run(args, &config).await,
         Commands::AssetGroups(args) => cli::asset_groups::run(args, &config).await,
         Commands::AccessGrants(args) => cli::access_grants::run(args, &config).await,
+        Commands::CustomChecks(args) => cli::custom_checks::run(args, &config).await,
+        Commands::CustomReports(args) => cli::custom_reports::run(args, &config).await,
         Commands::Alerts(args) => cli::alerts::run(args, &config).await,
         Commands::AuditLogs(args) => cli::audit_logs::run(args, &config).await,
         Commands::Integrations(args) => cli::integrations::run(args, &config).await,

@@ -56,6 +56,13 @@ impl PlerionClient {
             .header("Content-Type", "application/json")
     }
 
+    pub fn put(&self, path: &str) -> RequestBuilder {
+        self.inner
+            .put(format!("{}{}", self.base_url, path))
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .header("Content-Type", "application/json")
+    }
+
     pub fn delete(&self, path: &str) -> RequestBuilder {
         self.inner
             .delete(format!("{}{}", self.base_url, path))
