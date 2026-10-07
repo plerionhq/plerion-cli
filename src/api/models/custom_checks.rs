@@ -90,7 +90,11 @@ pub struct CustomCheckDryRunStatus {
     pub status: Option<String>,
     pub started_at: Option<String>,
     pub completed_at: Option<String>,
+    /// Run summary: counts, per-check results and failures.
     pub output: Option<serde_json::Value>,
+    /// Preview findings, a sibling of `output`.
+    #[serde(default)]
+    pub findings: Vec<serde_json::Value>,
 }
 
 impl TableRenderable for CustomCheck {
@@ -145,7 +149,7 @@ impl TableRenderable for CustomCheckDryRunStarted {
 
 impl TableRenderable for CustomCheckDryRunStatus {
     fn headers() -> Vec<&'static str> {
-        vec!["DRY RUN ID", "STATUS", "STARTED AT", "COMPLETED AT"]
+        vec!["DRY RUN ID", "STATUS", "STARTED AT", "COMPLETED AT", "FINDINGS"]
     }
 
     fn row(&self) -> Vec<String> {
@@ -154,6 +158,7 @@ impl TableRenderable for CustomCheckDryRunStatus {
             self.status.clone().unwrap_or_default(),
             self.started_at.clone().unwrap_or_default(),
             self.completed_at.clone().unwrap_or_default(),
+            self.findings.len().to_string(),
         ]
     }
 }

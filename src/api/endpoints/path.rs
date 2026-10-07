@@ -45,10 +45,9 @@ const PATH_SEGMENT: &AsciiSet = &CONTROLS
 /// correct option, and no real id looks like this.
 pub(crate) fn segment(id: &str, label: &str) -> Result<String, PlerionError> {
     if id.bytes().all(|b| b == b'.') {
-        return Err(PlerionError::ApiError {
-            status: 400,
-            message: format!("'{id}' is not a valid {label}"),
-        });
+        return Err(PlerionError::InvalidArgument(format!(
+            "'{id}' is not a valid {label}"
+        )));
     }
     Ok(utf8_percent_encode(id, PATH_SEGMENT).to_string())
 }
@@ -114,6 +113,6 @@ mod tests {
     #[test]
     fn test_error_names_the_label() {
         let err = segment("..", "risk ID").unwrap_err().to_string();
-        assert!(err.contains("is not a valid risk ID"), "{err}");
+        assert_eq!(err, "'..' is not a valid risk ID");
     }
 }

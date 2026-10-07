@@ -167,7 +167,7 @@ plerion --profile prod findings list
 | `custom-checks list/get/delete` | Custom rego checks (list supports `--all`, `--asset-type`, `--scope`) |
 | `custom-checks create/update --file <path>` | Create or replace a custom check from a JSON definition (`-` reads stdin) |
 | `custom-checks dry-run --integration-id <id> --file <path>` | Run a check against live assets without saving findings |
-| `custom-checks dry-run-status --id <id>` | Dry run status; preview findings are in `--output json` |
+| `custom-checks dry-run-status --id <id>` | Dry run status and findings count; the findings themselves are in `--output json` |
 | `custom-reports list` | Custom dashboards (supports `--all`) |
 | `alerts list` | Risk-based alerts (supports `--all`) |
 | `audit-logs list` | Audit logs (supports `--all`) |

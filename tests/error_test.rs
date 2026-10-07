@@ -44,6 +44,13 @@ fn test_api_error_display() {
     assert!(s.contains("Forbidden"));
 }
 
+/// A locally refused argument never reads as an HTTP response.
+#[test]
+fn test_invalid_argument_display() {
+    let err = PlerionError::InvalidArgument("'..' is not a valid custom check ID".to_string());
+    assert_eq!(err.to_string(), "'..' is not a valid custom check ID");
+}
+
 #[test]
 fn test_parse_error_display() {
     let err = PlerionError::ParseError("invalid json".to_string());

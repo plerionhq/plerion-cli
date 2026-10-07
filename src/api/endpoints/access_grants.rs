@@ -22,7 +22,7 @@ pub struct ListAccessGrantsParams {
     pub principal: Option<String>,
     pub search: Option<String>,
     pub review_decisions: Option<String>,
-    pub grant_owner: Option<String>,
+    pub grantee: Option<String>,
     pub next_review_at_end: Option<String>,
     pub cursor: Option<String>,
     pub per_page: Option<u32>,
@@ -48,7 +48,7 @@ pub async fn list_access_grants(
     if let Some(v) = &params.principal { req = req.query(&[("principal", v)]); }
     if let Some(v) = &params.search { req = req.query(&[("search", v)]); }
     if let Some(v) = &params.review_decisions { req = req.query(&[("reviewDecisions", v)]); }
-    if let Some(v) = &params.grant_owner { req = req.query(&[("grantOwner", v)]); }
+    if let Some(v) = &params.grantee { req = req.query(&[("grantee", v)]); }
     if let Some(v) = &params.next_review_at_end { req = req.query(&[("nextReviewAtEnd", v)]); }
     if let Some(v) = &params.cursor { req = req.query(&[("cursor", v)]); }
     if let Some(v) = params.per_page { req = req.query(&[("perPage", v)]); }

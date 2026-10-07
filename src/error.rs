@@ -36,6 +36,10 @@ pub enum PlerionError {
     #[error("HTTP error {status}: {message}")]
     ApiError { status: u16, message: String },
 
+    /// A local check refused an argument before any request was sent.
+    #[error("{0}")]
+    InvalidArgument(String),
+
     #[error("Failed to parse response: {0}")]
     ParseError(String),
 

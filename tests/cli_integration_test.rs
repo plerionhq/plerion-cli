@@ -733,7 +733,8 @@ async fn test_cli_access_grants_list_renders_renamed_columns() {
                     "resourceType": "AWS::S3::Bucket",
                     "awsAccountId": "111122223333",
                     "assetName": "acme-prod-exports",
-                    "grantOrigin": "external"
+                    "grantOrigin": "external",
+                    "grantee": "platform-team"
                 }],
                 "meta": { "perPage": 50, "total": 1, "cursor": null }
             })
@@ -748,6 +749,148 @@ async fn test_cli_access_grants_list_renders_renamed_columns() {
     assert!(stdout.contains("RESOURCE TYPE"));
     assert!(stdout.contains("AWS ACCOUNT ID"));
     assert!(stdout.contains("acme-prod-exports"));
+    assert!(stdout.contains("GRANTEE") && stdout.contains("platform-team"), "{stdout}");
+}
+
+const GRANT_ID: &str = "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3";
+
+fn empty_grants_page() -> String {
+    serde_json::json!({ "data": [], "meta": { "perPage": 50, "total": 0, "cursor": null } }).to_string()
+}
+
+fn updated_grant() -> String {
+    serde_json::json!({ "data": { "id": GRANT_ID, "grantee": "platform-team" } }).to_string()
+}
+
+/// `--grantee` and its hidden `--grant-owner` alias both send `grantee`.
+#[tokio::test]
+async fn test_cli_access_grants_list_sends_grantee_filter() {
+    for flag in ["--grantee", "--grant-owner"] {
+        let mut server = Server::new_async().await;
+        let mock = server
+            .mock("GET", "/v1/tenant/aws/access-grants")
+            .match_query(mockito::Matcher::Exact("grantee=platform-team&perPage=50".into()))
+            .with_status(200)
+            .with_body(empty_grants_page())
+            .create_async()
+            .await;
+        let output = run_plerion(&["access-grants", "list", flag, "platform-team"], "k", &server.url());
+        assert!(output.status.success(), "{flag}: {}", String::from_utf8_lossy(&output.stderr));
+        mock.assert_async().await;
+    }
+}
+
+#[tokio::test]
+async fn test_cli_access_grants_list_accepts_every_review_decision() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/aws/access-grants")
+        .match_query(mockito::Matcher::UrlEncoded(
+            "reviewDecisions".into(),
+            "keep,remove,review_later,trust_until_review".into(),
+        ))
+        .with_status(200)
+        .with_body(empty_grants_page())
+        .create_async()
+        .await;
+    let output = run_plerion(
+        &["access-grants", "list", "--review-decisions", "keep,remove,review_later,trust_until_review"],
+        "k", &server.url(),
+    );
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+#[test]
+fn test_cli_access_grants_list_rejects_unknown_review_decision() {
+    let output = run_plerion_offline(&["access-grants", "list", "--review-decisions", "keep,maybe"]);
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(stderr.contains("'maybe' is not a review decision"), "{stderr}");
+}
+
+#[test]
+fn test_cli_access_grants_list_per_page_range() {
+    for value in ["0", "1001"] {
+        let output = run_plerion_offline(&["access-grants", "list", "--per-page", value]);
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(!output.status.success(), "--per-page {value} should fail");
+        assert!(stderr.contains("1..=1000"), "{stderr}");
+    }
+}
+
+#[tokio::test]
+async fn test_cli_access_grants_update_sends_trust_until_review_and_grantee() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("PATCH", format!("/v1/tenant/aws/access-grants/{GRANT_ID}").as_str())
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "reviewDecision": "trust_until_review",
+            "nextReviewAt": "2027-01-31T00:00:00.000Z",
+            "grantee": "platform-team"
+        })))
+        .with_status(200)
+        .with_body(updated_grant())
+        .create_async()
+        .await;
+    let output = run_plerion(
+        &[
+            "access-grants", "update", GRANT_ID,
+            "--review-decision", "trust_until_review",
+            "--next-review-at", "2027-01-31T00:00:00.000Z",
+            "--grantee", "platform-team",
+        ],
+        "k", &server.url(),
+    );
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+/// The old flag names still work, so existing scripts keep running.
+#[tokio::test]
+async fn test_cli_access_grants_update_keeps_old_flag_names() {
+    for (args, body) in [
+        (vec!["--grant-owner", "platform-team"], serde_json::json!({ "grantee": "platform-team" })),
+        (vec!["--clear-grant-owner"], serde_json::json!({ "grantee": null })),
+        (vec!["--clear-grantee"], serde_json::json!({ "grantee": null })),
+    ] {
+        let mut server = Server::new_async().await;
+        let mock = server
+            .mock("PATCH", format!("/v1/tenant/aws/access-grants/{GRANT_ID}").as_str())
+            .match_body(mockito::Matcher::Json(body))
+            .with_status(200)
+            .with_body(updated_grant())
+            .create_async()
+            .await;
+        let mut full = vec!["access-grants", "update", GRANT_ID];
+        full.extend(&args);
+        let output = run_plerion(&full, "k", &server.url());
+        assert!(output.status.success(), "{args:?}: {}", String::from_utf8_lossy(&output.stderr));
+        mock.assert_async().await;
+    }
+}
+
+#[test]
+fn test_cli_access_grants_update_rejects_grantee_with_clear() {
+    for args in [
+        ["--grantee", "x", "--clear-grantee"],
+        ["--grant-owner", "x", "--clear-grantee"],
+    ] {
+        let mut full = vec!["access-grants", "update", GRANT_ID];
+        full.extend(args);
+        let output = run_plerion_offline(&full);
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        assert!(!output.status.success(), "{args:?}");
+        assert!(stderr.contains("cannot be used with"), "{stderr}");
+    }
+}
+
+#[test]
+fn test_cli_access_grants_help_hides_old_flag_names() {
+    let output = run_plerion_offline(&["access-grants", "update", "--help"]);
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("--grantee") && stdout.contains("--clear-grantee"));
+    assert!(!stdout.contains("grant-owner"), "{stdout}");
 }
 
 /// A body with no review fields is rejected locally, before any HTTP call.

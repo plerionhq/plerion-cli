@@ -2,8 +2,9 @@ use mockito::{Matcher, Server};
 use plerion::api::{
     client::PlerionClient,
     endpoints::custom_checks::{self, ListCustomChecksParams},
-    models::custom_checks::{CustomCheck, StartCustomCheckDryRunRequest},
+    models::custom_checks::{CustomCheck, CustomCheckDryRunStatus, StartCustomCheckDryRunRequest},
 };
+use plerion::error::PlerionError;
 use plerion::output::TableRenderable;
 
 const CHECK_ID: &str = "0f9a1c3e-5b7d-4c21-9e8f-2a6b4d10c7f3";
@@ -146,7 +147,8 @@ async fn test_get_custom_check_rejects_a_dot_segment() {
     let err = custom_checks::get_custom_check(&client(&server), "..")
         .await
         .unwrap_err();
-    assert!(err.to_string().contains("not a valid custom check ID"), "{err}");
+    assert!(matches!(err, PlerionError::InvalidArgument(_)), "{err:?}");
+    assert_eq!(err.to_string(), "'..' is not a valid custom check ID");
 }
 
 #[tokio::test]
@@ -279,7 +281,16 @@ async fn test_get_custom_check_dry_run_status() {
                 "status": "SUCCEEDED",
                 "startedAt": "2026-01-07T13:37:23.388Z",
                 "completedAt": "2026-01-07T13:38:23.388Z",
-                "output": { "findings": [{ "assetId": "a-1", "status": "FAILED" }] }
+                "output": {
+                    "dryRun": true,
+                    "totalChecks": 1,
+                    "succeededCount": 1,
+                    "failedCount": 0,
+                    "totalFindings": 1,
+                    "perCheck": [],
+                    "failures": []
+                },
+                "findings": [{ "assetId": "a-1", "status": "FAILED" }]
             })
             .to_string(),
         )
@@ -291,7 +302,22 @@ async fn test_get_custom_check_dry_run_status() {
         .unwrap();
     mock.assert_async().await;
     assert_eq!(resp.status.as_deref(), Some("SUCCEEDED"));
-    assert_eq!(resp.output.unwrap()["findings"][0]["assetId"], "a-1");
+    assert_eq!(resp.findings.len(), 1);
+    assert_eq!(resp.findings[0]["assetId"], "a-1");
+    assert_eq!(resp.output.as_ref().unwrap()["totalFindings"], 1);
+    let row = resp.row();
+    assert_eq!(row.len(), CustomCheckDryRunStatus::headers().len());
+    assert_eq!(row[4], "1");
+}
+
+/// A running dry run has no findings yet.
+#[test]
+fn test_dry_run_status_without_findings_defaults_to_empty() {
+    let resp: CustomCheckDryRunStatus =
+        serde_json::from_value(serde_json::json!({ "dryRunId": DRY_RUN_ID, "status": "RUNNING" }))
+            .unwrap();
+    assert!(resp.findings.is_empty());
+    assert_eq!(resp.row()[4], "0");
 }
 
 #[test]
