@@ -39,7 +39,7 @@ pub struct Cli {
     pub region: Option<String>,
 
     /// Override the API key
-    #[arg(long, global = true, env = "PLERION_API_KEY")]
+    #[arg(long, global = true, env = "PLERION_API_KEY", hide_env_values = true)]
     pub api_key: Option<String>,
 
     /// Override the API base URL (e.g. https://au.develop2.plerionaut.com)
