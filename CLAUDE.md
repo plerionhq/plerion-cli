@@ -44,6 +44,7 @@ src/
 5. Register in `mod.rs` files and add match arm in `main.rs`
 6. Write mockito-based test in `tests/<resource>_test.rs`
 7. Write CLI integration test in `tests/cli_integration_test.rs` or `tests/cli_crud_test.rs`
+8. Run `python3 scripts/api_coverage.py` before opening the PR
 
 ### Table coloring
 Colors are applied in `src/output/table.rs::colorize_cell()` using `Cell::fg(Color)`. Models must NOT embed ANSI codes in strings -- comfy-table handles width calculation correctly only when using its native color API.
@@ -90,7 +91,7 @@ Custom endpoint via `--endpoint-url` bypasses region validation.
 
 ## OpenAPI coverage
 
-A GitHub Action (`openapi-monitor.yml`) checks weekly for upstream spec changes. The spec grows faster than this doc, so treat `src/api/endpoints/` as the source of truth for what is covered rather than a count recorded here.
+`scripts/api_coverage.py` compares the `/v1/tenant/*` operations in the published API reference with the calls in `src/api/endpoints/` (and the IaC upload in `src/api/client.rs`) and lists any the CLI doesn't make. `.github/workflows/api-coverage.yml` runs it weekly and keeps one open issue, "CLI is missing customer API operations", up to date; it also runs on PRs that touch the endpoints, the script or the ignore file. Operations deliberately left out of the CLI go in `api-coverage-ignore.txt`, one operationId per line with a `#` reason. Use `--list-covered` to see what the script extracted.
 
 ## Release
 
