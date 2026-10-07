@@ -76,6 +76,17 @@ impl PlerionClient {
         handle_response(resp).await
     }
 
+    /// Execute a request whose success response has no body (e.g. 204).
+    pub async fn execute_no_content(&self, req: RequestBuilder) -> Result<(), PlerionError> {
+        let resp = req.send().await?;
+        if resp.status().is_success() {
+            return Ok(());
+        }
+        let status = resp.status().as_u16();
+        let message = resp.text().await.unwrap_or_default();
+        Err(PlerionError::ApiError { status, message })
+    }
+
     /// Upload a zip file for IaC scanning (needs application/zip content-type).
     pub fn upload_iac(&self, artifact_name: &str, zip_bytes: bytes::Bytes) -> RequestBuilder {
         self.inner

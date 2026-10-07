@@ -61,6 +61,7 @@ async fn main() {
         Commands::Alerts(args) => cli::alerts::run(args, &config).await,
         Commands::AuditLogs(args) => cli::audit_logs::run(args, &config).await,
         Commands::Integrations(args) => cli::integrations::run(args, &config).await,
+        Commands::Profiles(args) => cli::profiles::run(args, &config).await,
         Commands::Risks(args) => cli::risks::run(args, &config).await,
         Commands::WorkloadScans(args) => cli::workload_scans::run(args, &config).await,
         Commands::Metrics(args) => cli::metrics::run(args, &config).await,

@@ -10,6 +10,7 @@ pub mod findings;
 pub mod iac;
 pub mod integrations;
 pub mod metrics;
+pub mod profiles;
 pub mod risks;
 pub mod tenant;
 pub mod vulnerabilities;
