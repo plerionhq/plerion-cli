@@ -6,6 +6,8 @@ pub mod audit_logs;
 pub mod aws;
 pub mod compliance;
 pub mod configure;
+pub mod custom_checks;
+pub mod custom_reports;
 pub mod findings;
 pub mod iac;
 pub mod integrations;
@@ -95,6 +97,10 @@ pub enum Commands {
     AssetGroups(asset_groups::AssetGroupsArgs),
     /// Resource access grant inventory and review
     AccessGrants(access_grants::AccessGrantsArgs),
+    /// Custom (rego) check management and dry runs
+    CustomChecks(custom_checks::CustomChecksArgs),
+    /// Custom dashboards
+    CustomReports(custom_reports::CustomReportsArgs),
     /// Alert management
     Alerts(alerts::AlertsArgs),
     /// Audit log operations

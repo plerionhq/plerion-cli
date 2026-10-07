@@ -4,6 +4,8 @@ pub mod asset_groups;
 pub mod assets;
 pub mod audit_logs;
 pub mod compliance;
+pub mod custom_checks;
+pub mod custom_reports;
 pub mod findings;
 pub mod iac;
 pub mod integrations;

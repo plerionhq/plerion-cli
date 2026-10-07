@@ -59,11 +59,13 @@ Colors are applied in `src/output/table.rs::colorize_cell()` using `Cell::fg(Col
 Custom endpoint via `--endpoint-url` bypasses region validation.
 
 ### Pagination
-- **Cursor-based**: findings, alerts, risks, audit-logs, integrations, asset-groups, vuln-exemptions, access-grants (use `cursor` param)
+- **Cursor-based**: findings, alerts, risks, audit-logs, integrations, asset-groups, vuln-exemptions, access-grants, custom-checks, custom-reports (use `cursor` param)
 - **Page-based**: assets, vulnerabilities, iac-scans, iac-findings, iac-vulnerabilities (use `page` param)
 - `--all` flag auto-paginates through all pages on every list command that supports pagination
 - Vuln exemptions use `limit`/`cursor` params and `hasNext`/`nextCursor` response fields (different from standard `PaginationMeta`)
 - Access grants return no `hasNextPage`: `meta.cursor` is null on the last page and is the only end-of-pages signal, so `--all` loops until the cursor is null. `meta.total` is returned on the first page only
+- Custom checks return `items` and a top-level `nextCursor` (no `data`/`meta`), and take `limit` rather than `perPage`; `--all` loops until `nextCursor` is absent
+- Custom reports return no `hasNextPage`: `--all` loops until `meta.cursor` is null, and also stops on an empty page, since a page ending on the last dashboard still carries a cursor
 
 ## Testing approach
 
