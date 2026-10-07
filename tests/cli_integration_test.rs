@@ -1264,3 +1264,16 @@ fn test_cli_metrics_query_rejects_an_out_of_range_interval() {
     assert!(!output.status.success());
     assert!(stderr.contains("--interval"), "stderr was: {stderr}");
 }
+
+#[test]
+fn test_help_does_not_print_the_api_key() {
+    let output = Command::new(env!("CARGO_BIN_EXE_plerion"))
+        .arg("--help")
+        .env("PLERION_API_KEY", "plerion_tak_secret_value")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success());
+    assert!(stdout.contains("PLERION_API_KEY"), "{stdout}");
+    assert!(!stdout.contains("plerion_tak_secret_value"), "{stdout}");
+}
