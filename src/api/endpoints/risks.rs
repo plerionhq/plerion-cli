@@ -1,5 +1,6 @@
 use crate::api::client::PlerionClient;
-use crate::api::models::risks::RisksResponse;
+use crate::api::endpoints::path::segment;
+use crate::api::models::risks::{RiskResponse, RisksResponse};
 use crate::error::PlerionError;
 
 #[derive(Debug, Default)]
@@ -45,5 +46,18 @@ pub async fn list_risks(
     if let Some(v) = params.per_page { req = req.query(&[("perPage", v)]); }
     if let Some(v) = &params.fields { req = req.query(&[("fields", v)]); }
 
+    client.execute(req).await
+}
+
+pub async fn get_risk(
+    client: &PlerionClient,
+    risk_id: &str,
+    fields: Option<&str>,
+) -> Result<RiskResponse, PlerionError> {
+    let path = format!("/v1/tenant/risks/{}", segment(risk_id, "risk ID")?);
+    let mut req = client.get(&path);
+    if let Some(v) = fields {
+        req = req.query(&[("fields", v)]);
+    }
     client.execute(req).await
 }

@@ -19,7 +19,7 @@ pub struct AccessGrantsArgs {
 #[derive(Subcommand, Debug)]
 pub enum AccessGrantsCommands {
     /// List access grants
-    List(ListAccessGrantsArgs),
+    List(Box<ListAccessGrantsArgs>),
     /// Get a single access grant by ID
     Get { id: String },
     /// Access grant counts for the tenant

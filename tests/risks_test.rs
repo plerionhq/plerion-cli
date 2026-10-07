@@ -96,3 +96,71 @@ async fn test_list_risks_with_id_and_date_filters() {
     assert_eq!(resp.data.len(), 0);
     mock.assert_async().await;
 }
+
+#[tokio::test]
+async fn test_get_risk() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": {
+            "id": "risk-123",
+            "riskTypeId": "PLERION-RISK-1",
+            "severityLevel": "HIGH",
+            "score": 7.25
+        }
+    });
+    let mock = server
+        .mock("GET", "/v1/tenant/risks/risk-123")
+        .match_query(mockito::Matcher::UrlEncoded(
+            "fields".into(),
+            "riskTypeId,score".into(),
+        ))
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "k").unwrap();
+    let resp =
+        plerion::api::endpoints::risks::get_risk(&client, "risk-123", Some("riskTypeId,score"))
+            .await
+            .unwrap();
+    let risk = resp.data.unwrap();
+    assert_eq!(risk.risk_type_id.as_deref(), Some("PLERION-RISK-1"));
+    assert_eq!(risk.score, Some(7.25));
+    mock.assert_async().await;
+}
+
+/// An unknown risk ID answers 200 with an empty object.
+#[tokio::test]
+async fn test_get_risk_unknown_id_is_empty() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/v1/tenant/risks/nope")
+        .with_status(200)
+        .with_body(r#"{"data":{}}"#)
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "k").unwrap();
+    let resp = plerion::api::endpoints::risks::get_risk(&client, "nope", None)
+        .await
+        .unwrap();
+    assert!(resp.data.unwrap().id.is_none());
+}
+
+#[tokio::test]
+async fn test_get_risk_escapes_the_id() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/risks/prn%3Arisk%2F1")
+        .with_status(200)
+        .with_body(r#"{"data":{"id":"prn:risk/1"}}"#)
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "k").unwrap();
+    plerion::api::endpoints::risks::get_risk(&client, "prn:risk/1", None)
+        .await
+        .unwrap();
+    mock.assert_async().await;
+}

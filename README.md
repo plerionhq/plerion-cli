@@ -171,6 +171,10 @@ plerion --profile prod findings list
 | `audit-logs list` | Audit logs (supports `--all`) |
 | `integrations list` | Cloud integrations (supports `--all`) |
 | `risks list` | Security risks (supports `--all`) |
+| `risks get <id> [--fields <list>]` | One risk by ID |
+| `workload-scans request --integration-id <id> (--asset-id <id> \| --resource-type <type> --resource-region <region> --resource-id <id>)` | Scan one EC2 instance or AMI now |
+| `workload-scans get <scan-id>` | Status of a requested workload scan |
+| `metrics query --namespace <ns> --metric-names <list> --interval <secs> --start <time> --end <time> --stat <stat>` | Dashboard metric time series (filter with `--integration-ids`, `--integration-group-ids`, `--asset-group-ids`, `--environment-ids`) |
 | `vulnerabilities list` | Vulnerabilities (supports `--all`; EPSS filters `--epss-score-gte`/`--epss-score-lte` take a 0 to 1 probability) |
 | `vulnerabilities exemptions list/get/create/update/delete` | Vulnerability exemptions (list supports `--all`) |
 | `compliance-frameworks list` | Compliance frameworks |

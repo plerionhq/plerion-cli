@@ -73,3 +73,9 @@ impl TableRenderable for Risk {
         ]
     }
 }
+
+/// `data` is an empty object when no risk has the ID.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RiskResponse {
+    pub data: Option<Risk>,
+}
