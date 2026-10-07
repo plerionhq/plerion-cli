@@ -39,7 +39,7 @@ src/
 ### Adding an endpoint
 1. Add model in `src/api/models/<resource>.rs` with `#[serde(rename_all = "camelCase")]`
 2. Implement `TableRenderable` (return plain text from `row()` -- colors applied by table renderer)
-3. Add endpoint function in `src/api/endpoints/<resource>.rs`
+3. Add endpoint function in `src/api/endpoints/<resource>.rs`; escape ids in the path with `segment` from `endpoints/path.rs`
 4. Add CLI handler in `src/cli/<resource>.rs` with clap derive macros
 5. Register in `mod.rs` files and add match arm in `main.rs`
 6. Write mockito-based test in `tests/<resource>_test.rs`

@@ -1,5 +1,7 @@
 use crate::api::client::PlerionClient;
-use crate::api::models::integrations::IntegrationsResponse;
+use crate::api::models::integrations::{
+    IntegrationTagsResponse, IntegrationsResponse, ReplaceUserDefinedTagsRequest,
+};
 use crate::error::PlerionError;
 
 pub async fn list_integrations(
@@ -13,4 +15,17 @@ pub async fn list_integrations(
     if let Some(v) = cursor { req = req.query(&[("cursor", v)]); }
     if include_total { req = req.query(&[("includeTotal", true)]); }
     client.execute(req).await
+}
+
+/// Replaces every user-defined tag on the integration; an empty list removes them all.
+pub async fn replace_user_defined_tags(
+    client: &PlerionClient,
+    integration_id: &str,
+    body: &ReplaceUserDefinedTagsRequest,
+) -> Result<IntegrationTagsResponse, PlerionError> {
+    let path = format!(
+        "/v1/tenant/integrations/{}/user-defined-tags",
+        super::path::segment(integration_id, "integration ID")?
+    );
+    client.execute(client.put(&path).json(body)).await
 }

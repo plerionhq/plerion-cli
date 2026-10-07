@@ -58,3 +58,91 @@ impl TableRenderable for TenantData {
         ]
     }
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct HomeDashboardPreference {
+    pub tenant_id: Option<String>,
+    pub home_report_id: Option<String>,
+    pub updated_at: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HomeDashboardResponse {
+    pub data: HomeDashboardPreference,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct HomeDashboardRequest {
+    pub home_report_id: String,
+}
+
+impl TableRenderable for HomeDashboardPreference {
+    fn headers() -> Vec<&'static str> {
+        vec!["TENANT ID", "HOME REPORT ID", "UPDATED AT"]
+    }
+
+    fn row(&self) -> Vec<String> {
+        vec![
+            self.tenant_id.clone().unwrap_or_default(),
+            self.home_report_id.clone().unwrap_or_default(),
+            self.updated_at.clone().unwrap_or_default(),
+        ]
+    }
+}
+
+/// One operation from the OpenAPI document returned by the discover endpoint.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiOperation {
+    pub method: String,
+    pub path: String,
+    pub operation_id: Option<String>,
+    pub summary: Option<String>,
+}
+
+const HTTP_METHODS: [&str; 8] = [
+    "get", "put", "post", "patch", "delete", "head", "options", "trace",
+];
+
+impl ApiOperation {
+    /// Lists the operations under `paths`, in path order then method order.
+    pub fn from_openapi(doc: &serde_json::Value) -> Vec<ApiOperation> {
+        let Some(paths) = doc.get("paths").and_then(|p| p.as_object()) else {
+            return Vec::new();
+        };
+        let mut ops = Vec::new();
+        for (path, item) in paths {
+            for method in HTTP_METHODS {
+                let Some(op) = item.get(method).filter(|o| o.is_object()) else {
+                    continue;
+                };
+                let text = |k: &str| op.get(k).and_then(|v| v.as_str()).map(str::to_string);
+                ops.push(ApiOperation {
+                    method: method.to_uppercase(),
+                    path: path.clone(),
+                    operation_id: text("operationId"),
+                    summary: text("summary"),
+                });
+            }
+        }
+        ops.sort_by(|a, b| a.path.cmp(&b.path));
+        ops
+    }
+}
+
+impl TableRenderable for ApiOperation {
+    fn headers() -> Vec<&'static str> {
+        vec!["METHOD", "PATH", "OPERATION ID", "SUMMARY"]
+    }
+
+    fn row(&self) -> Vec<String> {
+        vec![
+            self.method.clone(),
+            self.path.clone(),
+            self.operation_id.clone().unwrap_or_default(),
+            self.summary.clone().unwrap_or_default(),
+        ]
+    }
+}

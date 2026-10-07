@@ -157,6 +157,8 @@ plerion --profile prod findings list
 | `configure list` | List configured profiles |
 | `tenant get` | Tenant details |
 | `tenant get-usage` | Tenant usage |
+| `tenant home-dashboard get/set/clear` | Tenant default home dashboard (`set --home-report-id <id>`) |
+| `tenant api-access` | API operations this key may call (`--output json` returns the OpenAPI document) |
 | `findings list` | Security findings (supports `--all`) |
 | `assets list` | Cloud assets (supports `--all`) |
 | `assets get --asset-id <id>` | Asset details |
@@ -170,6 +172,9 @@ plerion --profile prod findings list
 | `alerts list` | Risk-based alerts (supports `--all`) |
 | `audit-logs list` | Audit logs (supports `--all`) |
 | `integrations list` | Cloud integrations (supports `--all`) |
+| `integrations set-tags <id> --tag KEY=VALUE ...` | Replace all user-defined tags on an integration (`--clear` removes them all) |
+| `profiles list` | Profiles and the integrations each applies to |
+| `profiles detection-exemptions get/replace --profile-id <id> --detection-id <id>` | A detection's exemptions; `replace` sends the whole set (`--exemptions`, `--file`, or `--clear`; `--if-match <version>`) |
 | `risks list` | Security risks (supports `--all`) |
 | `risks get <id> [--fields <list>]` | One risk by ID |
 | `workload-scans request --integration-id <id> (--asset-id <id> \| --resource-type <type> --resource-region <region> --resource-id <id>)` | Scan one EC2 instance or AMI now |

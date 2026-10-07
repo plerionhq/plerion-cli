@@ -1055,3 +1055,508 @@ fn test_cli_custom_reports_rejects_per_page_over_100() {
     assert!(!output.status.success());
     assert!(String::from_utf8_lossy(&output.stderr).contains("101"));
 }
+
+// --- profiles ---
+
+fn exemption_set_body() -> String {
+    serde_json::json!({
+        "data": {
+            "profileId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+            "detectionId": "PLERION-AWS-16",
+            "provider": "AWS",
+            "supportsExemptions": true,
+            "supportedExemptionTypes": ["NAME_EXEMPTION", "REGION_EXEMPTION"],
+            "exemptions": [ { "type": "REGION_EXEMPTION", "regions": ["us-west-2"] } ],
+            "version": "v-123"
+        }
+    })
+    .to_string()
+}
+
+const DETECTION_EXEMPTIONS_PATH: &str =
+    "/v1/tenant/profiles/default/detection-settings/PLERION-AWS-16/exemptions";
+
+#[tokio::test]
+async fn test_cli_profiles_list() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": [ { "profileId": "p-1", "name": "Production", "isDefault": false,
+                    "integrations": [ { "integrationId": "i-1", "name": "acme-prod" } ] } ],
+        "meta": { "total": 1 }
+    });
+    let _mock = server
+        .mock("GET", "/v1/tenant/profiles")
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["profiles", "list"], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("PROFILE ID"));
+    assert!(stdout.contains("Production"));
+}
+
+#[tokio::test]
+async fn test_cli_profiles_detection_exemptions_get() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", DETECTION_EXEMPTIONS_PATH)
+        .with_status(200)
+        .with_body(exemption_set_body())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &[
+            "profiles",
+            "detection-exemptions",
+            "get",
+            "--profile-id",
+            "default",
+            "--detection-id",
+            "PLERION-AWS-16",
+        ],
+        "key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("v-123"), "the version is shown: {stdout}");
+    assert!(stdout.contains("REGION_EXEMPTION"));
+    assert!(
+        stdout.contains("us-west-2"),
+        "the exemptions are listed: {stdout}"
+    );
+}
+
+#[tokio::test]
+async fn test_cli_profiles_detection_exemptions_replace() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("PUT", DETECTION_EXEMPTIONS_PATH)
+        .match_header("If-Match", "v-123")
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "exemptions": [ { "type": "REGION_EXEMPTION", "regions": ["us-west-2"] } ]
+        })))
+        .with_status(200)
+        .with_body(exemption_set_body())
+        .create_async()
+        .await;
+
+    // The output of `get --output json` is accepted as input.
+    let get_output = serde_json::from_str::<serde_json::Value>(&exemption_set_body()).unwrap()
+        ["data"]
+        .to_string();
+    let output = run_plerion(
+        &[
+            "profiles",
+            "detection-exemptions",
+            "replace",
+            "--profile-id",
+            "default",
+            "--detection-id",
+            "PLERION-AWS-16",
+            "--exemptions",
+            &get_output,
+            "--if-match",
+            "v-123",
+            "--output",
+            "json",
+        ],
+        "key",
+        &server.url(),
+    );
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_profiles_detection_exemptions_replace_from_file() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("PUT", DETECTION_EXEMPTIONS_PATH)
+        .match_header("If-Match", mockito::Matcher::Missing)
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "exemptions": [ { "type": "NAME_EXEMPTION", "condition": "equals", "value": "x" } ]
+        })))
+        .with_status(200)
+        .with_body(exemption_set_body())
+        .create_async()
+        .await;
+
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("set.json");
+    std::fs::write(
+        &path,
+        r#"[{"type":"NAME_EXEMPTION","condition":"equals","value":"x"}]"#,
+    )
+    .unwrap();
+    let output = run_plerion(
+        &[
+            "profiles",
+            "detection-exemptions",
+            "replace",
+            "--profile-id",
+            "default",
+            "--detection-id",
+            "PLERION-AWS-16",
+            "--file",
+            path.to_str().unwrap(),
+        ],
+        "key",
+        &server.url(),
+    );
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_profiles_detection_exemptions_clear() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("PUT", DETECTION_EXEMPTIONS_PATH)
+        .match_body(mockito::Matcher::Json(
+            serde_json::json!({ "exemptions": [] }),
+        ))
+        .with_status(200)
+        .with_body(exemption_set_body())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &[
+            "profiles",
+            "detection-exemptions",
+            "replace",
+            "--profile-id",
+            "default",
+            "--detection-id",
+            "PLERION-AWS-16",
+            "--clear",
+        ],
+        "key",
+        &server.url(),
+    );
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    mock.assert_async().await;
+}
+
+/// No input, or an empty set without --clear, is refused before any HTTP call.
+#[test]
+fn test_cli_profiles_detection_exemptions_replace_requires_input() {
+    let base = [
+        "profiles",
+        "detection-exemptions",
+        "replace",
+        "--profile-id",
+        "default",
+        "--detection-id",
+        "X",
+    ];
+    let output = run_plerion(&base, "key", "http://127.0.0.1:1");
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(
+        stderr.contains("--exemptions or --file"),
+        "stderr was: {stderr}"
+    );
+
+    let mut args = base.to_vec();
+    args.extend(["--exemptions", "[]"]);
+    let output = run_plerion(&args, "key", "http://127.0.0.1:1");
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(stderr.contains("--clear"), "stderr was: {stderr}");
+}
+
+#[test]
+fn test_cli_profiles_detection_exemptions_clear_conflicts_with_input() {
+    let output = run_plerion(
+        &[
+            "profiles",
+            "detection-exemptions",
+            "replace",
+            "--profile-id",
+            "default",
+            "--detection-id",
+            "X",
+            "--clear",
+            "--exemptions",
+            "[{}]",
+        ],
+        "key",
+        "http://127.0.0.1:1",
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(
+        stderr.contains("cannot be used with"),
+        "stderr was: {stderr}"
+    );
+}
+
+// --- integrations set-tags ---
+
+#[tokio::test]
+async fn test_cli_integrations_set_tags() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("PUT", "/v1/tenant/integrations/int-1/user-defined-tags")
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "tags": [ { "key": "Division", "value": "payments" }, { "key": "Owner", "value": "a=b" } ]
+        })))
+        .with_status(200)
+        .with_body(r#"{"data":{"tags":[{"key":"Division","value":"payments","source":"user-defined"}]}}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &[
+            "integrations",
+            "set-tags",
+            "int-1",
+            "--tag",
+            "Division=payments",
+            "--tag",
+            "Owner=a=b",
+        ],
+        "key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    mock.assert_async().await;
+    assert!(stdout.contains("SOURCE"));
+    assert!(stdout.contains("user-defined"));
+}
+
+#[tokio::test]
+async fn test_cli_integrations_set_tags_clear() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("PUT", "/v1/tenant/integrations/int-1/user-defined-tags")
+        .match_body(mockito::Matcher::Json(serde_json::json!({ "tags": [] })))
+        .with_status(200)
+        .with_body(r#"{"data":{"tags":[]}}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["integrations", "set-tags", "int-1", "--clear"],
+        "key",
+        &server.url(),
+    );
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    mock.assert_async().await;
+}
+
+#[test]
+fn test_cli_integrations_set_tags_requires_a_tag() {
+    let output = run_plerion(
+        &["integrations", "set-tags", "int-1"],
+        "key",
+        "http://127.0.0.1:1",
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(stderr.contains("--tag KEY=VALUE"), "stderr was: {stderr}");
+
+    let output = run_plerion(
+        &[
+            "integrations",
+            "set-tags",
+            "int-1",
+            "--tag",
+            "a=1",
+            "--clear",
+        ],
+        "key",
+        "http://127.0.0.1:1",
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(
+        stderr.contains("cannot be used with"),
+        "stderr was: {stderr}"
+    );
+}
+
+// --- tenant home-dashboard and api-access ---
+
+#[tokio::test]
+async fn test_cli_tenant_home_dashboard_get() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/v1/tenant/preferences/home-dashboard")
+        .with_status(200)
+        .with_body(r#"{"data":{"tenantId":"t-1","homeReportId":"r-1","updatedAt":"2026-10-01T00:00:00Z"}}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["tenant", "home-dashboard", "get"], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("HOME REPORT ID"));
+    assert!(stdout.contains("r-1"));
+}
+
+#[tokio::test]
+async fn test_cli_tenant_home_dashboard_set() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("PUT", "/v1/tenant/preferences/home-dashboard")
+        .match_body(mockito::Matcher::Json(
+            serde_json::json!({ "homeReportId": "r-2" }),
+        ))
+        .with_status(200)
+        .with_body(r#"{"data":{"tenantId":"t-1","homeReportId":"r-2"}}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &[
+            "tenant",
+            "home-dashboard",
+            "set",
+            "--home-report-id",
+            "r-2",
+            "--output",
+            "json",
+        ],
+        "key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    mock.assert_async().await;
+    assert!(stdout.contains("\"homeReportId\": \"r-2\""));
+}
+
+#[test]
+fn test_cli_tenant_home_dashboard_set_rejects_empty_id() {
+    let output = run_plerion(
+        &["tenant", "home-dashboard", "set", "--home-report-id", ""],
+        "key",
+        "http://127.0.0.1:1",
+    );
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!output.status.success());
+    assert!(stderr.contains("--home-report-id"), "stderr was: {stderr}");
+}
+
+#[tokio::test]
+async fn test_cli_tenant_home_dashboard_clear() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("DELETE", "/v1/tenant/preferences/home-dashboard")
+        .with_status(204)
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["tenant", "home-dashboard", "clear"], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    mock.assert_async().await;
+    assert!(stdout.contains("cleared"));
+}
+
+fn api_access_body() -> String {
+    serde_json::json!({
+        "openapi": "3.1.0",
+        "x-plerion-role": { "name": "Tenant read-only" },
+        "paths": {
+            "/v1/tenant/profiles": { "get": { "operationId": "listProfiles", "summary": "List" } }
+        }
+    })
+    .to_string()
+}
+
+#[tokio::test]
+async fn test_cli_tenant_api_access_table() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/v1/tenant/openapi")
+        .with_status(200)
+        .with_body(api_access_body())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["tenant", "api-access"], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(stdout.contains("OPERATION ID"));
+    assert!(stdout.contains("listProfiles"));
+    assert!(stdout.contains("/v1/tenant/profiles"));
+}
+
+#[tokio::test]
+async fn test_cli_tenant_api_access_json_returns_document() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/v1/tenant/openapi")
+        .with_status(200)
+        .with_body(api_access_body())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["tenant", "api-access", "--output", "json"],
+        "key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let doc: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+    assert_eq!(doc["x-plerion-role"]["name"], "Tenant read-only");
+    assert_eq!(doc["openapi"], "3.1.0");
+}

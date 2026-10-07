@@ -12,6 +12,7 @@ pub mod findings;
 pub mod iac;
 pub mod integrations;
 pub mod metrics;
+pub mod profiles;
 pub mod risks;
 pub mod tenant;
 pub mod vulnerabilities;
@@ -109,6 +110,8 @@ pub enum Commands {
     AuditLogs(audit_logs::AuditLogsArgs),
     /// Integration management
     Integrations(integrations::IntegrationsArgs),
+    /// Detection profiles and their detection exemptions
+    Profiles(profiles::ProfilesArgs),
     /// Risk management
     Risks(risks::RisksArgs),
     /// On-demand workload scans

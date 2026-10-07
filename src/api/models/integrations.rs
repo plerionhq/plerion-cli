@@ -65,3 +65,48 @@ impl TableRenderable for Integration {
         ]
     }
 }
+
+/// A tag on an integration, either set in Plerion or read from the cloud account.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct IntegrationTag {
+    pub key: String,
+    pub value: String,
+    pub source: Option<String>,
+}
+
+impl TableRenderable for IntegrationTag {
+    fn headers() -> Vec<&'static str> {
+        vec!["KEY", "VALUE", "SOURCE"]
+    }
+
+    fn row(&self) -> Vec<String> {
+        vec![
+            self.key.clone(),
+            self.value.clone(),
+            self.source.clone().unwrap_or_default(),
+        ]
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct UserDefinedTag {
+    pub key: String,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ReplaceUserDefinedTagsRequest {
+    pub tags: Vec<UserDefinedTag>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IntegrationTagsData {
+    #[serde(default)]
+    pub tags: Vec<IntegrationTag>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IntegrationTagsResponse {
+    pub data: IntegrationTagsData,
+}
