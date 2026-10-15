@@ -35,7 +35,7 @@ pub async fn run(args: &AwsArgs, config: &Config) -> anyhow::Result<()> {
             output::render_json_value(&resp, config.output, config.query.as_deref())?;
         }
         AwsCommands::GenerateToken { integration_id } => {
-            let resp = generate_token(&client, integration_id).await?;
+            let resp = generate_token(&client, Some(integration_id)).await?;
             output::render_json_value(&resp, config.output, config.query.as_deref())?;
         }
     }
