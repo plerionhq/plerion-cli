@@ -110,8 +110,20 @@ pub fn format_epss(score: Option<f64>) -> String {
         Some(s) if s < 0.001 => "<0.1%".to_string(),
         // Rounding would show 100.0%, which overstates a probability.
         Some(s) if s > 0.999 => ">99.9%".to_string(),
-        Some(s) => format!("{:.1}%", s * 100.0),
+        Some(s) => format!("{}%", one_decimal(s * 100.0)),
     }
+}
+
+/// A positive value to one decimal, with an exact tie rounding up the way the web app's
+/// `toFixed(1)` does: 1.25 reads 1.3. Rust's formatter rounds a tie to even, which reads 1.2.
+/// Only a fraction of exactly .25 or .75 can be a tie: no other x.x5 is exact in binary.
+fn one_decimal(value: f64) -> String {
+    let fraction = value.fract();
+    let is_exact_tie = fraction == 0.25 || fraction == 0.75;
+    if is_exact_tie {
+        return format!("{:.1}", (value * 10.0).ceil() / 10.0);
+    }
+    format!("{:.1}", value)
 }
 
 fn bool_icon(v: Option<bool>) -> String {

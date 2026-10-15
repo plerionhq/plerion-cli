@@ -186,6 +186,13 @@ fn test_format_epss() {
     assert_eq!(format_epss(Some(0.00099)), "<0.1%");
     assert_eq!(format_epss(Some(0.001)), "0.1%");
     assert_eq!(format_epss(Some(0.5)), "50.0%");
+    // An exact tie at one decimal rounds up, as the web app's toFixed(1) does.
+    assert_eq!(format_epss(Some(0.0125)), "1.3%");
+    assert_eq!(format_epss(Some(0.0625)), "6.3%");
+    assert_eq!(format_epss(Some(0.0135)), "1.4%");
+    // A value that only looks like a tie is below it in binary, and rounds down.
+    assert_eq!(format_epss(Some(0.0015)), "0.1%");
+    assert_eq!(format_epss(Some(0.0115)), "1.1%");
     assert_eq!(format_epss(Some(0.91969)), "92.0%");
     assert_eq!(format_epss(Some(0.943)), "94.3%");
     assert_eq!(format_epss(Some(0.95404)), "95.4%");
