@@ -1,6 +1,6 @@
 # Plerion CLI
 
-[![Release](https://img.shields.io/badge/release-v0.1.10-blue?style=flat-square)](https://github.com/plerionhq/plerion-cli/releases)
+[![Release](https://img.shields.io/github/v/release/plerionhq/plerion-cli?style=flat-square)](https://github.com/plerionhq/plerion-cli/releases)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli/actions)
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen?style=flat-square)](https://github.com/plerionhq/plerion-cli)
 [![API Version](https://img.shields.io/badge/Plerion%20API-v1-blue?style=flat-square)](https://docs.plerion.com/api-reference)
@@ -19,8 +19,16 @@ curl -fsSL https://raw.githubusercontent.com/plerionhq/plerion-cli/main/install.
 To pin a version or change the install directory:
 
 ```bash
-VERSION=v0.1.5 INSTALL_DIR=~/.local/bin \
-  curl -fsSL https://raw.githubusercontent.com/plerionhq/plerion-cli/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/plerionhq/plerion-cli/main/install.sh | \
+  VERSION=v0.2.1 INSTALL_DIR="$HOME/.local/bin" sh
+```
+
+To upgrade, repeat the installation method you used and keep the same install directory. For a manual installation in `/usr/local/bin`, repeat the manual steps below. The install script can fall back to `~/.local/bin`, leaving an older copy first in `PATH`.
+
+Locate the selected binary with `command -v plerion` on macOS/Linux or `Get-Command plerion` in PowerShell. Then check its version:
+
+```bash
+plerion --version
 ```
 
 ### macOS — "cannot verify" Gatekeeper warning

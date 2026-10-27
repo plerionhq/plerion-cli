@@ -3,8 +3,8 @@
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/plerionhq/plerion-cli/main/install.sh | sh
-#   VERSION=v0.1.1 curl -fsSL ... | sh    # pin a specific version
-#   INSTALL_DIR=~/.local/bin curl -fsSL ... | sh
+#   curl -fsSL ... | VERSION=v0.2.1 sh    # pin a specific version
+#   curl -fsSL ... | INSTALL_DIR="$HOME/.local/bin" sh
 set -e
 
 REPO="plerionhq/plerion-cli"
