@@ -4,7 +4,7 @@ import subprocess
 
 metadata = json.loads(subprocess.check_output(
     ["cargo", "metadata", "--locked", "--format-version", "1"], text=True))
-minimum = {"rustls-webpki": (0, 103, 16), "webpki-roots": (1, 0, 10)}
+minimum = {"rustls-webpki": (0, 103, 16), "webpki-roots": (1, 0, 11)}
 for name, floor in minimum.items():
     versions = [p["version"] for p in metadata["packages"] if p["name"] == name]
     assert versions, f"Missing {name}"
