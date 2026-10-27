@@ -25,10 +25,9 @@ curl -fsSL https://raw.githubusercontent.com/plerionhq/plerion-cli/main/install.
 
 To upgrade, repeat the installation method you used and keep the same install directory. For a manual installation in `/usr/local/bin`, repeat the manual steps below. The install script can fall back to `~/.local/bin`, leaving an older copy first in `PATH`.
 
-Check which binary your shell selects and its version:
+Locate the selected binary with `command -v plerion` on macOS/Linux or `Get-Command plerion` in PowerShell. Then check its version:
 
 ```bash
-command -v plerion
 plerion --version
 ```
 
