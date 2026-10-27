@@ -1,0 +1,1 @@
+Certificate fixtures from https://emudhra.we-have-a-problem.com/. The fourteen server chains include both issuer paths and the two chains without Certificate Transparency entries. Verification uses a fixed time within their validity period. Root certificates are public certificates. No private keys are included.

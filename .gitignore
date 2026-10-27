@@ -1,6 +1,5 @@
 # Build output
 /target/
-Cargo.lock
 
 # Credentials — never commit API keys
 .plerion/
