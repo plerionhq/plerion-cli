@@ -14,15 +14,20 @@ pub async fn get_cloudformation_template(
     client.execute(req).await
 }
 
+/// Generate a temporary integration token.
+///
+/// With `Some(integration_id)` the token is scoped to an existing integration
+/// (the `plerion aws generate-token` behavior). With `None` the request is a
+/// bare POST, which mints the onboarding token used to register a NEW AWS
+/// account integration via CloudFormation.
 pub async fn generate_token(
     client: &PlerionClient,
-    integration_id: &str,
+    integration_id: Option<&str>,
 ) -> Result<serde_json::Value, PlerionError> {
-    client
-        .execute(
-            client
-                .post("/v1/tenant/integrations/token")
-                .json(&serde_json::json!({ "integrationId": integration_id })),
-        )
-        .await
+    let req = client.post("/v1/tenant/integrations/token");
+    let req = match integration_id {
+        Some(id) => req.json(&serde_json::json!({ "integrationId": id })),
+        None => req,
+    };
+    client.execute(req).await
 }
