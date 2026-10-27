@@ -52,7 +52,7 @@ jobs:
             asset_name: plerion-windows-x86_64.exe
 
           - target: x86_64-apple-darwin
-            os: macos-latest
+            os: macos-15-intel
             use_cross: false
             artifact_name: plerion
             asset_name: plerion-macos-x86_64
@@ -92,6 +92,23 @@ jobs:
       - name: Build native
         if: ${{ !matrix.use_cross }}
         run: cargo build --locked --release --target ${{ matrix.target }}
+
+      - name: Install ARM emulator
+        if: matrix.target == 'aarch64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y qemu-user
+
+      - name: Smoke test the release binary
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          BINARY: ${{ matrix.artifact_name }}
+        run: |
+          runner=()
+          if [[ "$TARGET" == aarch64-unknown-linux-musl ]]; then
+            runner=(qemu-aarch64)
+          fi
+          "${runner[@]}" "target/$TARGET/release/$BINARY" --version
+          "${runner[@]}" "target/$TARGET/release/$BINARY" --help
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
