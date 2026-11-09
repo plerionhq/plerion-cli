@@ -146,12 +146,22 @@ pub async fn run(args: &IntegrationsArgs, config: &Config) -> anyhow::Result<()>
                 integration_ids: a.ids.clone(),
             };
             let resp = set_continuous_scanning(&client, &body).await?;
+            let outcomes = resp.data.outcomes();
             output::render_list(
-                &resp.data.outcomes(),
+                &outcomes,
                 config.output,
                 config.query.as_deref(),
                 config.no_color,
             )?;
+            // A script needs to see a partial result in the exit code, not
+            // only in the rows.
+            let not_updated = resp.data.skipped.len() + resp.data.failed.len();
+            if not_updated > 0 {
+                anyhow::bail!(
+                    "{not_updated} of {} integrations were not updated; see the skipped and failed rows.",
+                    outcomes.len()
+                );
+            }
         }
     }
     Ok(())

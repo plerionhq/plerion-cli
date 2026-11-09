@@ -365,6 +365,30 @@ async fn test_cli_integrations_set_continuous_scanning() {
 }
 
 #[tokio::test]
+async fn test_cli_integrations_set_continuous_scanning_exits_non_zero_when_some_are_skipped() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": { "enabled": true, "updated": ["int-1"], "unchanged": [],
+                  "skipped": [{ "integrationId": "int-2", "reason": "CdrIntegrationRequired" }], "failed": [] }
+    });
+    let _mock = server
+        .mock("PUT", "/v1/tenant/integrations/continuous-scanning")
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["integrations", "set-continuous-scanning", "--enabled", "--id", "int-1", "--id", "int-2", "--output", "json"],
+        "test-key",
+        &server.url(),
+    );
+    assert!(!output.status.success());
+    assert!(String::from_utf8(output.stdout).unwrap().contains("CdrIntegrationRequired"));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("1 of 2 integrations were not updated"));
+}
+
+#[tokio::test]
 async fn test_cli_integrations_set_continuous_scanning_needs_a_direction() {
     let server = Server::new_async().await;
     let output = run_plerion(
