@@ -1,8 +1,12 @@
 use clap::{Args, Subcommand};
 use crate::api::{
     client::PlerionClient,
-    endpoints::integrations::{list_integrations, replace_user_defined_tags},
-    models::integrations::{ReplaceUserDefinedTagsRequest, UserDefinedTag},
+    endpoints::integrations::{
+        list_integrations, replace_user_defined_tags, set_continuous_scanning,
+    },
+    models::integrations::{
+        ReplaceUserDefinedTagsRequest, SetContinuousScanningRequest, UserDefinedTag,
+    },
 };
 use crate::config::Config;
 use crate::output;
@@ -22,6 +26,34 @@ pub enum IntegrationsCommands {
     /// out is removed. Tags read from the cloud account are not changed, but a
     /// user-defined tag overrides a cloud tag with the same key.
     SetTags(SetTagsArgs),
+    /// Turn continuous scanning on or off for one or more AWS account integrations.
+    ///
+    /// An account needs a CDR integration before continuous scanning can be
+    /// turned on. The command answers for each account: updated, unchanged,
+    /// skipped with a reason, or failed.
+    SetContinuousScanning(SetContinuousScanningArgs),
+}
+
+#[derive(Args, Debug)]
+pub struct SetContinuousScanningArgs {
+    /// Turn continuous scanning on
+    #[arg(long, conflicts_with = "disabled")]
+    pub enabled: bool,
+    /// Turn continuous scanning off
+    #[arg(long)]
+    pub disabled: bool,
+    /// An AWS account integration ID; repeat for each account (up to 1000)
+    #[arg(long = "id", value_name = "INTEGRATION_ID", required = true)]
+    pub ids: Vec<String>,
+}
+
+/// Turns the two flags into the value to send, requiring exactly one of them.
+pub fn continuous_scanning_value(enabled: bool, disabled: bool) -> anyhow::Result<bool> {
+    match (enabled, disabled) {
+        (true, false) => Ok(true),
+        (false, true) => Ok(false),
+        _ => anyhow::bail!("Pass exactly one of --enabled or --disabled."),
+    }
 }
 
 #[derive(Args, Debug)]
@@ -103,6 +135,19 @@ pub async fn run(args: &IntegrationsArgs, config: &Config) -> anyhow::Result<()>
             let resp = replace_user_defined_tags(&client, &a.id, &body).await?;
             output::render_list(
                 &resp.data.tags,
+                config.output,
+                config.query.as_deref(),
+                config.no_color,
+            )?;
+        }
+        IntegrationsCommands::SetContinuousScanning(a) => {
+            let body = SetContinuousScanningRequest {
+                enabled: continuous_scanning_value(a.enabled, a.disabled)?,
+                integration_ids: a.ids.clone(),
+            };
+            let resp = set_continuous_scanning(&client, &body).await?;
+            output::render_list(
+                &resp.data.outcomes(),
                 config.output,
                 config.query.as_deref(),
                 config.no_color,

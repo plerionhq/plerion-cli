@@ -1,6 +1,7 @@
 use crate::api::client::PlerionClient;
 use crate::api::models::integrations::{
-    IntegrationTagsResponse, IntegrationsResponse, ReplaceUserDefinedTagsRequest,
+    ContinuousScanningResponse, IntegrationTagsResponse, IntegrationsResponse,
+    ReplaceUserDefinedTagsRequest, SetContinuousScanningRequest,
 };
 use crate::error::PlerionError;
 
@@ -28,4 +29,14 @@ pub async fn replace_user_defined_tags(
         super::path::segment(integration_id, "integration ID")?
     );
     client.execute(client.put(&path).json(body)).await
+}
+
+/// Turns continuous scanning on or off for the listed AWS account integrations.
+pub async fn set_continuous_scanning(
+    client: &PlerionClient,
+    body: &SetContinuousScanningRequest,
+) -> Result<ContinuousScanningResponse, PlerionError> {
+    client
+        .execute(client.put("/v1/tenant/integrations/continuous-scanning").json(body))
+        .await
 }
