@@ -110,3 +110,87 @@ pub struct IntegrationTagsData {
 pub struct IntegrationTagsResponse {
     pub data: IntegrationTagsData,
 }
+
+/// The body of PUT /v1/tenant/integrations/continuous-scanning.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SetContinuousScanningRequest {
+    pub enabled: bool,
+    pub integration_ids: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SkippedIntegration {
+    pub integration_id: String,
+    pub reason: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FailedIntegration {
+    pub integration_id: String,
+}
+
+/// What happened to each listed integration, in request order.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ContinuousScanningResult {
+    pub enabled: bool,
+    #[serde(default)]
+    pub updated: Vec<String>,
+    #[serde(default)]
+    pub unchanged: Vec<String>,
+    #[serde(default)]
+    pub skipped: Vec<SkippedIntegration>,
+    #[serde(default)]
+    pub failed: Vec<FailedIntegration>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ContinuousScanningResponse {
+    pub data: ContinuousScanningResult,
+}
+
+/// One integration's outcome, for the table and JSON output.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ContinuousScanningOutcome {
+    pub integration_id: String,
+    pub outcome: String,
+    pub reason: Option<String>,
+}
+
+impl ContinuousScanningResult {
+    /// Flattens the four lists into one row per integration.
+    pub fn outcomes(&self) -> Vec<ContinuousScanningOutcome> {
+        let mut rows = Vec::new();
+        for id in &self.updated {
+            rows.push(ContinuousScanningOutcome { integration_id: id.clone(), outcome: "updated".into(), reason: None });
+        }
+        for id in &self.unchanged {
+            rows.push(ContinuousScanningOutcome { integration_id: id.clone(), outcome: "unchanged".into(), reason: None });
+        }
+        for s in &self.skipped {
+            rows.push(ContinuousScanningOutcome { integration_id: s.integration_id.clone(), outcome: "skipped".into(), reason: Some(s.reason.clone()) });
+        }
+        for f in &self.failed {
+            rows.push(ContinuousScanningOutcome { integration_id: f.integration_id.clone(), outcome: "failed".into(), reason: None });
+        }
+        rows
+    }
+}
+
+impl TableRenderable for ContinuousScanningOutcome {
+    fn headers() -> Vec<&'static str> {
+        vec!["INTEGRATION ID", "OUTCOME", "REASON"]
+    }
+
+    fn row(&self) -> Vec<String> {
+        vec![
+            self.integration_id.clone(),
+            self.outcome.clone(),
+            self.reason.clone().unwrap_or_default(),
+        ]
+    }
+}

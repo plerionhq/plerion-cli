@@ -183,3 +183,50 @@ fn test_tags_to_send_rules() {
     let ok = [parse_tag("a=1").unwrap(), parse_tag("A=2").unwrap()];
     assert_eq!(tags_to_send(&ok, false).unwrap().len(), 2);
 }
+
+#[tokio::test]
+async fn test_set_continuous_scanning() {
+    use plerion::api::models::integrations::SetContinuousScanningRequest;
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": {
+            "enabled": true,
+            "updated": ["int-1"],
+            "unchanged": [],
+            "skipped": [{ "integrationId": "int-2", "reason": "CdrIntegrationRequired" }],
+            "failed": []
+        }
+    });
+    let mock = server
+        .mock("PUT", "/v1/tenant/integrations/continuous-scanning")
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "enabled": true,
+            "integrationIds": ["int-1", "int-2"]
+        })))
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    let req = SetContinuousScanningRequest {
+        enabled: true,
+        integration_ids: vec!["int-1".into(), "int-2".into()],
+    };
+    let resp = integrations::set_continuous_scanning(&client, &req).await.unwrap();
+    mock.assert_async().await;
+    let rows = resp.data.outcomes();
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0].outcome, "updated");
+    assert_eq!(rows[1].outcome, "skipped");
+    assert_eq!(rows[1].reason.as_deref(), Some("CdrIntegrationRequired"));
+}
+
+#[test]
+fn test_continuous_scanning_value_requires_one_flag() {
+    use plerion::cli::integrations::continuous_scanning_value;
+    assert!(continuous_scanning_value(true, false).unwrap());
+    assert!(!continuous_scanning_value(false, true).unwrap());
+    assert!(continuous_scanning_value(false, false).is_err());
+    assert!(continuous_scanning_value(true, true).is_err());
+}

@@ -340,6 +340,42 @@ async fn test_cli_integrations_list() {
     assert!(stdout.contains("AWS Prod"));
 }
 
+#[tokio::test]
+async fn test_cli_integrations_set_continuous_scanning() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({
+        "data": { "enabled": false, "updated": ["int-1"], "unchanged": [], "skipped": [], "failed": [] }
+    });
+    let _mock = server
+        .mock("PUT", "/v1/tenant/integrations/continuous-scanning")
+        .with_status(200)
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["integrations", "set-continuous-scanning", "--disabled", "--id", "int-1", "--output", "json"],
+        "test-key",
+        &server.url(),
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(stdout.contains("int-1"));
+    assert!(stdout.contains("updated"));
+}
+
+#[tokio::test]
+async fn test_cli_integrations_set_continuous_scanning_needs_a_direction() {
+    let server = Server::new_async().await;
+    let output = run_plerion(
+        &["integrations", "set-continuous-scanning", "--id", "int-1"],
+        "test-key",
+        &server.url(),
+    );
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("--enabled or --disabled"));
+}
+
 // --- audit-logs ---
 
 #[tokio::test]
