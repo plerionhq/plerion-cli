@@ -214,6 +214,63 @@ async fn test_cli_findings_list_with_query() {
     assert!(stdout.contains("PLERION-AWS-16"));
 }
 
+#[tokio::test]
+async fn test_cli_findings_list_with_integration_category() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/findings")
+        .match_query(mockito::Matcher::UrlEncoded(
+            "integrationCategories".to_string(),
+            "code,cloud".to_string(),
+        ))
+        .with_status(200)
+        .with_body(findings_body())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["findings", "list", "--integration-category", "Code, cloud", "--output", "json"],
+        "test-key", &server.url(),
+    );
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_findings_list_rejects_an_unknown_integration_category() {
+    let output = run_plerion(
+        &["findings", "list", "--integration-category", "saas"],
+        "test-key", "http://127.0.0.1:9",
+    );
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("not an integration category"));
+}
+
+#[tokio::test]
+async fn test_cli_vulnerabilities_list_with_integration_category() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/vulnerabilities")
+        .match_query(mockito::Matcher::UrlEncoded(
+            "integrationCategories".to_string(),
+            "code".to_string(),
+        ))
+        .with_status(200)
+        .with_body(serde_json::json!({
+            "data": [],
+            "meta": { "cursor": null, "perPage": 50, "total": 0, "hasNextPage": false }
+        }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["vulnerabilities", "list", "--integration-category", "code", "--output", "json"],
+        "test-key", &server.url(),
+    );
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
 // --- alerts ---
 
 #[tokio::test]

@@ -53,6 +53,10 @@ pub struct ListFindingsArgs {
     #[arg(long)]
     pub integration_id: Option<String>,
 
+    /// Filter by integration category: cloud, code or cloud,code (default: cloud only)
+    #[arg(long, value_parser = super::parse_integration_categories)]
+    pub integration_category: Option<String>,
+
     /// Filter by asset group IDs (comma-separated)
     #[arg(long)]
     pub asset_group_id: Option<String>,
@@ -110,6 +114,7 @@ pub async fn run(args: &FindingsArgs, config: &Config) -> anyhow::Result<()> {
                 resource_types: list_args.resource_type.clone(),
                 detection_ids: list_args.detection_id.clone(),
                 integration_ids: list_args.integration_id.clone(),
+                integration_categories: list_args.integration_category.clone(),
                 asset_group_ids: list_args.asset_group_id.clone(),
                 environment_ids: list_args.environment_id.clone(),
                 services: list_args.service.clone(),
@@ -138,6 +143,7 @@ pub async fn run(args: &FindingsArgs, config: &Config) -> anyhow::Result<()> {
                             resource_types: params.resource_types.clone(),
                             detection_ids: params.detection_ids.clone(),
                             integration_ids: params.integration_ids.clone(),
+                            integration_categories: params.integration_categories.clone(),
                             asset_group_ids: params.asset_group_ids.clone(),
                             environment_ids: params.environment_ids.clone(),
                             services: params.services.clone(),

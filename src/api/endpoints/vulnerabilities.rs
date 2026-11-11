@@ -8,6 +8,7 @@ pub struct ListVulnerabilitiesParams {
     pub asset_ids: Option<String>,
     pub providers: Option<String>,
     pub integration_ids: Option<String>,
+    pub integration_categories: Option<String>,
     pub asset_group_ids: Option<String>,
     pub environment_ids: Option<String>,
     pub package_name: Option<String>,
@@ -43,6 +44,7 @@ pub async fn list_vulnerabilities(
     if let Some(v) = &params.asset_ids { req = req.query(&[("assetIds", v)]); }
     if let Some(v) = &params.providers { req = req.query(&[("providers", v)]); }
     if let Some(v) = &params.integration_ids { req = req.query(&[("integrationIds", v)]); }
+    if let Some(v) = &params.integration_categories { req = req.query(&[("integrationCategories", v)]); }
     if let Some(v) = &params.asset_group_ids { req = req.query(&[("assetGroupIds", v)]); }
     if let Some(v) = &params.environment_ids { req = req.query(&[("environmentIds", v)]); }
     if let Some(v) = &params.package_name { req = req.query(&[("packageName", v)]); }

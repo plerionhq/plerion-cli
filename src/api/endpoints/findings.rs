@@ -9,6 +9,7 @@ pub struct ListFindingsParams {
     pub regions: Option<String>,
     pub asset_ids: Option<String>,
     pub integration_ids: Option<String>,
+    pub integration_categories: Option<String>,
     pub asset_group_ids: Option<String>,
     pub environment_ids: Option<String>,
     pub severity_levels: Option<String>,
@@ -36,6 +37,7 @@ pub async fn list_findings(
     if let Some(v) = &params.regions { req = req.query(&[("regions", v)]); }
     if let Some(v) = &params.asset_ids { req = req.query(&[("assetIds", v)]); }
     if let Some(v) = &params.integration_ids { req = req.query(&[("integrationIds", v)]); }
+    if let Some(v) = &params.integration_categories { req = req.query(&[("integrationCategories", v)]); }
     if let Some(v) = &params.asset_group_ids { req = req.query(&[("assetGroupIds", v)]); }
     if let Some(v) = &params.environment_ids { req = req.query(&[("environmentIds", v)]); }
     if let Some(v) = &params.severity_levels { req = req.query(&[("severityLevels", v)]); }
