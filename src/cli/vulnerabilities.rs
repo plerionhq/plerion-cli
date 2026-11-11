@@ -37,6 +37,9 @@ pub struct ListVulnArgs {
     #[arg(long)] pub has_exploit: bool,
     #[arg(long)] pub has_vendor_fix: bool,
     #[arg(long)] pub integration_id: Option<String>,
+    /// Filter by integration category: cloud, code or cloud,code
+    #[arg(long, value_parser = super::parse_integration_categories)]
+    pub integration_category: Option<String>,
     #[arg(long)] pub asset_id: Option<String>,
     #[arg(long)] pub region: Option<String>,
     /// Sort by field (epssScore puts unscored vulnerabilities last in either order)
@@ -149,6 +152,7 @@ pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<
                 has_exploit: if a.has_exploit { Some(true) } else { None },
                 has_vendor_fix: if a.has_vendor_fix { Some(true) } else { None },
                 integration_ids: a.integration_id.clone(),
+                integration_categories: a.integration_category.clone(),
                 asset_ids: a.asset_id.clone(),
                 regions: a.region.clone(),
                 sort_by: a.sort_by.clone(),
@@ -184,6 +188,7 @@ pub async fn run(args: &VulnerabilitiesArgs, config: &Config) -> anyhow::Result<
                         has_exploit: params.has_exploit,
                         has_vendor_fix: params.has_vendor_fix,
                         integration_ids: params.integration_ids.clone(),
+                        integration_categories: params.integration_categories.clone(),
                         asset_ids: params.asset_ids.clone(),
                         regions: params.regions.clone(),
                         sort_by: params.sort_by.clone(),

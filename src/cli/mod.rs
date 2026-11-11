@@ -66,6 +66,21 @@ fn parse_output_format(s: &str) -> Result<OutputFormat, String> {
     s.parse()
 }
 
+/// Parses a comma-separated list of integration categories (cloud, code).
+pub fn parse_integration_categories(input: &str) -> Result<String, String> {
+    let mut categories: Vec<String> = Vec::new();
+    for part in input.split(',') {
+        let category = part.trim().to_lowercase();
+        if category != "cloud" && category != "code" {
+            return Err(format!("'{}' is not an integration category; use cloud, code or cloud,code", part.trim()));
+        }
+        if !categories.contains(&category) {
+            categories.push(category);
+        }
+    }
+    Ok(categories.join(","))
+}
+
 /// Normalize provider names so that common case variants are accepted.
 /// The API requires exact casing: `AWS`, `Azure`, `GCP`, `CASM`, `Kubernetes`.
 /// This allows users to type `azure`, `AZURE`, `gcp`, `kubernetes`, etc.
