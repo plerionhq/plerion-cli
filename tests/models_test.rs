@@ -335,6 +335,7 @@ fn test_integration_table_renderable() {
         created_at: None,
         updated_at: None,
         aws_account_id: Some("123456789012".to_string()),
+        continuous_scanning_enabled: Some(true),
         azure_subscription_id: None,
         azure_directory_id: None,
         gcp_project_id: None,
@@ -342,7 +343,8 @@ fn test_integration_table_renderable() {
     let row = i.row();
     assert_eq!(row[0], "int-1");
     assert_eq!(row[1], "AWS Prod");
-    assert_eq!(row[11], "123456789012"); // aws_account_id (index 11 in new headers)
+    assert_eq!(row[11], "123456789012"); // aws_account_id
+    assert_eq!(row[12], "true"); // continuous_scanning_enabled
 }
 
 #[test]
@@ -354,12 +356,13 @@ fn test_integration_azure_account() {
         schedule: None, scan_interval: None, detection_setting_id: None,
         created_at: None, updated_at: None,
         aws_account_id: None,
+        continuous_scanning_enabled: None,
         azure_subscription_id: Some("sub-123".to_string()),
         azure_directory_id: None,
         gcp_project_id: None,
     };
     let row = i.row();
-    assert_eq!(row[12], "sub-123"); // azure_subscription_id (index 12 in new headers)
+    assert_eq!(row[13], "sub-123"); // azure_subscription_id
 }
 
 #[test]
@@ -370,12 +373,12 @@ fn test_integration_gcp_project() {
         tenant_id: None, organization_id: None,
         schedule: None, scan_interval: None, detection_setting_id: None,
         created_at: None, updated_at: None,
-        aws_account_id: None, azure_subscription_id: None,
+        aws_account_id: None, continuous_scanning_enabled: None, azure_subscription_id: None,
         azure_directory_id: None,
         gcp_project_id: Some("my-project".to_string()),
     };
     let row = i.row();
-    assert_eq!(row[14], "my-project"); // gcp_project_id (index 14 in new headers)
+    assert_eq!(row[15], "my-project"); // gcp_project_id
 }
 
 #[test]

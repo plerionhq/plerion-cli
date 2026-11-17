@@ -72,6 +72,8 @@ pub fn tags_to_send(tags: &[UserDefinedTag], clear: bool) -> anyhow::Result<Vec<
 pub struct ListIntegrationsArgs {
     #[arg(long, default_value = "50")] pub per_page: u32,
     #[arg(long)] pub include_total: bool,
+    /// Only these integrations, as a comma-separated list of IDs
+    #[arg(long)] pub integration_ids: Option<String>,
     /// Fetch all pages automatically
     #[arg(long)] pub all: bool,
 }
@@ -84,7 +86,7 @@ pub async fn run(args: &IntegrationsArgs, config: &Config) -> anyhow::Result<()>
                 let mut all_items = Vec::new();
                 let mut cursor: Option<String> = None;
                 loop {
-                    let resp = list_integrations(&client, Some(1000), cursor.as_deref(), a.include_total).await?;
+                    let resp = list_integrations(&client, Some(1000), cursor.as_deref(), a.include_total, a.integration_ids.as_deref()).await?;
                     let has_next = resp.meta.has_next_page.unwrap_or(false);
                     cursor = resp.meta.cursor.clone();
                     all_items.extend(resp.data);
@@ -92,7 +94,7 @@ pub async fn run(args: &IntegrationsArgs, config: &Config) -> anyhow::Result<()>
                 }
                 output::render_list(&all_items, config.output, config.query.as_deref(), config.no_color)?;
             } else {
-                let resp = list_integrations(&client, Some(a.per_page), None, a.include_total).await?;
+                let resp = list_integrations(&client, Some(a.per_page), None, a.include_total, a.integration_ids.as_deref()).await?;
                 output::render_list(&resp.data, config.output, config.query.as_deref(), config.no_color)?;
             }
         }

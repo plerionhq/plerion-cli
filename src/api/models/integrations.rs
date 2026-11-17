@@ -21,6 +21,8 @@ pub struct Integration {
     pub updated_at: Option<String>,
     // Provider-specific
     pub aws_account_id: Option<String>,
+    /// Only returned for AWS account integrations.
+    pub continuous_scanning_enabled: Option<bool>,
     pub azure_subscription_id: Option<String>,
     pub azure_directory_id: Option<String>,
     pub gcp_project_id: Option<String>,
@@ -38,7 +40,7 @@ impl TableRenderable for Integration {
             "ID", "NAME", "PROVIDER", "TYPE", "STATUS", "RISK SCORE",
             "SCHEDULE", "SCAN INTERVAL", "DETECTION SETTING ID",
             "TENANT ID", "ORG ID",
-            "AWS ACCOUNT", "AZURE SUBSCRIPTION", "AZURE DIRECTORY", "GCP PROJECT",
+            "AWS ACCOUNT", "CONTINUOUS SCANNING", "AZURE SUBSCRIPTION", "AZURE DIRECTORY", "GCP PROJECT",
             "CREATED AT", "UPDATED AT",
         ]
     }
@@ -57,6 +59,7 @@ impl TableRenderable for Integration {
             self.tenant_id.clone().unwrap_or_default(),
             self.organization_id.clone().unwrap_or_default(),
             self.aws_account_id.clone().unwrap_or_default(),
+            self.continuous_scanning_enabled.map(|v| v.to_string()).unwrap_or_default(),
             self.azure_subscription_id.clone().unwrap_or_default(),
             self.azure_directory_id.clone().unwrap_or_default(),
             self.gcp_project_id.clone().unwrap_or_default(),
