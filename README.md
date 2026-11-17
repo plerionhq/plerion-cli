@@ -20,7 +20,7 @@ To pin a version or change the install directory:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/plerionhq/plerion-cli/main/install.sh | \
-  VERSION=v0.2.1 INSTALL_DIR="$HOME/.local/bin" sh
+  VERSION=v0.2.2 INSTALL_DIR="$HOME/.local/bin" sh
 ```
 
 To upgrade, repeat the installation method you used and keep the same install directory. For a manual installation in `/usr/local/bin`, repeat the manual steps below. The install script can fall back to `~/.local/bin`, leaving an older copy first in `PATH`.
