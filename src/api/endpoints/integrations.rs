@@ -9,11 +9,13 @@ pub async fn list_integrations(
     per_page: Option<u32>,
     cursor: Option<&str>,
     include_total: bool,
+    integration_ids: Option<&str>,
 ) -> Result<IntegrationsResponse, PlerionError> {
     let mut req = client.get("/v1/tenant/integrations");
     if let Some(v) = per_page { req = req.query(&[("perPage", v)]); }
     if let Some(v) = cursor { req = req.query(&[("cursor", v)]); }
     if include_total { req = req.query(&[("includeTotal", true)]); }
+    if let Some(v) = integration_ids { req = req.query(&[("integrationIds", v)]); }
     client.execute(req).await
 }
 

@@ -14,6 +14,7 @@ async fn test_list_integrations() {
                 "status": "Active",
                 "riskScore": 8.19,
                 "awsAccountId": "123456789012",
+                "continuousScanningEnabled": true,
                 "createdAt": "2023-02-04T06:07:09.092Z"
             }
         ],
@@ -29,11 +30,35 @@ async fn test_list_integrations() {
         .await;
 
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
-    let resp = integrations::list_integrations(&client, Some(10), None, false).await.unwrap();
+    let resp = integrations::list_integrations(&client, Some(10), None, false, None).await.unwrap();
     assert_eq!(resp.data.len(), 1);
     assert_eq!(resp.data[0].integration_id.as_deref(), Some("int-123"));
     assert_eq!(resp.data[0].provider.as_deref(), Some("AWS"));
     assert_eq!(resp.data[0].aws_account_id.as_deref(), Some("123456789012"));
+    assert_eq!(resp.data[0].continuous_scanning_enabled, Some(true));
+}
+
+#[tokio::test]
+async fn test_list_integrations_with_integration_ids() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({ "data": [], "meta": { "perPage": 10 } });
+    let mock = server
+        .mock("GET", "/v1/tenant/integrations")
+        .match_query(mockito::Matcher::UrlEncoded(
+            "integrationIds".to_string(),
+            "int-1,int-2".to_string(),
+        ))
+        .with_status(200)
+        .with_header("Content-Type", "application/json")
+        .with_body(body.to_string())
+        .create_async()
+        .await;
+
+    let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
+    integrations::list_integrations(&client, Some(10), None, false, Some("int-1,int-2"))
+        .await
+        .unwrap();
+    mock.assert_async().await;
 }
 
 #[tokio::test]
@@ -55,7 +80,7 @@ async fn test_list_integrations_with_include_total() {
         .await;
 
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
-    let resp = integrations::list_integrations(&client, Some(10), None, true).await.unwrap();
+    let resp = integrations::list_integrations(&client, Some(10), None, true, None).await.unwrap();
     assert_eq!(resp.data.len(), 0);
     mock.assert_async().await;
 }
@@ -77,7 +102,7 @@ async fn test_list_integrations_with_cursor() {
         .await;
 
     let client = PlerionClient::with_base_url(&server.url(), "key").unwrap();
-    let _resp = integrations::list_integrations(&client, Some(10), Some("page2"), false).await.unwrap();
+    let _resp = integrations::list_integrations(&client, Some(10), Some("page2"), false, None).await.unwrap();
     mock.assert_async().await;
 }
 

@@ -184,6 +184,7 @@ fn test_integration_all_nones() {
         created_at: None,
         updated_at: None,
         aws_account_id: None,
+        continuous_scanning_enabled: None,
         azure_subscription_id: None,
         azure_directory_id: None,
         gcp_project_id: None,
