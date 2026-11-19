@@ -87,10 +87,10 @@ pub async fn run(args: &IntegrationsArgs, config: &Config) -> anyhow::Result<()>
                 let mut cursor: Option<String> = None;
                 loop {
                     let resp = list_integrations(&client, Some(1000), cursor.as_deref(), a.include_total, a.integration_ids.as_deref()).await?;
-                    let has_next = resp.meta.has_next_page.unwrap_or(false);
+                    let done = super::is_last_cursor_page(resp.meta.has_next_page, resp.meta.cursor.as_deref(), resp.data.len());
                     cursor = resp.meta.cursor.clone();
                     all_items.extend(resp.data);
-                    if !has_next { break; }
+                    if done { break; }
                 }
                 output::render_list(&all_items, config.output, config.query.as_deref(), config.no_color)?;
             } else {
