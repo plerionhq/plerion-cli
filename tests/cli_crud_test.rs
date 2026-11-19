@@ -1567,3 +1567,127 @@ async fn test_cli_tenant_api_access_json_returns_document() {
     assert_eq!(doc["x-plerion-role"]["name"], "Tenant read-only");
     assert_eq!(doc["openapi"], "3.1.0");
 }
+
+// --- --all with the API's real cursor pages ---
+
+// Only the first page of a cursor list carries hasNextPage. The last page
+// still has a cursor, and the request after it returns no rows and no cursor.
+async fn mock_cursor_pages(server: &mut mockito::ServerGuard, path: &str, pages: &[serde_json::Value]) -> Vec<mockito::Mock> {
+    let mut mocks = Vec::new();
+    for (i, page) in pages.iter().enumerate().skip(1).rev() {
+        mocks.push(server
+            .mock("GET", path)
+            .match_query(mockito::Matcher::UrlEncoded("cursor".into(), format!("c{i}")))
+            .with_status(200)
+            .with_body(page.to_string())
+            .expect(1)
+            .create_async()
+            .await);
+    }
+    mocks.push(server
+        .mock("GET", path)
+        .match_query(mockito::Matcher::Any)
+        .with_status(200)
+        .with_body(pages[0].to_string())
+        .expect(1)
+        .create_async()
+        .await);
+    mocks
+}
+
+#[tokio::test]
+async fn test_cli_findings_list_all_follows_cursor_pages_without_has_next_page() {
+    let mut server = Server::new_async().await;
+    let pages = [
+        serde_json::json!({ "data": [{ "id": "f-1" }], "meta": { "perPage": 1000, "total": 3, "cursor": "c1", "page": 1, "hasNextPage": true } }),
+        serde_json::json!({ "data": [{ "id": "f-2" }], "meta": { "perPage": 1000, "cursor": "c2" } }),
+        serde_json::json!({ "data": [{ "id": "f-3" }], "meta": { "perPage": 1000, "cursor": "c3" } }),
+        serde_json::json!({ "data": [], "meta": { "perPage": 1000, "cursor": null } }),
+    ];
+    let mocks = mock_cursor_pages(&mut server, "/v1/tenant/findings", &pages).await;
+
+    let output = run_plerion(&["findings", "list", "--all", "--output", "json"], "key", &server.url());
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    let items: Vec<serde_json::Value> = serde_json::from_slice(&output.stdout).unwrap();
+    let ids: Vec<&str> = items.iter().map(|f| f["id"].as_str().unwrap()).collect();
+    assert_eq!(ids, ["f-1", "f-2", "f-3"]);
+    for m in mocks { m.assert_async().await; }
+}
+
+#[tokio::test]
+async fn test_cli_audit_logs_list_all_follows_cursor_with_no_has_next_page() {
+    let mut server = Server::new_async().await;
+    let pages = [
+        serde_json::json!({ "data": [{ "id": "log-1" }], "meta": { "perPage": 1000, "cursor": "c1" } }),
+        serde_json::json!({ "data": [{ "id": "log-2" }], "meta": { "perPage": 1000, "cursor": "c2" } }),
+        serde_json::json!({ "data": [], "meta": { "perPage": 1000, "cursor": null } }),
+    ];
+    let mocks = mock_cursor_pages(&mut server, "/v1/tenant/audit-logs", &pages).await;
+
+    let output = run_plerion(&["audit-logs", "list", "--all", "--output", "json"], "key", &server.url());
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("log-1") && stdout.contains("log-2"));
+    for m in mocks { m.assert_async().await; }
+}
+
+#[tokio::test]
+async fn test_cli_findings_list_all_uses_per_page() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({ "data": [{ "id": "f-1" }], "meta": { "perPage": 100, "cursor": null, "hasNextPage": false } });
+    let mock = server
+        .mock("GET", "/v1/tenant/findings")
+        .match_query(mockito::Matcher::UrlEncoded("perPage".into(), "100".into()))
+        .with_status(200)
+        .with_body(body.to_string())
+        .expect(1)
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["findings", "list", "--all", "--per-page", "100", "--output", "json"], "key", &server.url());
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_findings_list_all_defaults_to_1000_per_page() {
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({ "data": [{ "id": "f-1" }], "meta": { "perPage": 1000, "cursor": null, "hasNextPage": false } });
+    let mock = server
+        .mock("GET", "/v1/tenant/findings")
+        .match_query(mockito::Matcher::UrlEncoded("perPage".into(), "1000".into()))
+        .with_status(200)
+        .with_body(body.to_string())
+        .expect(1)
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["findings", "list", "--all", "--output", "json"], "key", &server.url());
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    mock.assert_async().await;
+}
+
+#[tokio::test]
+async fn test_cli_asks_for_gzip_and_reads_a_gzip_body() {
+    use flate2::{write::GzEncoder, Compression};
+    use std::io::Write;
+
+    let mut server = Server::new_async().await;
+    let body = serde_json::json!({ "data": [{ "id": "f-gz" }], "meta": { "perPage": 50, "cursor": null } });
+    let mut enc = GzEncoder::new(Vec::new(), Compression::default());
+    enc.write_all(body.to_string().as_bytes()).unwrap();
+    let mock = server
+        .mock("GET", "/v1/tenant/findings")
+        .match_query(mockito::Matcher::Any)
+        .match_header("accept-encoding", mockito::Matcher::Regex("gzip".into()))
+        .with_status(200)
+        .with_header("content-encoding", "gzip")
+        .with_body(enc.finish().unwrap())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["findings", "list", "--output", "json"], "key", &server.url());
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(String::from_utf8(output.stdout).unwrap().contains("f-gz"));
+    mock.assert_async().await;
+}

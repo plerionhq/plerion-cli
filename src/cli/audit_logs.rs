@@ -42,10 +42,10 @@ pub async fn run(args: &AuditLogsArgs, config: &Config) -> anyhow::Result<()> {
                         Some(1000),
                         cursor.as_deref(),
                     ).await?;
-                    let has_next = resp.meta.has_next_page.unwrap_or(false);
+                    let done = super::is_last_cursor_page(resp.meta.has_next_page, resp.meta.cursor.as_deref(), resp.data.len());
                     cursor = resp.meta.cursor.clone();
                     all_items.extend(resp.data);
-                    if !has_next { break; }
+                    if done { break; }
                 }
                 output::render_list(&all_items, config.output, config.query.as_deref(), config.no_color)?;
             } else {

@@ -81,6 +81,13 @@ pub fn parse_integration_categories(input: &str) -> Result<String, String> {
     Ok(categories.join(","))
 }
 
+/// Whether an `--all` loop has reached the last cursor page. Most list
+/// endpoints send hasNextPage only on the first page, so a missing flag
+/// falls back to the cursor and an empty page.
+pub fn is_last_cursor_page(has_next_page: Option<bool>, cursor: Option<&str>, page_len: usize) -> bool {
+    has_next_page == Some(false) || cursor.is_none() || page_len == 0
+}
+
 /// Normalize provider names so that common case variants are accepted.
 /// The API requires exact casing: `AWS`, `Azure`, `GCP`, `CASM`, `Kubernetes`.
 /// This allows users to type `azure`, `AZURE`, `gcp`, `kubernetes`, etc.

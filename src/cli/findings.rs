@@ -91,9 +91,9 @@ pub struct ListFindingsArgs {
     #[arg(long, value_parser = ["asc", "desc"])]
     pub sort_order: Option<String>,
 
-    /// Number of results per page (max 1000)
-    #[arg(long, default_value = "50")]
-    pub per_page: u32,
+    /// Number of results per page (max 1000; default 50, or 1000 with --all)
+    #[arg(long)]
+    pub per_page: Option<u32>,
 
     /// Fetch all pages automatically
     #[arg(long)]
@@ -123,7 +123,7 @@ pub async fn run(args: &FindingsArgs, config: &Config) -> anyhow::Result<()> {
                 first_observed_at_end: list_args.end.clone(),
                 sort_by: list_args.sort_by.clone(),
                 sort_order: list_args.sort_order.clone(),
-                per_page: Some(list_args.per_page),
+                per_page: Some(list_args.per_page.unwrap_or(50)),
                 ..Default::default()
             };
 
@@ -152,15 +152,15 @@ pub async fn run(args: &FindingsArgs, config: &Config) -> anyhow::Result<()> {
                             first_observed_at_end: params.first_observed_at_end.clone(),
                             sort_by: params.sort_by.clone(),
                             sort_order: params.sort_order.clone(),
-                            per_page: Some(1000),
+                            per_page: Some(list_args.per_page.unwrap_or(1000)),
                             ..Default::default()
                         }
                     };
                     let resp = list_findings(&client, &p).await?;
-                    let has_next = resp.meta.has_next_page.unwrap_or(false);
+                    let done = super::is_last_cursor_page(resp.meta.has_next_page, resp.meta.cursor.as_deref(), resp.data.len());
                     cursor = resp.meta.cursor.clone();
                     all_findings.extend(resp.data);
-                    if !has_next { break; }
+                    if done { break; }
                 }
                 output::render_list(&all_findings, config.output, config.query.as_deref(), config.no_color)?;
             } else {
