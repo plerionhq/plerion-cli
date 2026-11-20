@@ -3,6 +3,7 @@ pub mod alerts;
 pub mod asset_groups;
 pub mod assets;
 pub mod audit_logs;
+pub mod aws;
 pub mod compliance;
 pub mod custom_checks;
 pub mod custom_reports;
