@@ -67,7 +67,7 @@ pub async fn run(args: &AssetGroupsArgs, config: &Config) -> anyhow::Result<()> 
                 let mut cursor: Option<String> = None;
                 loop {
                     let resp = list_asset_groups(&client, a.name.as_deref(), Some(1000), cursor.as_deref(), a.include_total).await?;
-                    let done = super::is_last_cursor_page(resp.meta.has_next_page, resp.meta.cursor.as_deref(), resp.data.len());
+                    let done = super::is_last_filtered_page(resp.meta.has_next_page, resp.meta.cursor.as_deref(), cursor.as_deref());
                     cursor = resp.meta.cursor.clone();
                     all_items.extend(resp.data);
                     if done { break; }

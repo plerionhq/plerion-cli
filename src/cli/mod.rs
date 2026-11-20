@@ -88,6 +88,14 @@ pub fn is_last_cursor_page(has_next_page: Option<bool>, cursor: Option<&str>, pa
     has_next_page == Some(false) || cursor.is_none() || page_len == 0
 }
 
+/// Whether an `--all` loop has reached the last page of a list the API
+/// filters after it reads a page, such as audit logs and asset groups.
+/// Such a page can be empty while more remains, so only a missing cursor,
+/// or the same cursor sent back, ends the loop.
+pub fn is_last_filtered_page(has_next_page: Option<bool>, cursor: Option<&str>, sent_cursor: Option<&str>) -> bool {
+    has_next_page == Some(false) || cursor.is_none() || cursor == sent_cursor
+}
+
 /// Normalize provider names so that common case variants are accepted.
 /// The API requires exact casing: `AWS`, `Azure`, `GCP`, `CASM`, `Kubernetes`.
 /// This allows users to type `azure`, `AZURE`, `gcp`, `kubernetes`, etc.
