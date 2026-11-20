@@ -42,7 +42,7 @@ pub async fn run(args: &AuditLogsArgs, config: &Config) -> anyhow::Result<()> {
                         Some(1000),
                         cursor.as_deref(),
                     ).await?;
-                    let done = super::is_last_cursor_page(resp.meta.has_next_page, resp.meta.cursor.as_deref(), resp.data.len());
+                    let done = super::is_last_filtered_page(resp.meta.has_next_page, resp.meta.cursor.as_deref(), cursor.as_deref());
                     cursor = resp.meta.cursor.clone();
                     all_items.extend(resp.data);
                     if done { break; }

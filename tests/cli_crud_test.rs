@@ -1631,6 +1631,58 @@ async fn test_cli_audit_logs_list_all_follows_cursor_with_no_has_next_page() {
     for m in mocks { m.assert_async().await; }
 }
 
+/// The audit logs API filters by tenant after it reads a page, so a page can
+/// be empty while its cursor leads to more rows.
+#[tokio::test]
+async fn test_cli_audit_logs_list_all_follows_cursor_past_an_empty_page() {
+    let mut server = Server::new_async().await;
+    let pages = [
+        serde_json::json!({ "data": [{ "id": "log-1" }], "meta": { "perPage": 1000, "cursor": "c1" } }),
+        serde_json::json!({ "data": [], "meta": { "perPage": 1000, "cursor": "c2" } }),
+        serde_json::json!({ "data": [{ "id": "log-3" }], "meta": { "perPage": 1000, "cursor": "c3" } }),
+        serde_json::json!({ "data": [], "meta": { "perPage": 1000, "cursor": null } }),
+    ];
+    let mocks = mock_cursor_pages(&mut server, "/v1/tenant/audit-logs", &pages).await;
+
+    let output = run_plerion(&["audit-logs", "list", "--all", "--output", "json"], "key", &server.url());
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    let items: Vec<serde_json::Value> = serde_json::from_slice(&output.stdout).unwrap();
+    let ids: Vec<&str> = items.iter().map(|l| l["id"].as_str().unwrap()).collect();
+    assert_eq!(ids, ["log-1", "log-3"]);
+    for m in mocks { m.assert_async().await; }
+}
+
+#[tokio::test]
+async fn test_cli_asset_groups_list_all_follows_cursor_past_an_empty_page() {
+    let mut server = Server::new_async().await;
+    let pages = [
+        serde_json::json!({ "data": [], "meta": { "perPage": 1000, "cursor": "c1" } }),
+        serde_json::json!({ "data": [{ "assetGroupId": "ag-2" }], "meta": { "perPage": 1000, "cursor": null } }),
+    ];
+    let mocks = mock_cursor_pages(&mut server, "/v1/tenant/asset-groups", &pages).await;
+
+    let output = run_plerion(&["asset-groups", "list", "--all", "--output", "json"], "key", &server.url());
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(String::from_utf8(output.stdout).unwrap().contains("ag-2"));
+    for m in mocks { m.assert_async().await; }
+}
+
+/// A cursor sent back unchanged would loop forever, so it ends the list.
+#[tokio::test]
+async fn test_cli_audit_logs_list_all_stops_on_a_repeated_cursor() {
+    let mut server = Server::new_async().await;
+    let pages = [
+        serde_json::json!({ "data": [{ "id": "log-1" }], "meta": { "perPage": 1000, "cursor": "c1" } }),
+        serde_json::json!({ "data": [], "meta": { "perPage": 1000, "cursor": "c1" } }),
+    ];
+    let mocks = mock_cursor_pages(&mut server, "/v1/tenant/audit-logs", &pages).await;
+
+    let output = run_plerion(&["audit-logs", "list", "--all", "--output", "json"], "key", &server.url());
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(String::from_utf8(output.stdout).unwrap().contains("log-1"));
+    for m in mocks { m.assert_async().await; }
+}
+
 #[tokio::test]
 async fn test_cli_findings_list_all_uses_per_page() {
     let mut server = Server::new_async().await;
