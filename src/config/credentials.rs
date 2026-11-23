@@ -101,10 +101,7 @@ pub fn write_profile(
         creds.load(p).map_err(|e| PlerionError::ConfigError(e.to_string()))?;
     }
     creds.set(profile, "api_key", Some(api_key.to_string()));
-    let creds_str = creds_path.to_str().unwrap().to_string();
-    creds
-        .write(&creds_str)
-        .map_err(|e| PlerionError::ConfigError(e.to_string()))?;
+    write_private(&creds_path, &creds.writes())?;
 
     // Write config
     let cfg_path = config_path();
@@ -120,4 +117,32 @@ pub fn write_profile(
         .map_err(|e| PlerionError::ConfigError(e.to_string()))?;
 
     Ok(())
+}
+
+/// Write a file only its owner can read. The content goes into a new file
+/// created with mode 0600 on Unix, which is then renamed over `path`. A
+/// handle someone opened on the old file never sees the new content.
+fn write_private(path: &std::path::Path, content: &str) -> Result<(), PlerionError> {
+    use std::io::Write;
+    let file_name = path
+        .file_name()
+        .ok_or_else(|| PlerionError::ConfigError("Invalid credentials path".to_string()))?
+        .to_string_lossy();
+    let tmp = path.with_file_name(format!(".{file_name}.{}.tmp", std::process::id()));
+    let _ = std::fs::remove_file(&tmp);
+
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+
+    let result = options.open(&tmp).and_then(|mut file| {
+        file.write_all(content.as_bytes())?;
+        file.sync_all()?;
+        std::fs::rename(&tmp, path)
+    });
+    if result.is_err() {
+        let _ = std::fs::remove_file(&tmp);
+    }
+    Ok(result?)
 }
