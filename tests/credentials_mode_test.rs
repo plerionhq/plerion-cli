@@ -50,3 +50,22 @@ fn test_configure_tightens_existing_credentials_file() {
     assert!(content.contains("old-key"));
     assert!(content.contains("dummy-key"));
 }
+
+#[test]
+fn test_configure_hides_new_key_from_handle_opened_on_old_file() {
+    use std::io::Read;
+    let home = TempDir::new().unwrap();
+    let dir = home.path().join(".plerion");
+    fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("credentials");
+    fs::write(&path, "[old]\napi_key = old-key\n").unwrap();
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).unwrap();
+    let mut held = fs::File::open(&path).unwrap();
+
+    configure(home.path());
+
+    let mut seen = String::new();
+    held.read_to_string(&mut seen).unwrap();
+    assert!(!seen.contains("dummy-key"));
+    assert!(fs::read_to_string(&path).unwrap().contains("dummy-key"));
+}

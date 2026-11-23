@@ -119,21 +119,30 @@ pub fn write_profile(
     Ok(())
 }
 
-/// Write a file only its owner can read. On Unix the mode is set to 0600
-/// before any content goes in, so an existing readable file is tightened too.
+/// Write a file only its owner can read. The content goes into a new file
+/// created with mode 0600 on Unix, which is then renamed over `path`. A
+/// handle someone opened on the old file never sees the new content.
 fn write_private(path: &std::path::Path, content: &str) -> Result<(), PlerionError> {
     use std::io::Write;
+    let file_name = path
+        .file_name()
+        .ok_or_else(|| PlerionError::ConfigError("Invalid credentials path".to_string()))?
+        .to_string_lossy();
+    let tmp = path.with_file_name(format!(".{file_name}.{}.tmp", std::process::id()));
+    let _ = std::fs::remove_file(&tmp);
+
     let mut options = std::fs::OpenOptions::new();
-    options.write(true).create(true);
+    options.write(true).create_new(true);
     #[cfg(unix)]
     std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
-    let mut file = options.open(path)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        file.set_permissions(std::fs::Permissions::from_mode(0o600))?;
+
+    let result = options.open(&tmp).and_then(|mut file| {
+        file.write_all(content.as_bytes())?;
+        file.sync_all()?;
+        std::fs::rename(&tmp, path)
+    });
+    if result.is_err() {
+        let _ = std::fs::remove_file(&tmp);
     }
-    file.set_len(0)?;
-    file.write_all(content.as_bytes())?;
-    Ok(())
+    Ok(result?)
 }
