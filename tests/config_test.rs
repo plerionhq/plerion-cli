@@ -52,6 +52,7 @@ fn test_config_base_url_by_region() {
         ("sg1", "https://sg1.api.plerion.com"),
         ("in1", "https://in1.api.plerion.com"),
         ("us1", "https://us1.api.plerion.com"),
+        ("kr1", "https://kr1.api.plerion.com"),
     ];
     for (region, expected_url) in cases {
         let url = format!("https://{}.api.plerion.com", region);
@@ -66,6 +67,7 @@ fn test_valid_regions() {
     assert!(VALID_REGIONS.contains(&"sg1"));
     assert!(VALID_REGIONS.contains(&"in1"));
     assert!(VALID_REGIONS.contains(&"us1"));
+    assert!(VALID_REGIONS.contains(&"kr1"));
     assert!(!VALID_REGIONS.contains(&"us-east-1"));
 }
 

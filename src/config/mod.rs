@@ -3,7 +3,7 @@ pub mod credentials;
 use crate::error::PlerionError;
 use std::path::PathBuf;
 
-pub const VALID_REGIONS: &[&str] = &["au", "sg1", "in1", "us1"];
+pub const VALID_REGIONS: &[&str] = &["au", "sg1", "in1", "us1", "kr1"];
 
 #[derive(Debug, Clone)]
 pub struct Config {

@@ -142,3 +142,18 @@ fn test_all_valid_regions_produce_correct_urls() {
         assert_eq!(config.base_url(), expected);
     }
 }
+
+#[test]
+fn test_config_load_accepts_kr1() {
+    let overrides = ConfigOverrides {
+        profile: Some("test".to_string()),
+        api_key: Some("my-api-key".to_string()),
+        region: Some("kr1".to_string()),
+        endpoint_url: None,
+        output: None,
+        no_color: false,
+        query: None,
+    };
+    let config = Config::load(overrides).unwrap();
+    assert_eq!(config.base_url(), "https://kr1.api.plerion.com");
+}

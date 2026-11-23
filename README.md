@@ -115,7 +115,7 @@ endpoint_url = https://us1.api.plerion.com
 | Variable | Description |
 |---|---|
 | `PLERION_API_KEY` | API key |
-| `PLERION_REGION` | Region (`au`, `sg1`, `in1`, `us1`) |
+| `PLERION_REGION` | Region (`au`, `sg1`, `in1`, `us1`, `kr1`) |
 | `PLERION_PROFILE` | Profile name |
 | `PLERION_ENDPOINT_URL` | Custom API base URL (bypasses region validation) |
 | `NO_COLOR` | Disable colour output |
@@ -138,7 +138,7 @@ plerion [global flags] <command> <subcommand> [flags]
 | Flag | Description |
 |---|---|
 | `--profile <name>` | Use a named profile |
-| `--region <r>` | API region (`au`, `sg1`, `in1`, `us1`) |
+| `--region <r>` | API region (`au`, `sg1`, `in1`, `us1`, `kr1`) |
 | `--api-key <key>` | Override API key |
 | `--endpoint-url <url>` | Custom API base URL |
 | `--output <format>` | `table`, `json`, `yaml`, `text` |
@@ -227,6 +227,7 @@ Table output shows every field returned by the API — no columns are hidden. Us
 | Singapore | `sg1` | `https://sg1.api.plerion.com` |
 | India | `in1` | `https://in1.api.plerion.com` |
 | United States | `us1` | `https://us1.api.plerion.com` |
+| South Korea | `kr1` | `https://kr1.api.plerion.com` |
 
 Use `--endpoint-url` to override with a custom URL (bypasses region validation).
 

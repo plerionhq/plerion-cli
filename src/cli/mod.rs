@@ -34,7 +34,7 @@ pub struct Cli {
     #[arg(long, global = true, env = "PLERION_PROFILE")]
     pub profile: Option<String>,
 
-    /// Override the API region (au, sg1, in1, us1)
+    /// Override the API region (au, sg1, in1, us1, kr1)
     #[arg(long, global = true, env = "PLERION_REGION")]
     pub region: Option<String>,
 
