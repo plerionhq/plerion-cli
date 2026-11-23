@@ -27,7 +27,7 @@ pub enum PlerionError {
     #[allow(dead_code)]
     MissingRegion,
 
-    #[error("Invalid region '{0}'. Valid regions: au, sg1, in1, us1")]
+    #[error("Invalid region '{0}'. Valid regions: {}", crate::config::VALID_REGIONS.join(", "))]
     InvalidRegion(String),
 
     #[error("Profile '{0}' not found. Check ~/.plerion/credentials or run `plerion configure`.")]

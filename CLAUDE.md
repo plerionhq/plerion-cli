@@ -56,7 +56,7 @@ Colors are applied in `src/output/table.rs::colorize_cell()` using `Cell::fg(Col
 4. `[default]` profile
 
 ### Regions
-`au`, `sg1`, `in1`, `us1` → `https://{region}.api.plerion.com`
+`au`, `sg1`, `in1`, `us1`, `kr1` → `https://{region}.api.plerion.com`
 Custom endpoint via `--endpoint-url` bypasses region validation.
 
 ### Pagination

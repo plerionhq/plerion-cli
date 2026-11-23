@@ -23,6 +23,7 @@ fn test_invalid_region_display() {
     assert!(s.contains("Invalid region"));
     assert!(s.contains("xyz"));
     assert!(s.contains("au"));
+    assert!(s.contains("kr1"));
 }
 
 #[test]
