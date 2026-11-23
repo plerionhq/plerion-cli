@@ -101,10 +101,7 @@ pub fn write_profile(
         creds.load(p).map_err(|e| PlerionError::ConfigError(e.to_string()))?;
     }
     creds.set(profile, "api_key", Some(api_key.to_string()));
-    let creds_str = creds_path.to_str().unwrap().to_string();
-    creds
-        .write(&creds_str)
-        .map_err(|e| PlerionError::ConfigError(e.to_string()))?;
+    write_private(&creds_path, &creds.writes())?;
 
     // Write config
     let cfg_path = config_path();
@@ -119,5 +116,24 @@ pub fn write_profile(
     cfg.write(&cfg_str)
         .map_err(|e| PlerionError::ConfigError(e.to_string()))?;
 
+    Ok(())
+}
+
+/// Write a file only its owner can read. On Unix the mode is set to 0600
+/// before any content goes in, so an existing readable file is tightened too.
+fn write_private(path: &std::path::Path, content: &str) -> Result<(), PlerionError> {
+    use std::io::Write;
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+    let mut file = options.open(path)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        file.set_permissions(std::fs::Permissions::from_mode(0o600))?;
+    }
+    file.set_len(0)?;
+    file.write_all(content.as_bytes())?;
     Ok(())
 }
