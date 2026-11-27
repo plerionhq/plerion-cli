@@ -15,6 +15,7 @@ pub mod metrics;
 pub mod profiles;
 pub mod risks;
 pub mod tenant;
+pub mod triage;
 pub mod vulnerabilities;
 pub mod well_architected;
 pub mod workload_scans;
@@ -148,6 +149,8 @@ pub enum Commands {
     WorkloadScans(workload_scans::WorkloadScansArgs),
     /// Dashboard metric time series
     Metrics(metrics::MetricsArgs),
+    /// Triage decisions on findings and vulnerabilities
+    Triage(triage::TriageArgs),
     /// Vulnerability management
     Vulnerabilities(vulnerabilities::VulnerabilitiesArgs),
     /// Compliance framework operations

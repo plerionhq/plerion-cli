@@ -183,6 +183,10 @@ plerion --profile prod findings list
 | `integrations set-tags <id> --tag KEY=VALUE ...` | Replace all user-defined tags on an integration (`--clear` removes them all) |
 | `profiles list` | Profiles and the integrations each applies to |
 | `profiles detection-exemptions get/replace --profile-id <id> --detection-id <id>` | A detection's exemptions; `replace` sends the whole set (`--exemptions`, `--file`, or `--clear`; `--if-match <version>`) |
+| `triage decisions list` | Triage decisions (`--per-page` up to 500, `--cursor`, `--all`) |
+| `triage decisions get/delete <id>` | One triage decision and its rule, or delete it |
+| `triage decisions create` | Create a decision (`--subject-kind`, `--rule <json>`, `--reason`, `--until`, `--note`, or `--file`) |
+| `triage decisions edit <id>` | Edit a decision; flags you leave out keep their value, and `--updated-at` guards against overwriting a newer change |
 | `risks list` | Security risks (supports `--all`) |
 | `risks get <id> [--fields <list>]` | One risk by ID |
 | `workload-scans request --integration-id <id> (--asset-id <id> \| --resource-type <type> --resource-region <region> --resource-id <id>)` | Scan one EC2 instance or AMI now |

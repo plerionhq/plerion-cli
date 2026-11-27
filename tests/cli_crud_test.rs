@@ -1743,3 +1743,309 @@ async fn test_cli_asks_for_gzip_and_reads_a_gzip_body() {
     assert!(String::from_utf8(output.stdout).unwrap().contains("f-gz"));
     mock.assert_async().await;
 }
+
+// --- triage decisions ---
+
+const TD_ID: &str = "3f2b8c1e-7d4a-4e9b-a1c2-5d6e7f8a9b0c";
+
+fn triage_decision_json(note: &str, updated_at: &str) -> serde_json::Value {
+    serde_json::json!({
+        "id": TD_ID,
+        "subjectKind": "finding",
+        "rule": {
+            "version": 1,
+            "conditions": [
+                { "field": "check", "comparison": "isAnyOf", "values": ["PLERION-AWS-16"] },
+                { "field": "finding", "comparison": "isAnyOf", "values": ["prn:findings:int-1:x"] }
+            ]
+        },
+        "exemption": { "reason": "ACCEPTED_RISK", "untilAt": null },
+        "outcome": "exempt",
+        "note": note,
+        "status": "active",
+        "isInForce": true,
+        "createdBy": "key-1",
+        "createdAt": "2026-11-01T00:00:00.000Z",
+        "updatedBy": "key-1",
+        "updatedAt": updated_at
+    })
+}
+
+#[tokio::test]
+async fn test_cli_triage_decisions_list_table_prints_the_next_cursor() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("GET", "/v1/tenant/triage/decisions")
+        .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("perPage".into(), "1".into()),
+            mockito::Matcher::UrlEncoded("cursor".into(), "c-1".into()),
+        ]))
+        .with_status(200)
+        .with_body(serde_json::json!({
+            "data": [triage_decision_json("Staging only", "2026-11-02T00:00:00.000Z")],
+            "meta": { "perPage": 1, "cursor": "c-2" }
+        }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["triage", "decisions", "list", "--per-page", "1", "--cursor", "c-1"],
+        "key", &server.url(),
+    );
+    mock.assert_async().await;
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(output.status.success(), "stderr: {stderr}");
+    assert!(stdout.contains("SUBJECT KIND"));
+    assert!(stdout.contains("ACCEPTED_RISK"));
+    assert!(stderr.contains("Next page: --cursor c-2"), "stderr: {stderr}");
+}
+
+#[tokio::test]
+async fn test_cli_triage_decisions_list_all_follows_the_cursor_until_null() {
+    let mut server = Server::new_async().await;
+    let first = server
+        .mock("GET", "/v1/tenant/triage/decisions")
+        .match_query(mockito::Matcher::Exact("perPage=500".into()))
+        .with_status(200)
+        .with_body(serde_json::json!({
+            "data": [triage_decision_json("first", "2026-11-02T00:00:00.000Z")],
+            "meta": { "perPage": 500, "cursor": "c-2" }
+        }).to_string())
+        .create_async()
+        .await;
+    let second = server
+        .mock("GET", "/v1/tenant/triage/decisions")
+        .match_query(mockito::Matcher::AllOf(vec![
+            mockito::Matcher::UrlEncoded("perPage".into(), "500".into()),
+            mockito::Matcher::UrlEncoded("cursor".into(), "c-2".into()),
+        ]))
+        .with_status(200)
+        .with_body(serde_json::json!({
+            "data": [triage_decision_json("second", "2026-11-02T00:00:00.000Z")],
+            "meta": { "perPage": 500, "cursor": null }
+        }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["triage", "decisions", "list", "--all", "--output", "json"], "key", &server.url());
+    first.assert_async().await;
+    second.assert_async().await;
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    let items: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(items.as_array().unwrap().len(), 2);
+    assert_eq!(items[1]["note"], "second");
+}
+
+#[test]
+fn test_cli_triage_decisions_list_rejects_cursor_with_all() {
+    let output = run_plerion(&["triage", "decisions", "list", "--all", "--cursor", "c"], "key", "http://127.0.0.1:9");
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be used with"));
+}
+
+#[test]
+fn test_cli_triage_decisions_list_rejects_per_page_over_500() {
+    let output = run_plerion(&["triage", "decisions", "list", "--per-page", "501"], "key", "http://127.0.0.1:9");
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("501"));
+}
+
+#[tokio::test]
+async fn test_cli_triage_decisions_get_table_shows_the_conditions() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", format!("/v1/tenant/triage/decisions/{TD_ID}").as_str())
+        .with_status(200)
+        .with_body(serde_json::json!({ "data": triage_decision_json("Staging only", "2026-11-02T00:00:00.000Z") }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["triage", "decisions", "get", TD_ID], "key", &server.url());
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(stdout.contains("Staging only"));
+    assert!(stdout.contains("COMPARISON"));
+    assert!(stdout.contains("PLERION-AWS-16"));
+}
+
+#[tokio::test]
+async fn test_cli_triage_decisions_get_not_found() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", format!("/v1/tenant/triage/decisions/{TD_ID}").as_str())
+        .with_status(404)
+        .with_body(r#"{"errors":[{"code":"DecisionNotFound","message":"Triage decision not found"}]}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["triage", "decisions", "get", TD_ID], "key", &server.url());
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("HTTP error 404 (DecisionNotFound)"), "stderr: {stderr}");
+    assert!(stderr.contains(&format!("Triage decision '{TD_ID}' was not found")));
+}
+
+#[tokio::test]
+async fn test_cli_triage_decisions_create_from_flags() {
+    let mut server = Server::new_async().await;
+    let rule = serde_json::json!({ "version": 1, "conditions": [{ "field": "check", "comparison": "isAnyOf", "values": ["PLERION-AWS-16"] }] });
+    let mock = server
+        .mock("POST", "/v1/tenant/triage/decisions")
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "subjectKind": "finding",
+            "rule": rule,
+            "exemption": { "reason": "ACCEPTED_RISK", "untilAt": "2027-01-01T00:00:00Z" },
+            "note": "Staging only"
+        })))
+        .with_status(201)
+        .with_body(serde_json::json!({
+            "data": triage_decision_json("Staging only", "2026-11-02T00:00:00.000Z"),
+            "meta": { "isApplyQueued": true }
+        }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &[
+            "triage", "decisions", "create", "--subject-kind", "finding", "--rule", &rule.to_string(),
+            "--reason", "ACCEPTED_RISK", "--until", "2027-01-01T00:00:00Z", "--note", "Staging only",
+            "--output", "json",
+        ],
+        "key", &server.url(),
+    );
+    mock.assert_async().await;
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    let decision: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(decision["id"], TD_ID);
+}
+
+#[test]
+fn test_cli_triage_decisions_create_names_the_missing_flags() {
+    let output = run_plerion(&["triage", "decisions", "create", "--subject-kind", "finding"], "key", "http://127.0.0.1:9");
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("A decision needs --rule, --reason, --note."), "stderr: {stderr}");
+}
+
+#[test]
+fn test_cli_triage_decisions_create_rejects_an_unknown_reason() {
+    let output = run_plerion(&["triage", "decisions", "create", "--reason", "NOT_IN_USE"], "key", "http://127.0.0.1:9");
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("FALSE_POSITIVE"));
+}
+
+#[tokio::test]
+async fn test_cli_triage_decisions_edit_reads_first_and_sends_its_updated_at() {
+    let mut server = Server::new_async().await;
+    let path = format!("/v1/tenant/triage/decisions/{TD_ID}");
+    let read = server
+        .mock("GET", path.as_str())
+        .with_status(200)
+        .with_body(serde_json::json!({ "data": triage_decision_json("Staging only", "2026-11-02T00:00:00.000Z") }).to_string())
+        .create_async()
+        .await;
+    let current = triage_decision_json("Staging only", "2026-11-02T00:00:00.000Z");
+    let write = server
+        .mock("PUT", path.as_str())
+        .match_body(mockito::Matcher::Json(serde_json::json!({
+            "rule": current["rule"],
+            "exemption": { "reason": "FALSE_POSITIVE", "untilAt": null },
+            "note": "Renewed",
+            "updatedAt": "2026-11-02T00:00:00.000Z"
+        })))
+        .with_status(200)
+        .with_body(serde_json::json!({
+            "data": triage_decision_json("Renewed", "2026-11-03T00:00:00.000Z"),
+            "meta": { "isApplyQueued": true }
+        }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &["triage", "decisions", "edit", TD_ID, "--reason", "FALSE_POSITIVE", "--note", "Renewed", "--output", "json"],
+        "key", &server.url(),
+    );
+    read.assert_async().await;
+    write.assert_async().await;
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(String::from_utf8(output.stdout).unwrap().contains("Renewed"));
+}
+
+#[tokio::test]
+async fn test_cli_triage_decisions_edit_conflict_explains_what_to_do() {
+    let mut server = Server::new_async().await;
+    let path = format!("/v1/tenant/triage/decisions/{TD_ID}");
+    let read = server.mock("GET", path.as_str()).expect(0).create_async().await;
+    let _write = server
+        .mock("PUT", path.as_str())
+        .with_status(409)
+        .with_body(r#"{"errors":[{"code":"DecisionChanged","message":"Someone else changed this decision after you opened it. Reload it to see their change, then try again."}]}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(
+        &[
+            "triage", "decisions", "edit", TD_ID,
+            "--rule", r#"{"version":1,"conditions":[]}"#, "--reason", "ACCEPTED_RISK", "--clear-until",
+            "--note", "n", "--updated-at", "2026-10-01T00:00:00.000Z",
+        ],
+        "key", &server.url(),
+    );
+    read.assert_async().await;
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("HTTP error 409 (DecisionChanged)"), "stderr: {stderr}");
+    assert!(stderr.contains(&format!("plerion triage decisions get {TD_ID}")));
+}
+
+#[test]
+fn test_cli_triage_decisions_edit_rejects_until_with_clear_until() {
+    let output = run_plerion(
+        &["triage", "decisions", "edit", TD_ID, "--until", "2027-01-01T00:00:00Z", "--clear-until"],
+        "key", "http://127.0.0.1:9",
+    );
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("cannot be used with"));
+}
+
+#[test]
+fn test_cli_triage_decisions_edit_with_nothing_to_change_sends_nothing() {
+    let output = run_plerion(&["triage", "decisions", "edit", TD_ID], "key", "http://127.0.0.1:9");
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("Nothing to change."));
+}
+
+#[tokio::test]
+async fn test_cli_triage_decisions_delete() {
+    let mut server = Server::new_async().await;
+    let mock = server
+        .mock("DELETE", format!("/v1/tenant/triage/decisions/{TD_ID}").as_str())
+        .with_status(200)
+        .with_body(serde_json::json!({ "data": { "id": TD_ID } }).to_string())
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["triage", "decisions", "delete", TD_ID], "key", &server.url());
+    mock.assert_async().await;
+    assert!(output.status.success(), "stderr: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(String::from_utf8(output.stdout).unwrap().contains(&format!("Triage decision '{TD_ID}' deleted.")));
+}
+
+#[tokio::test]
+async fn test_cli_triage_decisions_tenant_not_on_triage() {
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/v1/tenant/triage/decisions")
+        .match_query(mockito::Matcher::Any)
+        .with_status(409)
+        .with_body(r#"{"errors":[{"code":"TenantNotOnTriage","message":"This tenant still uses exemptions. Triage decisions are not available to it yet."}]}"#)
+        .create_async()
+        .await;
+
+    let output = run_plerion(&["triage", "decisions", "list"], "key", &server.url());
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("HTTP error 409 (TenantNotOnTriage)"), "stderr: {stderr}");
+    assert!(stderr.contains("plerion profiles detection-exemptions"));
+}

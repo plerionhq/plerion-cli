@@ -65,6 +65,7 @@ async fn main() {
         Commands::Risks(args) => cli::risks::run(args, &config).await,
         Commands::WorkloadScans(args) => cli::workload_scans::run(args, &config).await,
         Commands::Metrics(args) => cli::metrics::run(args, &config).await,
+        Commands::Triage(args) => cli::triage::run(args, &config).await,
         Commands::Vulnerabilities(args) => cli::vulnerabilities::run(args, &config).await,
         Commands::ComplianceFrameworks(args) => cli::compliance::run(args, &config).await,
         Commands::WellArchitectedFrameworks(args) => cli::well_architected::run(args, &config).await,

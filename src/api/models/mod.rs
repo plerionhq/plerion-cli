@@ -13,6 +13,7 @@ pub mod metrics;
 pub mod profiles;
 pub mod risks;
 pub mod tenant;
+pub mod triage;
 pub mod vulnerabilities;
 pub mod well_architected;
 pub mod workload_scans;
